@@ -197,10 +197,10 @@
   "home": {
     "sectionOrder": [
       "featured",
+      "latestVideos",
       "projects",
       "infoPanels",
       "categoryVideos",
-      "latestVideos",
       "stats"
     ],
     "sectionVisibility": {
@@ -209,7 +209,7 @@
       "latestVideos": true,
       "categoryVideos": true,
       "projects": true,
-      "stats": true
+      "stats": false
     },
     "playAllButtonEnabled": true,
     "latestVideos": {
