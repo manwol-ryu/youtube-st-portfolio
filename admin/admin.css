@@ -2206,6 +2206,8 @@ h3 {
 }
 
 #embed-crop-canvas,
+#quickstart-channel-crop-canvas,
+.crop-editor-canvas,
 .crop-preview-canvas {
   display: block;
   width: 100%;
@@ -2213,7 +2215,9 @@ h3 {
   background: #10131a;
 }
 
-#embed-crop-canvas {
+#embed-crop-canvas,
+#quickstart-channel-crop-canvas,
+.crop-editor-canvas {
   cursor: crosshair;
 }
 

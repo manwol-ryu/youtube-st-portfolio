@@ -1,14 +1,11 @@
 const DEFAULT_DATA = {
   site: {
-    title: "영상 포트폴리오 템플릿",
-    description: "영상 편집자와 크리에이터를 위한 정적 포트폴리오 템플릿입니다. site.json만 수정해 브랜드, 작업물, 가격, 문의 정보를 구성할 수 있습니다.",
     githubRepo: "",
     brand: {
-      prefix: "studio",
       name: "your-name",
       displayName: "",
-      avatarUrl: "assets/프로필이미지.png",
-      bannerImageUrl: "assets/배너이미지.png",
+      avatarUrl: "assets/avatar.png",
+      bannerImageUrl: "assets/banner.png",
     },
     profile: {
       discordId: "",
@@ -104,6 +101,7 @@ const DEFAULT_DATA = {
     items: [],
   },
   home: {
+    featuredVideoId: "",
     sectionOrder: ["featured", "infoPanels", "latestVideos", "categoryVideos", "projects", "stats"],
     sectionVisibility: {
       featured: true,
@@ -214,6 +212,12 @@ const HOME_SECTION_KEYS = Object.freeze(["featured", "infoPanels", "latestVideos
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function withoutKeys(value, keys) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const blocked = new Set(keys);
+  return Object.fromEntries(Object.entries(value).filter(([key]) => !blocked.has(key)));
 }
 
 let DATA = clone(DEFAULT_DATA);
@@ -467,6 +471,7 @@ function normalizeHomeSettings(sourceHome) {
     ...(sourceHome || {}),
     sectionOrder: normalizeHomeSectionOrder(sourceHome?.sectionOrder),
     sectionVisibility,
+    featuredVideoId: String(sourceHome?.featuredVideoId || "").trim(),
     playAllButtonEnabled: normalizeEnabled(sourceHome?.playAllButtonEnabled, base.playAllButtonEnabled),
     latestVideos: {
       ...base.latestVideos,
@@ -742,11 +747,10 @@ function normalizeData(input) {
     ...source,
     site: {
       ...clone(DEFAULT_DATA.site),
-      ...(source.site || {}),
+      ...withoutKeys(source.site, ["title", "description"]),
       brand: {
         ...clone(DEFAULT_DATA.site.brand),
-        ...(source.site?.brand || {}),
-        prefix: String(source.site?.brand?.prefix || DEFAULT_DATA.site.brand.prefix || "").trim(),
+        ...withoutKeys(source.site?.brand, ["prefix"]),
         name: String(source.site?.brand?.name || DEFAULT_DATA.site.brand.name || "").trim(),
         displayName: String(source.site?.brand?.displayName || "").trim(),
         avatarUrl: String(source.site?.brand?.avatarUrl || "").trim(),
@@ -1259,7 +1263,6 @@ function renderNav() {
   const brandDisplayName = getBrandDisplayName();
   document.body.dataset.brandName = brandEnglishName;
   document.body.dataset.brandDisplayName = brandDisplayName;
-  setText("brand-prefix", DATA.site.brand.prefix);
   setText("brand-name", brandEnglishName);
   setText("brand-name-display", brandDisplayName);
   document.body.dataset.discordId = DATA.site.profile?.discordId || "";
@@ -1757,6 +1760,13 @@ function buildHomeVideoCardsMarkup(videos, { hideCategory = false } = {}) {
   }).join("");
 }
 
+function getHomeFeaturedVideo(home, works) {
+  home = home || {};
+  const videos = getSortedWorksVideos(works?.videos);
+  const featuredVideoId = String(home.featuredVideoId || "").trim();
+  return videos.find((video) => video.id === featuredVideoId) || videos[0] || null;
+}
+
 function renderHomeFeaturedVideo() {
   const section = $("#home-feature-section");
   const link = $("#home-feature-link");
@@ -1769,7 +1779,8 @@ function renderHomeFeaturedVideo() {
   if (!section || !link || !image || !play || !kicker || !title || !meta || !description) return;
 
   const works = DATA.works || DEFAULT_DATA.works;
-  const featuredVideo = getSortedWorksVideos(works.videos)[0];
+  const home = normalizeHomeSettings(DATA.home);
+  const featuredVideo = getHomeFeaturedVideo(home, works);
   const categoryEntryMap = getWorksCategoryEntryMap(works);
 
   if (!featuredVideo) {
@@ -1781,10 +1792,11 @@ function renderHomeFeaturedVideo() {
     link.dataset.channelTab = "works";
     link.dataset.worksFilterType = "all";
     link.dataset.worksFilterCategory = "all";
+    const fallbackTitle = getBrandDisplayName() || getBrandEnglishName();
     image.src = "assets/social-preview.png";
-    image.alt = DATA.site?.title || DEFAULT_DATA.site.title;
+    image.alt = fallbackTitle;
     kicker.textContent = "대표 영상";
-    title.textContent = DATA.site?.title || DEFAULT_DATA.site.title;
+    title.textContent = fallbackTitle;
     meta.textContent = "동영상 포트폴리오";
     description.innerHTML = escapeWithBreaks(DATA.hero?.description || DEFAULT_DATA.hero.description);
     play.hidden = true;
@@ -2577,8 +2589,8 @@ function getCurrentPageFile() {
 }
 
 function getCurrentPageMeta() {
-  const siteTitle = compactMetaText(DATA.site.title) || DEFAULT_DATA.site.title;
-  const siteDescription = compactMetaText(DATA.site.description) || DEFAULT_DATA.site.description;
+  const siteTitle = compactMetaText(getBrandDisplayName()) || compactMetaText(getBrandEnglishName()) || "영상 포트폴리오";
+  const siteDescription = compactMetaText(DATA.hero?.description) || DEFAULT_DATA.hero.description;
   const pageFile = getCurrentPageFile();
 
   if (pageFile === "pricing.html") {
