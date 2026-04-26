@@ -7,8 +7,8 @@
       "prefix": "studio",
       "name": "your-name",
       "displayName": "",
-      "avatarUrl": "assets/프로필이미지.png",
-      "bannerImageUrl": "assets/배너이미지.png"
+      "avatarUrl": "assets/avatar.png",
+      "bannerImageUrl": "assets/banner.png"
     },
     "profile": {
       "discordId": "",
