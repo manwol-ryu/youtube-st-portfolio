@@ -1,0 +1,8148 @@
+const jsonPath = "../data/site.json";
+const exampleJsonPath = "../data/example.site.json";
+const githubJsonPath = "data/site.json";
+const indexHtmlPath = "../index.html";
+const fallbackGitHubBranch = "main";
+const detailSectionStateStorageKey = "portfolio-template-admin-detail-sections-v1";
+const editorCardStateStorageKey = "portfolio-template-admin-editor-cards-v1";
+const embedCardTabs = new Set(["embed-card", "embed-image"]);
+const socialPreviewPresets = Object.freeze([
+  { id: "og-191", label: "OG 권장 1.91:1 · 1200×630", width: 1200, height: 630 },
+  { id: "twitter-2-1", label: "Twitter/X 2:1 · 1200×600", width: 1200, height: 600 },
+  { id: "wide-16-9", label: "16:9 · 1200×675", width: 1200, height: 675 },
+  { id: "landscape-3-2", label: "3:2 · 1200×800", width: 1200, height: 800 },
+  { id: "classic-4-3", label: "4:3 · 1200×900", width: 1200, height: 900 },
+  { id: "square-1-1", label: "1:1 · 1200×1200", width: 1200, height: 1200 },
+  { id: "portrait-4-5", label: "4:5 · 1080×1350", width: 1080, height: 1350 },
+  { id: "story-9-16", label: "9:16 · 1080×1920", width: 1080, height: 1920 },
+]);
+const defaultSocialPreviewPresetId = socialPreviewPresets[0].id;
+const previewFontFamilyStyle = "font-family:'Epilogue', 'Segoe UI', 'Malgun Gothic', '맑은 고딕', Arial, sans-serif;";
+const publicPreviewStorageKey = "portfolio-template-admin-preview-data";
+const publicPreviewMessageType = "portfolio-template-preview-data";
+const publicPagePreviewTargets = new Set([
+  "brand",
+  "channel-images",
+  "home",
+  "hero",
+  "hero-panels",
+  "projects",
+  "works",
+  "stats-process",
+  "process",
+  "pricing",
+  "contact-footer",
+  "json",
+]);
+const previewTargets = {
+  quickstart: {
+    title: "퀵스타트 미리보기",
+    description: "초기 세팅 핵심값이 실제 홈, 가격, 문의 영역에 어떻게 반영되는지 한 번에 확인합니다.",
+    pathText: "index.html#home / #pricing / #contact",
+    openHref: "../index.html",
+  },
+  brand: {
+    title: "채널/브랜드 미리보기",
+    description: "현재 공개 페이지의 YouTube 채널형 헤더, 채널 메타, 탭 구성을 확인합니다.",
+    pathText: "index.html#home / header",
+    openHref: "../index.html",
+  },
+  "channel-images": {
+    title: "채널 이미지 미리보기",
+    description: "채널 배너와 프로필 이미지가 공개 페이지 상단에 어떻게 보이는지 확인합니다.",
+    pathText: "index.html#home / channel images",
+    openHref: "../index.html#home",
+  },
+  home: {
+    title: "홈 탭 콘텐츠 미리보기",
+    description: "홈 탭의 대표 영상, 경력/툴 카드, 최신 영상, 카테고리별 영상, 프로젝트, 통계 순서를 확인합니다.",
+    pathText: "index.html#home",
+    openHref: "../index.html#home",
+  },
+  hero: {
+    title: "히어로 미리보기",
+    description: "홈 첫 화면의 상단 히어로 카피와 액션 구성을 바로 확인할 수 있습니다.",
+    pathText: "index.html#home",
+    openHref: "../index.html#home",
+  },
+  "hero-panels": {
+    title: "경력사항 / 툴 / BGM ",
+    description: "경력사항 / 사용 가능한 툴 / BGM 카드 구성을 바로 확인합니다.",
+    pathText: "index.html#home",
+    openHref: "../index.html#home",
+  },
+  projects: {
+    title: "프로젝트 고급 설정 미리보기",
+    description: "기존 프로젝트 섹션과 유튜브 채널 카드 설정을 고급 영역에서 확인합니다.",
+    pathText: "index.html#projects",
+    openHref: "../index.html#projects",
+  },
+  works: {
+    title: "동영상/카테고리 미리보기",
+    description: "공개 페이지 사이드바의 영상 카테고리와 동영상 탭 구성을 확인합니다.",
+    pathText: "index.html#works",
+    openHref: "../index.html#works",
+  },
+  "stats-process": {
+    title: "통계 / 프로세스 미리보기",
+    description: "공개 페이지의 홈 통계와 가격 탭 프로세스 디자인을 같은 톤으로 확인합니다.",
+    pathText: "index.html#stats + #process-section",
+    openHref: "../index.html#process-section",
+  },
+  process: {
+    title: "프로세스 미리보기",
+    description: "가격 탭 하단의 진행 프로세스만 실제 공개 페이지 디자인으로 확인합니다.",
+    pathText: "index.html#process-section",
+    openHref: "../index.html#process-section",
+  },
+  pricing: {
+    title: "가격 탭 미리보기",
+    description: "현재 채널형 페이지의 가격 탭 카드 구성을 확인합니다.",
+    pathText: "index.html#pricing",
+    openHref: "../index.html#pricing",
+  },
+  "contact-footer": {
+    title: "문의 / 푸터 미리보기",
+    description: "흰색 테마의 문의 탭과 푸터 문구를 확인합니다.",
+    pathText: "index.html#contact + footer",
+    openHref: "../index.html#contact",
+  },
+  json: {
+    title: "전체 사이트 미리보기",
+    description: "현재 JSON 기준으로 홈, 가격, 문의 핵심 구간을 한 번에 빠르게 점검합니다.",
+    pathText: "index.html#home / #pricing / #contact",
+    openHref: "../index.html",
+  },
+};
+
+const DEFAULT_EMBED_META = {
+  title: "영상 포트폴리오 템플릿",
+  description: "영상 편집자와 크리에이터를 위한 정적 포트폴리오 템플릿입니다. site.json만 수정해 브랜드, 작업물, 가격, 문의 정보를 구성할 수 있습니다.",
+  image: "",
+  url: "",
+  imageAlt: "영상 포트폴리오 템플릿 공유 이미지",
+  twitterCard: "summary_large_image",
+  imageMetaEnabled: true,
+};
+
+const DEFAULT_DATA = {
+  site: {
+    title: "영상 포트폴리오 템플릿",
+    description: "영상 편집자와 크리에이터를 위한 정적 포트폴리오 템플릿입니다. site.json만 수정해 브랜드, 작업물, 가격, 문의 정보를 구성할 수 있습니다.",
+    githubRepo: "",
+    brand: {
+      prefix: "studio",
+      name: "your-name",
+      displayName: "",
+      avatarUrl: "assets/프로필이미지.png",
+      bannerImageUrl: "assets/배너이미지.png",
+    },
+    profile: {
+      discordId: "",
+      email: "",
+    },
+    nav: {
+      links: [
+        {
+          label: "홈",
+          href: "index.html#home",
+        },
+        {
+          label: "영상 포트폴리오",
+          href: "index.html#works",
+        },
+        {
+          label: "서비스 및 가격",
+          href: "index.html#pricing",
+        },
+        {
+          label: "문의하기",
+          href: "index.html#contact",
+        },
+      ],
+      ctaLabel: "문의하기",
+      ctaHref: "index.html#contact",
+    },
+    footer: {
+      enabled: true,
+      linksEnabled: false,
+      title: "STUDIO YOUR-NAME",
+      copy: "© 2026 STUDIO YOUR-NAME. 모든 권리 보유.",
+      links: [],
+    },
+  },
+  hero: {
+    eyebrow: "VIDEO PORTFOLIO TEMPLATE",
+    title: "브랜드에 맞는\n영상 포트폴리오를 시작하세요.",
+    titleAccent: "영상 포트폴리오",
+    description: "JSON 데이터만 교체하면 소개 문구, 작업물, 가격, 문의 섹션을 프로젝트에 맞게 빠르게 구성할 수 있습니다.",
+    statusLabel: "",
+    statusText: "",
+    actions: [
+      {
+        label: "가격 보기",
+        href: "index.html#pricing",
+        variant: "primary",
+      },
+      {
+        label: "문의하기",
+        href: "index.html#contact",
+        variant: "ghost",
+      },
+    ],
+    infoPanels: {
+      layoutPreset: "1:1",
+      career: {
+        title: "경력사항",
+        mode: "structured",
+        structuredItems: [],
+        simpleItems: [],
+        freeformText: "",
+      },
+      tools: {
+        title: "사용 가능한 툴",
+        items: [],
+      },
+      bgm: {
+        title: "BGM 사용 툴",
+        items: [],
+      },
+    },
+  },
+  projects: {
+    enabled: false,
+    sectionEyebrow: "",
+    sectionTitle: "",
+    sectionMeta: "",
+    youtubeChannel: {
+      enabled: false,
+      url: "https://www.youtube.com/@kojjilmung",
+      avatarUrl: "",
+      name: "",
+      handle: "@kojjilmung",
+      subscriberText: "",
+      videoCountText: "",
+      description: "",
+    },
+    cards: [],
+  },
+  stats: {
+    enabled: false,
+    items: [],
+  },
+  home: {
+    sectionOrder: ["featured", "infoPanels", "latestVideos", "categoryVideos", "projects", "stats"],
+    sectionVisibility: {
+      featured: true,
+      infoPanels: true,
+      latestVideos: true,
+      categoryVideos: true,
+      projects: true,
+      stats: true,
+    },
+    playAllButtonEnabled: true,
+    latestVideos: {
+      enabled: true,
+      count: 4,
+      title: "최신 영상",
+    },
+    categoryVideos: {
+      enabled: true,
+      perCategoryCount: 4,
+    },
+  },
+  works: {
+    enabled: true,
+    sectionTitle: "영상 포트폴리오",
+    sectionDescription: "",
+    emptyText: "영상 항목을 추가하면 이 영역이 자동으로 채워집니다.",
+    visualPreset: "reference",
+    displayMode: "grid",
+    gridColumns: 3,
+    categoryStackColumns: 2,
+    categoryStackTypeFilterEnabled: false,
+    categoryStackSingleColumnSize: "medium",
+    categoryOrder: [],
+    categoryEntries: [],
+    videos: [],
+  },
+  pricing: {
+    sectionEyebrow: "Pricing Template",
+    title: "서비스 구조를 바로 안내할 수 있게 준비해두세요.",
+    description: "패키지, 포함 항목, 문의 CTA를 예시로 남겨두었습니다. 프로젝트에 맞게 값만 교체하면 됩니다.",
+    gridColumns: 2,
+    processStyle: "cards",
+    plans: [
+      {
+        slug: "starter",
+        design: "shortform",
+        badge: "Template Example",
+        icon: "movie_edit",
+        title: "기본 포트폴리오 편집",
+        description: "서비스 설명, 산출물 범위, 수정 횟수 같은 기본 정보를 넣어 구조를 빠르게 완성할 수 있습니다.",
+        price: "₩000,000",
+        priceUnit: "/ 프로젝트",
+        features: [
+          "작업 범위 예시 문구",
+          "수정 정책 예시 문구",
+          "납품 형식 예시 문구",
+        ],
+        cta: {
+          label: "문의하기",
+          href: "index.html#contact",
+        },
+      },
+    ],
+    customWorksEnabled: false,
+    customWorks: [],
+    processEnabled: false,
+    processTitle: "",
+    processSteps: [],
+  },
+  contact: {
+    eyebrow: "CONTACT",
+    title: "프로젝트 문의는\n이메일로 남겨주세요.",
+    titleAccent: "이메일",
+    description: "메일 주소와 응답 정책을 템플릿으로 남겨두었습니다. 실제 운영 정보로 교체해서 사용하세요.",
+    detailsEnabled: true,
+    primaryCard: {
+      label: "Email",
+      value: "your@email.com",
+      note: "문의 내용을 간단히 적어 보내주세요.",
+      icon: "mail",
+      href: "mailto:your@email.com",
+    },
+    details: [
+      {
+        label: "Response",
+        value: "Within 2 Business Days",
+      },
+      {
+        label: "Location",
+        value: "Remote / South Korea",
+      },
+      {
+        label: "Availability",
+        value: "Open for Projects",
+      },
+    ],
+  },
+  freeContent: "",
+  freeContentEnabled: true,
+};
+
+const state = {
+  data: clone(DEFAULT_DATA),
+  activeTab: "quickstart",
+  mobileMenuOpen: false,
+  quickstartStepIndex: 0,
+  quickstartEmbedUploadDone: false,
+  quickstartEmbedIndexDone: false,
+  quickstartPlanExpanded: {},
+  detailSectionState: loadStoredState(detailSectionStateStorageKey),
+  editorCardState: loadStoredState(editorCardStateStorageKey),
+  search: "",
+  typeFilter: "all",
+  metadataTimer: null,
+  metadataRequestId: 0,
+  lastMetadataVideoId: "",
+  worksFormVideoId: "",
+  homeSectionDragIndex: null,
+  youtubeChannelTimer: null,
+  youtubeChannelRequestId: 0,
+  lastYouTubeChannelLookupUrl: "",
+  githubDefaultBranch: fallbackGitHubBranch,
+  githubDefaultBranchRepo: "",
+  githubDefaultBranchSource: "fallback",
+  githubBranchRequestId: 0,
+  githubBranchTimer: null,
+  embedHtml: "",
+  embedMeta: clone(DEFAULT_EMBED_META),
+  embedLoaded: false,
+  cropImage: null,
+  cropObjectUrl: "",
+  cropImageRect: null,
+  cropSelection: null,
+  cropInteraction: null,
+  cropInteractionPointerId: null,
+  cropInteractionStartX: 0,
+  cropInteractionStartY: 0,
+  cropInteractionStartSelection: null,
+  socialPreviewPresetId: defaultSocialPreviewPresetId,
+};
+
+const NAV_LINK_QUICK_PRESETS = Object.freeze([
+  { key: "home", label: "홈", href: "index.html#home" },
+  { key: "works", label: "영상 포트폴리오", href: "index.html#works" },
+  { key: "pricing", label: "서비스 및 가격", href: "index.html#pricing" },
+  { key: "contact", label: "문의하기", href: "index.html#contact" },
+]);
+const HOME_SECTION_KEYS = Object.freeze(["featured", "infoPanels", "latestVideos", "categoryVideos", "projects", "stats"]);
+const HOME_SECTION_LABELS = Object.freeze({
+  featured: "대표 영상",
+  infoPanels: "경력 / 사용 가능한 툴 / BGM 툴",
+  latestVideos: "최신 영상",
+  categoryVideos: "카테고리별 영상",
+  projects: "프로젝트 섹션",
+  stats: "통계 섹션",
+});
+
+function getNavLinkPresetOrderIndex(link) {
+  const label = String(link?.label || "").trim();
+  const href = String(link?.href || "").trim();
+  return NAV_LINK_QUICK_PRESETS.findIndex((preset) => (
+    preset.label === label &&
+    preset.href === href
+  ));
+}
+
+function sortNavLinksByPresetOrder(links) {
+  return (Array.isArray(links) ? links : [])
+    .map((link, index) => ({
+      link,
+      index,
+      presetIndex: getNavLinkPresetOrderIndex(link),
+    }))
+    .sort((left, right) => {
+      const leftIsPreset = left.presetIndex !== -1;
+      const rightIsPreset = right.presetIndex !== -1;
+
+      if (leftIsPreset && rightIsPreset) {
+        return left.presetIndex - right.presetIndex;
+      }
+      if (leftIsPreset) return -1;
+      if (rightIsPreset) return 1;
+      return left.index - right.index;
+    })
+    .map(({ link }) => link);
+}
+
+const DIRECT_BINDINGS = {
+  "site-title": ["site", "title"],
+  "site-description": ["site", "description"],
+  "brand-prefix": ["site", "brand", "prefix"],
+  "brand-name": ["site", "brand", "name"],
+  "brand-display-name": ["site", "brand", "displayName"],
+  "brand-avatar-url": ["site", "brand", "avatarUrl"],
+  "brand-banner-url": ["site", "brand", "bannerImageUrl"],
+  "profile-discord": ["site", "profile", "discordId"],
+  "profile-email": ["site", "profile", "email"],
+  "nav-cta-label": ["site", "nav", "ctaLabel"],
+  "nav-cta-href": ["site", "nav", "ctaHref"],
+  "hero-eyebrow": ["hero", "eyebrow"],
+  "hero-title": ["hero", "title"],
+  "hero-title-accent": ["hero", "titleAccent"],
+  "hero-description": ["hero", "description"],
+  "hero-status-label": ["hero", "statusLabel"],
+  "hero-status-text": ["hero", "statusText"],
+  "hero-career-title": ["hero", "infoPanels", "career", "title"],
+  "hero-tools-title": ["hero", "infoPanels", "tools", "title"],
+  "hero-bgm-title": ["hero", "infoPanels", "bgm", "title"],
+  "hero-career-freeform": ["hero", "infoPanels", "career", "freeformText"],
+  "projects-eyebrow": ["projects", "sectionEyebrow"],
+  "projects-title": ["projects", "sectionTitle"],
+  "projects-meta": ["projects", "sectionMeta"],
+  "projects-youtube-channel-url": ["projects", "youtubeChannel", "url"],
+  "projects-youtube-channel-avatar": ["projects", "youtubeChannel", "avatarUrl"],
+  "projects-youtube-channel-name": ["projects", "youtubeChannel", "name"],
+  "projects-youtube-channel-handle": ["projects", "youtubeChannel", "handle"],
+  "projects-youtube-channel-subscriber": ["projects", "youtubeChannel", "subscriberText"],
+  "projects-youtube-channel-videos": ["projects", "youtubeChannel", "videoCountText"],
+  "projects-youtube-channel-description": ["projects", "youtubeChannel", "description"],
+  "pricing-eyebrow": ["pricing", "sectionEyebrow"],
+  "pricing-title": ["pricing", "title"],
+  "pricing-description": ["pricing", "description"],
+  "pricing-process-title": ["pricing", "processTitle"],
+  "contact-eyebrow": ["contact", "eyebrow"],
+  "contact-title": ["contact", "title"],
+  "contact-title-accent": ["contact", "titleAccent"],
+  "contact-description": ["contact", "description"],
+  "contact-card-label": ["contact", "primaryCard", "label"],
+  "contact-card-value": ["contact", "primaryCard", "value"],
+  "contact-card-note": ["contact", "primaryCard", "note"],
+  "contact-card-href": ["contact", "primaryCard", "href"],
+  "footer-title": ["site", "footer", "title"],
+  "footer-copy": ["site", "footer", "copy"],
+  "free-content-input": ["freeContent"],
+};
+
+const CHECKBOX_BINDINGS = {
+  "projects-enabled": ["projects", "enabled"],
+  "projects-youtube-channel-enabled": ["projects", "youtubeChannel", "enabled"],
+  "works-enabled": ["works", "enabled"],
+  "stats-enabled": ["stats", "enabled"],
+  "pricing-process-enabled": ["pricing", "processEnabled"],
+  "pricing-custom-works-enabled": ["pricing", "customWorksEnabled"],
+  "contact-details-enabled": ["contact", "detailsEnabled"],
+  "footer-enabled": ["site", "footer", "enabled"],
+  "footer-links-enabled": ["site", "footer", "linksEnabled"],
+  "free-content-enabled": ["freeContentEnabled"],
+};
+
+const QUICKSTART_STEPS = Object.freeze([
+  {
+    id: "site",
+    title: "사이트 정보",
+    description: "사이트 제목, GitHub Repo, English Name, 채널 표시 이름, Discord ID, 이메일, 상단 버튼을 먼저 정리합니다.",
+    preview: "brand",
+  },
+  {
+    id: "channel-images",
+    title: "채널 이미지",
+    description: "채널 배너와 프로필 이미지를 공개 페이지 상단에 바로 반영합니다.",
+    preview: "channel-images",
+  },
+  {
+    id: "hero",
+    title: "히어로 기본 정보",
+    description: "첫 화면의 제목, 설명, 상태 문구를 확인합니다.",
+    preview: "hero",
+  },
+  {
+    id: "panels",
+    title: "경력/툴/BGM",
+    description: "히어로 하단 카드 제목과 경력 핵심 텍스트를 확인합니다.",
+    preview: "hero-panels",
+  },
+  {
+    id: "process",
+    title: "프로세스",
+    description: "진행 프로세스 표시 여부와 단계 목록을 확인합니다.",
+    preview: "process",
+  },
+  {
+    id: "pricing",
+    title: "가격",
+    description: "가격 섹션 제목, 설명, 플랜 카드 구성을 확인합니다.",
+    preview: "pricing",
+  },
+  {
+    id: "contact",
+    title: "문의/푸터",
+    description: "문의 섹션과 푸터 문구가 어떻게 보이는지 확인합니다.",
+    preview: "contact-footer",
+  },
+  {
+    id: "json",
+    title: "JSON",
+    description: "완성된 site.json을 복사하고 GitHub 편집 화면으로 이동하기 전에 전체 요약을 확인합니다.",
+    preview: "json",
+  },
+  {
+    id: "embed-image",
+    title: "임베드 카드 미리보기",
+    description: "대표 이미지를 바로 추가하고 임베드 카드 구도를 확인합니다.",
+    preview: "embed-card",
+  },
+  {
+    id: "embed-upload",
+    title: "GitHub assets 업로드",
+    description: "다운로드한 social-preview.png를 GitHub assets 폴더에 업로드합니다.",
+    preview: "embed-upload",
+  },
+  {
+    id: "embed-card",
+    title: "임베드 카드 수정",
+    description: "카드 제목, 설명, 대표 이미지 URL과 생성된 HTML을 확인합니다.",
+    preview: "embed-card",
+  },
+  {
+    id: "embed-index",
+    title: "GitHub index.html 수정",
+    description: "GitHub에서 index.html의 OG 블록을 복사한 코드로 교체합니다.",
+    preview: "embed-index",
+  },
+  {
+    id: "done",
+    title: "완료/최종 확인",
+    description: "JSON, 임베드 코드, 공개 페이지를 마지막으로 점검합니다.",
+    preview: "json",
+  },
+]);
+
+const QUICKSTART_DIRECT_BINDINGS = {
+  "quickstart-site-title": ["site", "title"],
+  "quickstart-site-description": ["site", "description"],
+  "quickstart-site-github-repo": ["site", "githubRepo"],
+  "quickstart-brand-name": ["site", "brand", "name"],
+  "quickstart-brand-display-name": ["site", "brand", "displayName"],
+  "quickstart-channel-avatar-url": ["site", "brand", "avatarUrl"],
+  "quickstart-channel-banner-url": ["site", "brand", "bannerImageUrl"],
+  "quickstart-profile-discord": ["site", "profile", "discordId"],
+  "quickstart-profile-email": ["site", "profile", "email"],
+  "quickstart-nav-cta-label": ["site", "nav", "ctaLabel"],
+  "quickstart-nav-cta-href": ["site", "nav", "ctaHref"],
+  "quickstart-hero-title": ["hero", "title"],
+  "quickstart-hero-title-accent": ["hero", "titleAccent"],
+  "quickstart-hero-description": ["hero", "description"],
+  "quickstart-hero-status-label": ["hero", "statusLabel"],
+  "quickstart-hero-status-text": ["hero", "statusText"],
+  "quickstart-hero-career-title": ["hero", "infoPanels", "career", "title"],
+  "quickstart-hero-tools-title": ["hero", "infoPanels", "tools", "title"],
+  "quickstart-hero-bgm-title": ["hero", "infoPanels", "bgm", "title"],
+  "quickstart-hero-career-freeform": ["hero", "infoPanels", "career", "freeformText"],
+  "quickstart-career-freeform": ["hero", "infoPanels", "career", "freeformText"],
+  "quickstart-pricing-process-style": ["pricing", "processStyle"],
+  "quickstart-pricing-process-title": ["pricing", "processTitle"],
+  "quickstart-pricing-title": ["pricing", "title"],
+  "quickstart-pricing-description": ["pricing", "description"],
+  "quickstart-contact-title": ["contact", "title"],
+  "quickstart-contact-description": ["contact", "description"],
+  "quickstart-contact-card-label": ["contact", "primaryCard", "label"],
+  "quickstart-contact-card-value": ["contact", "primaryCard", "value"],
+  "quickstart-contact-card-href": ["contact", "primaryCard", "href"],
+  "quickstart-footer-title": ["site", "footer", "title"],
+  "quickstart-footer-copy": ["site", "footer", "copy"],
+};
+
+const QUICKSTART_CHECKBOX_BINDINGS = {
+  "quickstart-pricing-process-enabled": ["pricing", "processEnabled"],
+  "quickstart-contact-details-enabled": ["contact", "detailsEnabled"],
+  "quickstart-footer-enabled": ["site", "footer", "enabled"],
+  "quickstart-free-content-enabled": ["freeContentEnabled"],
+};
+
+const MATERIAL_ICON_OPTIONS = Object.freeze([
+  { value: "movie_edit", label: "영상 편집", keywords: "video edit movie editing 편집 영상" },
+  { value: "smart_display", label: "플랫폼 영상", keywords: "youtube display platform 유튜브 플랫폼" },
+  { value: "play_circle", label: "재생", keywords: "play circle video 재생 플레이" },
+  { value: "videocam", label: "촬영", keywords: "video camera shoot 촬영 카메라" },
+  { value: "video_camera_front", label: "카메라", keywords: "camera front creator 카메라 크리에이터" },
+  { value: "movie", label: "무비", keywords: "movie film cinema 무비 영화" },
+  { value: "slideshow", label: "슬라이드", keywords: "slide reel showcase 슬라이드 릴 쇼케이스" },
+  { value: "smartphone", label: "모바일", keywords: "phone mobile shorts reel 모바일 쇼츠 릴스" },
+  { value: "auto_awesome", label: "강조 효과", keywords: "sparkle highlight awesome 강조 효과 반짝" },
+  { value: "bolt", label: "빠른 작업", keywords: "fast quick speed 빠른 스피드" },
+  { value: "rocket_launch", label: "런칭", keywords: "launch rocket opening 런칭 오픈" },
+  { value: "palette", label: "컬러 디자인", keywords: "color palette design 디자인 컬러" },
+  { value: "brush", label: "그래픽", keywords: "graphic brush art 그래픽 아트" },
+  { value: "music_note", label: "음악", keywords: "music bgm audio 음악 배경음악" },
+  { value: "headphones", label: "오디오", keywords: "audio sound headphones 오디오 사운드" },
+  { value: "record_voice_over", label: "나레이션", keywords: "voice narration over 더빙 나레이션 보이스" },
+  { value: "campaign", label: "광고", keywords: "ad marketing campaign 광고 마케팅" },
+  { value: "ads_click", label: "퍼포먼스", keywords: "ads click performance 클릭 광고 성과" },
+  { value: "work", label: "업무", keywords: "work business 업무 비즈니스" },
+  { value: "folder_open", label: "프로젝트", keywords: "project folder open 프로젝트 폴더" },
+  { value: "check_circle", label: "체크", keywords: "check confirm ok 체크 확인" },
+  { value: "mail", label: "이메일", keywords: "mail email contact 이메일 메일 연락" },
+  { value: "chat", label: "채팅", keywords: "chat message talk 채팅 메시지 상담" },
+  { value: "forum", label: "대화", keywords: "forum community discussion 대화 커뮤니티" },
+  { value: "call", label: "전화", keywords: "call phone contact 전화 통화" },
+  { value: "language", label: "웹사이트", keywords: "language web site website 웹사이트 사이트" },
+  { value: "link", label: "링크", keywords: "link url chain 링크 주소" },
+  { value: "support_agent", label: "고객 지원", keywords: "support agent service 고객 지원 서비스" },
+  { value: "schedule", label: "일정", keywords: "schedule time calendar 일정 시간" },
+  { value: "calendar_month", label: "캘린더", keywords: "calendar month plan 캘린더 월간 일정" },
+  { value: "groups", label: "팀", keywords: "group team people 팀 그룹 사람" },
+  { value: "person", label: "개인", keywords: "person creator individual 개인 크리에이터" },
+]);
+
+function toolPresetAsset(fileName) {
+  return `assets/tool-presets/${fileName}`;
+}
+
+const HERO_TOOL_PRESETS = Object.freeze({
+  "premiere-pro": {
+    name: "Premiere Pro",
+    logoUrl: toolPresetAsset("premiere-pro.svg"),
+    logoAlt: "Premiere Pro logo",
+  },
+  "after-effects": {
+    name: "After Effects",
+    logoUrl: toolPresetAsset("after-effects.svg"),
+    logoAlt: "After Effects logo",
+  },
+  "photoshop": {
+    name: "Photoshop",
+    logoUrl: toolPresetAsset("photoshop.svg"),
+    logoAlt: "Photoshop logo",
+  },
+  "illustrator": {
+    name: "Illustrator",
+    logoUrl: toolPresetAsset("illustrator.svg"),
+    logoAlt: "Illustrator logo",
+  },
+  "lightroom": {
+    name: "Lightroom",
+    logoUrl: toolPresetAsset("lightroom.svg"),
+    logoAlt: "Lightroom logo",
+  },
+  "animate": {
+    name: "Animate",
+    logoUrl: toolPresetAsset("animate.svg"),
+    logoAlt: "Animate logo",
+  },
+  "premiere-rush": {
+    name: "Premiere Rush",
+    logoUrl: toolPresetAsset("premiere-rush.svg"),
+    logoAlt: "Premiere Rush logo",
+  },
+  "indesign": {
+    name: "InDesign",
+    logoUrl: toolPresetAsset("indesign.svg"),
+    logoAlt: "InDesign logo",
+  },
+  "incopy": {
+    name: "InCopy",
+    logoUrl: toolPresetAsset("incopy.svg"),
+    logoAlt: "InCopy logo",
+  },
+  "dreamweaver": {
+    name: "Dreamweaver",
+    logoUrl: toolPresetAsset("dreamweaver.svg"),
+    logoAlt: "Dreamweaver logo",
+  },
+  "audition": {
+    name: "Audition",
+    logoUrl: toolPresetAsset("audition.svg"),
+    logoAlt: "Audition logo",
+  },
+  "media-encoder": {
+    name: "Media Encoder",
+    logoUrl: toolPresetAsset("media-encoder.svg"),
+    logoAlt: "Media Encoder logo",
+  },
+  "stock": {
+    name: "Stock",
+    logoUrl: toolPresetAsset("stock.svg"),
+    logoAlt: "Adobe Stock logo",
+  },
+  "bridge": {
+    name: "Bridge",
+    logoUrl: toolPresetAsset("bridge.svg"),
+    logoAlt: "Bridge logo",
+  },
+  "spark": {
+    name: "Spark",
+    logoUrl: toolPresetAsset("spark.webp"),
+    logoAlt: "Spark logo",
+  },
+  "xd": {
+    name: "XD",
+    logoUrl: toolPresetAsset("xd.svg"),
+    logoAlt: "Adobe XD logo",
+  },
+  "dimension": {
+    name: "Dimension",
+    logoUrl: toolPresetAsset("dimension.svg"),
+    logoAlt: "Dimension logo",
+  },
+  "character-animator": {
+    name: "Character Animator",
+    logoUrl: toolPresetAsset("character-animator.svg"),
+    logoAlt: "Character Animator logo",
+  },
+  "fresco": {
+    name: "Fresco",
+    logoUrl: toolPresetAsset("fresco.svg"),
+    logoAlt: "Fresco logo",
+  },
+  "aero": {
+    name: "Aero",
+    logoUrl: toolPresetAsset("aero.webp"),
+    logoAlt: "Aero logo",
+  },
+  "firefly": {
+    name: "Firefly",
+    logoUrl: toolPresetAsset("firefly.svg"),
+    logoAlt: "Firefly logo",
+  },
+});
+
+const HERO_BGM_PRESETS = Object.freeze({
+  artlist: {
+    name: "Artlist",
+    logoUrl: "https://search.pstatic.net/sunny?src=https%3A%2F%2Fartlist.io%2Ffavicon.ico%3Fv%3D1&type=f30_30_png_expire24",
+    logoAlt: "Artlist logo",
+  },
+  mewpot: {
+    name: "뮤팟",
+    logoUrl: "https://i.namu.wiki/i/NCLySXrh5IA5yfffX9NXuDHPdPOedGwH0XK_B1aZx6V9PfvSZrCeQDIGypbA5pnPRZ3jYBt1XGYABSClWrd8TyP0R58AtCX38RE8AJFa0uY4sErYNdcqarurH13Y26UzZTsa9mWLTfMEfHAns5iX4g.webp",
+    logoAlt: "뮤팟 logo",
+  },
+});
+
+function $(selector) {
+  return document.querySelector(selector);
+}
+
+function $$(selector) {
+  return [...document.querySelectorAll(selector)];
+}
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function loadStoredState(storageKey) {
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function saveStoredState(storageKey, value) {
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(value));
+  } catch (error) {
+    // Ignore storage failures so the editor remains usable in restricted contexts.
+  }
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;",
+  })[char]);
+}
+
+function slugifyToken(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9가-힣_-]/g, "");
+}
+
+function normalizeAccentKeywords(value) {
+  const seen = new Set();
+  return String(value || "")
+    .split(/[#,\n，]/)
+    .map((item) => item.trim())
+    .filter((item) => {
+      if (!item || seen.has(item)) return false;
+      seen.add(item);
+      return true;
+    });
+}
+
+function normalizeGitHubRepo(value) {
+  let repo = String(value || "").trim();
+  if (!repo) return "";
+
+  repo = repo
+    .replace(/^https?:\/\/github\.com\//i, "")
+    .replace(/^git@github\.com:/i, "")
+    .replace(/\.git$/i, "")
+    .replace(/^\/+|\/+$/g, "");
+
+  const parts = repo.split("/").filter(Boolean);
+  if (parts.length < 2) return "";
+  return `${parts[0]}/${parts[1]}`;
+}
+
+function normalizeGitHubBranch(value) {
+  return String(value || "").trim().replace(/^\/+|\/+$/g, "");
+}
+
+function resolveGitHubRepoFromPagesLocation(locationRef = window.location) {
+  const hostname = String(locationRef.hostname || "").toLowerCase();
+  const suffix = ".github.io";
+  if (!hostname.endsWith(suffix) || hostname === suffix.slice(1)) return "";
+
+  const owner = hostname.slice(0, -suffix.length);
+  if (!owner) return "";
+
+  const pathParts = String(locationRef.pathname || "")
+    .split("/")
+    .filter(Boolean)
+    .map((part) => {
+      try {
+        return decodeURIComponent(part);
+      } catch (error) {
+        return part;
+      }
+    });
+
+  const firstPath = pathParts[0] || "";
+  const repoName = !firstPath || firstPath === "admin" || firstPath === "index.html"
+    ? `${owner}.github.io`
+    : firstPath;
+
+  return `${owner}/${repoName}`;
+}
+
+function buildGitHubRepoApiUrl(repo) {
+  const normalizedRepo = normalizeGitHubRepo(repo);
+  return normalizedRepo ? `https://api.github.com/repos/${normalizedRepo}` : "";
+}
+
+function getKnownGitHubDefaultBranch(repo) {
+  const normalizedRepo = normalizeGitHubRepo(repo);
+  if (!normalizedRepo || state.githubDefaultBranchRepo !== normalizedRepo) return "";
+  if (state.githubDefaultBranchSource !== "fetched") return "";
+  return normalizeGitHubBranch(state.githubDefaultBranch);
+}
+
+function getGitHubDefaultBranch(repo) {
+  return getKnownGitHubDefaultBranch(repo) || fallbackGitHubBranch;
+}
+
+function setGitHubDefaultBranch(repo, branch, source = "fetched") {
+  state.githubDefaultBranchRepo = normalizeGitHubRepo(repo);
+  state.githubDefaultBranch = normalizeGitHubBranch(branch) || fallbackGitHubBranch;
+  state.githubDefaultBranchSource = source;
+  return state.githubDefaultBranch;
+}
+
+function buildGitHubSiteJsonUrl(repo, branch = getGitHubDefaultBranch(repo), mode = "blob") {
+  const normalizedRepo = normalizeGitHubRepo(repo);
+  const normalizedBranch = normalizeGitHubBranch(branch) || fallbackGitHubBranch;
+  const safeMode = mode === "edit" ? "edit" : "blob";
+  return normalizedRepo
+    ? `https://github.com/${normalizedRepo}/${safeMode}/${normalizedBranch}/${githubJsonPath}`
+    : "";
+}
+
+function buildGitHubRepoUrl(repo) {
+  const normalizedRepo = normalizeGitHubRepo(repo);
+  return normalizedRepo ? `https://github.com/${normalizedRepo}` : "";
+}
+
+function getEffectiveGitHubRepo(repoValue = state.data?.site?.githubRepo, locationRef = window.location) {
+  return normalizeGitHubRepo(repoValue) || resolveGitHubRepoFromPagesLocation(locationRef);
+}
+
+function buildGitHubPagesBaseUrl(repo) {
+  const normalizedRepo = normalizeGitHubRepo(repo);
+  if (!normalizedRepo) return "";
+
+  const [owner, repoName] = normalizedRepo.split("/");
+  const isUserPageRepo = repoName.toLowerCase() === `${owner.toLowerCase()}.github.io`;
+  const projectPath = isUserPageRepo ? "" : `${encodeURIComponent(repoName)}/`;
+  return `https://${owner.toLowerCase()}.github.io/${projectPath}`;
+}
+
+function resolveGitHubPagesBaseUrl(locationRef = window.location, repoValue = state.data?.site?.githubRepo) {
+  const repo = getEffectiveGitHubRepo(repoValue, locationRef) || normalizeGitHubRepo(DEFAULT_DATA.site.githubRepo);
+  return buildGitHubPagesBaseUrl(repo);
+}
+
+function resolveCurrentSiteBaseUrl(locationRef = window.location) {
+  try {
+    const url = new URL(locationRef.href);
+    if (url.protocol === "file:") return "";
+
+    let pathname = url.pathname || "/";
+    const lowerPathname = pathname.toLowerCase();
+    const adminPathIndex = lowerPathname.indexOf("/admin/");
+
+    if (adminPathIndex !== -1) {
+      pathname = pathname.slice(0, adminPathIndex + 1);
+    } else if (lowerPathname.endsWith("/admin")) {
+      pathname = pathname.slice(0, -"/admin".length) || "/";
+    } else if (/\/[^/]*\.html?$/i.test(pathname)) {
+      pathname = pathname.replace(/\/[^/]*$/, "/");
+    }
+
+    if (!pathname.endsWith("/")) pathname = `${pathname}/`;
+    return `${url.origin}${pathname}`;
+  } catch (error) {
+    return "";
+  }
+}
+
+function resolveHref(href) {
+  const value = String(href || "").trim();
+  if (!value) return "";
+  if (value.startsWith("#") || value.startsWith("mailto:") || value.startsWith("tel:")) return value;
+  if (/^https?:\/\//i.test(value)) return value;
+  if (/^(?:\.{1,2}\/|\/)/.test(value)) return value;
+  if (/^[\w./-]+\.(?:html?|json|js|css|png|jpe?g|webp|svg|gif|pdf)(?:[?#].*)?$/i.test(value)) return value;
+  if (/^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(value)) return `https://${value}`;
+  return value;
+}
+
+function isExternalHref(href) {
+  return /^https?:\/\//i.test(resolveHref(href));
+}
+
+function resolvePreviewAwareHref(href) {
+  const resolved = resolveHref(href);
+  if (!resolved || resolved.startsWith("mailto:") || resolved.startsWith("tel:") || isExternalHref(resolved)) return resolved;
+  if (resolved.startsWith("#")) return `../index.html${resolved}`;
+  if (/^index\.html(?:[?#].*)?$/i.test(resolved)) return `../${resolved}`;
+  return resolved;
+}
+
+function getDefaultEmbedMeta(locationRef = window.location, repoValue = state.data?.site?.githubRepo) {
+  const baseUrl = resolveGitHubPagesBaseUrl(locationRef, repoValue) || resolveCurrentSiteBaseUrl(locationRef);
+  const site = state?.data?.site || DEFAULT_DATA.site;
+  const title = compactText(site.title) || DEFAULT_EMBED_META.title;
+  const description = compactText(site.description) || DEFAULT_EMBED_META.description;
+  return {
+    ...DEFAULT_EMBED_META,
+    title,
+    description,
+    url: baseUrl || DEFAULT_EMBED_META.url,
+    image: baseUrl ? `${baseUrl}assets/social-preview.png` : DEFAULT_EMBED_META.image,
+    imageAlt: `${title} 공유 이미지`,
+  };
+}
+
+function getGitHubDefaultBranchNote(repo) {
+  const normalizedRepo = normalizeGitHubRepo(repo);
+  if (!normalizedRepo) return "";
+
+  if (state.githubDefaultBranchRepo === normalizedRepo) {
+    if (state.githubDefaultBranchSource === "loading") {
+      return ` GitHub 기본 브랜치를 확인 중이며, 확인 전까지는 ${fallbackGitHubBranch} 기준 링크를 사용합니다.`;
+    }
+    if (state.githubDefaultBranchSource === "fetched") {
+      return ` GitHub 기본 브랜치: ${state.githubDefaultBranch}.`;
+    }
+    if (state.githubDefaultBranchSource === "fallback") {
+      return ` GitHub 기본 브랜치를 확인하지 못해 ${fallbackGitHubBranch} 기준 링크를 사용합니다.`;
+    }
+  }
+
+  return ` GitHub 기본 브랜치는 확인 전까지 ${fallbackGitHubBranch}로 가정합니다.`;
+}
+
+function getAutoFooterRepoLink(links = state.data?.site?.footer?.links, repoValue = state.data?.site?.githubRepo, locationRef = window.location) {
+  const effectiveRepo = getEffectiveGitHubRepo(repoValue, locationRef);
+  if (!effectiveRepo) return null;
+
+  const normalizedLinks = normalizeFooterLinks(links);
+  const hasRepoLink = normalizedLinks.some((link) => normalizeGitHubRepo(link.url || link.href) === effectiveRepo);
+  if (hasRepoLink) return null;
+
+  return {
+    label: "GitHub Repo",
+    url: buildGitHubRepoUrl(effectiveRepo),
+  };
+}
+
+function getEffectiveFooterLinks(links = state.data?.site?.footer?.links, repoValue = state.data?.site?.githubRepo, locationRef = window.location) {
+  const normalizedLinks = normalizeFooterLinks(links);
+  const autoLink = getAutoFooterRepoLink(normalizedLinks, repoValue, locationRef);
+  return autoLink ? [...normalizedLinks, autoLink] : normalizedLinks;
+}
+
+function resolveGitHubSiteJsonUrl(locationRef = window.location, repoValue = state.data?.site?.githubRepo, mode = "blob") {
+  const effectiveRepo = getEffectiveGitHubRepo(repoValue, locationRef);
+  return effectiveRepo ? buildGitHubSiteJsonUrl(effectiveRepo, getGitHubDefaultBranch(effectiveRepo), mode) : "";
+}
+
+async function ensureGitHubDefaultBranch(repoValue = state.data?.site?.githubRepo, locationRef = window.location) {
+  const effectiveRepo = getEffectiveGitHubRepo(repoValue, locationRef);
+  if (!effectiveRepo) {
+    state.githubBranchRequestId += 1;
+    state.githubDefaultBranchRepo = "";
+    state.githubDefaultBranch = fallbackGitHubBranch;
+    state.githubDefaultBranchSource = "fallback";
+    renderGitHubRepoField({ preserveInputValue: true });
+    return fallbackGitHubBranch;
+  }
+
+  const cachedBranch = getKnownGitHubDefaultBranch(effectiveRepo);
+  if (cachedBranch) return cachedBranch;
+
+  const requestId = ++state.githubBranchRequestId;
+  setGitHubDefaultBranch(effectiveRepo, fallbackGitHubBranch, "loading");
+  renderGitHubRepoField({ preserveInputValue: true });
+
+  try {
+    const response = await fetch(buildGitHubRepoApiUrl(effectiveRepo), {
+      cache: "no-store",
+      headers: {
+        Accept: "application/vnd.github+json",
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`GitHub API ${response.status}`);
+    }
+
+    const payload = await response.json();
+    if (requestId !== state.githubBranchRequestId) {
+      return getGitHubDefaultBranch(effectiveRepo);
+    }
+
+    const defaultBranch = setGitHubDefaultBranch(effectiveRepo, payload.default_branch, "fetched");
+
+    renderGitHubRepoField({ preserveInputValue: true });
+
+    return defaultBranch;
+  } catch (error) {
+    if (requestId !== state.githubBranchRequestId) {
+      return getGitHubDefaultBranch(effectiveRepo);
+    }
+
+    setGitHubDefaultBranch(effectiveRepo, fallbackGitHubBranch, "fallback");
+    renderGitHubRepoField({ preserveInputValue: true });
+    return fallbackGitHubBranch;
+  }
+}
+
+function scheduleGitHubDefaultBranchLookup(repoValue = state.data?.site?.githubRepo, locationRef = window.location) {
+  if (state.githubBranchTimer) {
+    window.clearTimeout(state.githubBranchTimer);
+    state.githubBranchTimer = null;
+  }
+
+  const effectiveRepo = getEffectiveGitHubRepo(repoValue, locationRef);
+  if (!effectiveRepo) {
+    state.githubBranchRequestId += 1;
+    state.githubDefaultBranchRepo = "";
+    state.githubDefaultBranch = fallbackGitHubBranch;
+    state.githubDefaultBranchSource = "fallback";
+    renderGitHubRepoField({ preserveInputValue: true });
+    return;
+  }
+
+  if (state.githubDefaultBranchRepo !== effectiveRepo) {
+    state.githubBranchRequestId += 1;
+    state.githubDefaultBranchRepo = effectiveRepo;
+    state.githubDefaultBranch = fallbackGitHubBranch;
+    state.githubDefaultBranchSource = "fallback";
+  }
+
+  if (getKnownGitHubDefaultBranch(effectiveRepo)) {
+    renderGitHubRepoField({ preserveInputValue: true });
+    return;
+  }
+
+  state.githubBranchTimer = window.setTimeout(() => {
+    state.githubBranchTimer = null;
+    void ensureGitHubDefaultBranch(repoValue, locationRef);
+  }, 350);
+}
+
+function normalizeNavLinks(items) {
+  return Array.isArray(items)
+    ? items.map((item) => ({
+        label: String(item?.label || "").trim(),
+        href: String(item?.href || item?.url || "").trim(),
+      })).filter((item) => item.label || item.href)
+    : [];
+}
+
+function normalizeFooterLinks(items) {
+  return Array.isArray(items)
+    ? items.map((item) => ({
+        label: String(item?.label || "").trim(),
+        url: String(item?.url || item?.href || "").trim(),
+      })).filter((item) => item.label || item.url)
+    : [];
+}
+
+function normalizeHeroCareerMode(value) {
+  return ["structured", "simple", "freeform"].includes(value) ? value : "structured";
+}
+
+function normalizeHeroInfoLayoutPreset(value) {
+  return ["1:1", "2:1:1"].includes(String(value || "").trim()) ? String(value).trim() : "1:1";
+}
+
+function normalizeHeroCareerStructuredItems(items) {
+  return Array.isArray(items)
+    ? items.map((item) => ({
+        title: String(item?.title || "").trim(),
+        period: String(item?.period || "").trim(),
+        description: String(item?.description || "").trim(),
+      }))
+    : [];
+}
+
+function normalizeHeroCareerSimpleItems(items) {
+  return Array.isArray(items)
+    ? items.map((item) => ({
+        text: String(item?.text || "").trim(),
+        period: String(item?.period || "").trim(),
+      }))
+    : [];
+}
+
+function normalizeHeroLogoItems(items) {
+  return Array.isArray(items)
+    ? items.map((item) => ({
+        name: String(item?.name || "").trim(),
+        logoUrl: String(item?.logoUrl || "").trim(),
+        logoAlt: String(item?.logoAlt || "").trim(),
+      }))
+    : [];
+}
+
+function normalizeHeroInfoPanels(sourcePanels) {
+  const basePanels = clone(DEFAULT_DATA.hero.infoPanels);
+  const career = sourcePanels?.career || {};
+  const tools = sourcePanels?.tools || {};
+  const bgm = sourcePanels?.bgm || {};
+
+  return {
+    layoutPreset: normalizeHeroInfoLayoutPreset(sourcePanels?.layoutPreset ?? basePanels.layoutPreset),
+    career: {
+      ...basePanels.career,
+      ...career,
+      title: String(career.title ?? basePanels.career.title).trim() || basePanels.career.title,
+      mode: normalizeHeroCareerMode(career.mode),
+      structuredItems: normalizeHeroCareerStructuredItems(career.structuredItems),
+      simpleItems: normalizeHeroCareerSimpleItems(career.simpleItems),
+      freeformText: String(career.freeformText || ""),
+    },
+    tools: {
+      ...basePanels.tools,
+      ...tools,
+      title: String(tools.title ?? basePanels.tools.title).trim() || basePanels.tools.title,
+      items: normalizeHeroLogoItems(tools.items),
+    },
+    bgm: {
+      ...basePanels.bgm,
+      ...bgm,
+      title: String(bgm.title ?? basePanels.bgm.title).trim() || basePanels.bgm.title,
+      items: normalizeHeroLogoItems(bgm.items),
+    },
+  };
+}
+
+function normalizeEnabled(value, fallback = true) {
+  if (value === undefined || value === null) return fallback;
+  return Boolean(value);
+}
+
+function normalizeCustomWorkBlock(block) {
+  return {
+    eyebrow: String(block?.eyebrow || "").trim(),
+    title: String(block?.title || "").trim(),
+    description: String(block?.description || "").trim(),
+    highlight: String(block?.highlight || "").trim(),
+    caption: String(block?.caption || "").trim(),
+    imageUrl: String(block?.imageUrl || "").trim(),
+    imageAlt: String(block?.imageAlt || "").trim(),
+  };
+}
+
+function hasCustomWorkContent(block) {
+  if (!block || typeof block !== "object") return false;
+  return [
+    block.eyebrow,
+    block.title,
+    block.description,
+    block.highlight,
+    block.caption,
+    block.imageUrl,
+    block.imageAlt,
+  ].some((value) => String(value || "").trim());
+}
+
+function normalizeCustomWorks(items, legacyItem) {
+  const normalizedItems = Array.isArray(items)
+    ? items.map((item) => normalizeCustomWorkBlock(item)).filter(hasCustomWorkContent)
+    : [];
+
+  if (normalizedItems.length) return normalizedItems;
+
+  const legacyBlock = normalizeCustomWorkBlock(legacyItem);
+  return hasCustomWorkContent(legacyBlock) ? [legacyBlock] : [];
+}
+
+function normalizeProjectYouTubeChannel(channel) {
+  return {
+    enabled: normalizeEnabled(channel?.enabled, DEFAULT_DATA.projects.youtubeChannel.enabled),
+    url: String(channel?.url || "").trim(),
+    avatarUrl: String(channel?.avatarUrl || "").trim(),
+    name: String(channel?.name || "").trim(),
+    handle: String(channel?.handle || "").trim(),
+    subscriberText: String(channel?.subscriberText || "").trim(),
+    videoCountText: String(channel?.videoCountText || "").trim(),
+    description: String(channel?.description || "").trim(),
+  };
+}
+
+function hasProjectYouTubeChannel(channel) {
+  const normalized = normalizeProjectYouTubeChannel(channel);
+  return normalized.enabled !== false && Boolean(normalized.url && (normalized.name || normalized.handle));
+}
+
+function isDirectVideoUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return false;
+
+  try {
+    const url = new URL(raw, window.location.href);
+    return /\.(mp4|webm|ogg|mov|m4v)$/i.test(url.pathname);
+  } catch (error) {
+    return /\.(mp4|webm|ogg|mov|m4v)(?:[?#].*)?$/i.test(raw);
+  }
+}
+
+function buildYouTubeEmbedUrl(videoId) {
+  return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${encodeURIComponent(videoId)}&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1`;
+}
+
+function getHeroBackgroundMedia(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return { type: "none", src: "" };
+
+  const youtube = parseYouTubeUrl(raw);
+  if (youtube?.id) {
+    return {
+      type: "youtube",
+      src: buildYouTubeEmbedUrl(youtube.id),
+    };
+  }
+
+  if (isDirectVideoUrl(raw)) {
+    return {
+      type: "video",
+      src: raw,
+    };
+  }
+
+  return { type: "none", src: "" };
+}
+
+function getProjectsFallbackHash() {
+  return resolveVisibleHomeSectionHash("#projects");
+}
+
+function isProjectsSectionEnabled(data = state.data) {
+  return data.projects?.enabled !== false;
+}
+
+function isWorksSectionEnabled(data = state.data) {
+  return data.works?.enabled !== false;
+}
+
+function resolveVisibleHomeSectionHash(hash, data = state.data) {
+  const raw = String(hash || "").trim().toLowerCase();
+  const normalized = raw === "#work" ? "#works" : raw === "#project" ? "#projects" : raw;
+  if (normalized === "#projects" && isProjectsSectionEnabled(data)) return "#projects";
+  if (normalized === "#works" && isWorksSectionEnabled(data)) return "#works";
+  if (normalized === "#projects" && isWorksSectionEnabled(data)) return "#works";
+  if (normalized === "#works" && isProjectsSectionEnabled(data)) return "#projects";
+  if (normalized === "#stats" && data.stats?.enabled !== false) return "#stats";
+  return "#home";
+}
+
+function previewHiddenBlock(message) {
+  return `<div class="preview-hidden-block">${escapeHTML(message)}</div>`;
+}
+
+function getProcessGridRowSizes(count) {
+  const presets = {
+    1: [1],
+    2: [2],
+    3: [3],
+    4: [4],
+    5: [3, 2],
+    6: [3, 3],
+    7: [4, 3],
+    8: [4, 4],
+    9: [3, 3, 3],
+    10: [4, 4, 2],
+    11: [4, 4, 3],
+    12: [4, 4, 4],
+  };
+
+  if (presets[count]) return presets[count];
+
+  const rows = [];
+  let remaining = count;
+  while (remaining > 0) {
+    const next = Math.min(4, remaining);
+    rows.push(next);
+    remaining -= next;
+  }
+  return rows;
+}
+
+function chunkProcessSteps(steps) {
+  const rowSizes = getProcessGridRowSizes(steps.length);
+  const rows = [];
+  let offset = 0;
+
+  rowSizes.forEach((size) => {
+    rows.push(steps.slice(offset, offset + size));
+    offset += size;
+  });
+
+  return rows;
+}
+
+function normalizeWorksDisplayMode(value) {
+  return ["grid", "category-stack", "hybrid"].includes(String(value || "").trim())
+    ? String(value).trim()
+    : "grid";
+}
+
+function normalizeWorksCategoryDisplayMode(value) {
+  return value === "category-stack" ? "category-stack" : "grid";
+}
+
+function normalizeWorksVisualPreset(value) {
+  return ["reference", "panel", "minimal"].includes(String(value || "").trim())
+    ? String(value).trim()
+    : "reference";
+}
+
+function normalizeWorksColumnCount(value, fallback) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 8 ? parsed : fallback;
+}
+
+function normalizeWorksSingleColumnSize(value) {
+  return ["large", "medium", "small"].includes(String(value || "").trim())
+    ? String(value).trim()
+    : "medium";
+}
+
+function normalizePricingPlanDesign(value, fallback = "shortform") {
+  const normalized = String(value || "").trim();
+  if (normalized === "longform" || normalized === "shortform") return normalized;
+  return fallback === "longform" ? "longform" : "shortform";
+}
+
+function normalizePricingGridColumns(value, fallback) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 4 ? parsed : fallback;
+}
+
+function normalizePricingProcessStyle(value) {
+  return ["cards", "minimal", "editorial"].includes(String(value || "").trim())
+    ? String(value).trim()
+    : "cards";
+}
+
+function normalizeHomeVideoCount(value, fallback) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 12 ? parsed : fallback;
+}
+
+function normalizeHomeSectionOrder(items) {
+  const seen = new Set();
+  const normalized = (Array.isArray(items) ? items : [])
+    .map((item) => String(item || "").trim())
+    .filter((item) => HOME_SECTION_KEYS.includes(item))
+    .filter((item) => {
+      if (seen.has(item)) return false;
+      seen.add(item);
+      return true;
+    });
+
+  HOME_SECTION_KEYS.forEach((item) => {
+    if (!seen.has(item)) normalized.push(item);
+  });
+
+  return normalized;
+}
+
+function normalizeHomeSectionVisibility(sourceHome) {
+  const visibility = sourceHome?.sectionVisibility || {};
+  return HOME_SECTION_KEYS.reduce((result, sectionKey) => {
+    let fallback = true;
+    if (sectionKey === "latestVideos") fallback = normalizeEnabled(sourceHome?.latestVideos?.enabled, true);
+    if (sectionKey === "categoryVideos") fallback = normalizeEnabled(sourceHome?.categoryVideos?.enabled, true);
+    result[sectionKey] = normalizeEnabled(visibility?.[sectionKey], fallback);
+    return result;
+  }, {});
+}
+
+function isHomeSectionVisible(homeSettings, sectionKey) {
+  const home = homeSettings || normalizeHomeSettings(state.data.home);
+  return normalizeEnabled(home.sectionVisibility?.[sectionKey], true);
+}
+
+function setHomeSectionVisibility(sectionKey, isVisible) {
+  if (!HOME_SECTION_KEYS.includes(sectionKey)) return;
+  if (!state.data.home || typeof state.data.home !== "object") state.data.home = clone(DEFAULT_DATA.home);
+  if (!state.data.home.sectionVisibility || typeof state.data.home.sectionVisibility !== "object") {
+    state.data.home.sectionVisibility = normalizeHomeSectionVisibility(state.data.home);
+  }
+  state.data.home.sectionVisibility[sectionKey] = Boolean(isVisible);
+  if (sectionKey === "latestVideos") state.data.home.latestVideos.enabled = Boolean(isVisible);
+  if (sectionKey === "categoryVideos") state.data.home.categoryVideos.enabled = Boolean(isVisible);
+}
+
+function normalizeHomeSettings(sourceHome) {
+  const base = clone(DEFAULT_DATA.home);
+  const latestVideos = sourceHome?.latestVideos || {};
+  const categoryVideos = sourceHome?.categoryVideos || {};
+  const sectionVisibility = normalizeHomeSectionVisibility(sourceHome || {});
+
+  return {
+    ...base,
+    ...(sourceHome || {}),
+    sectionOrder: normalizeHomeSectionOrder(sourceHome?.sectionOrder),
+    sectionVisibility,
+    playAllButtonEnabled: normalizeEnabled(sourceHome?.playAllButtonEnabled, base.playAllButtonEnabled),
+    latestVideos: {
+      ...base.latestVideos,
+      ...latestVideos,
+      enabled: sectionVisibility.latestVideos,
+      count: normalizeHomeVideoCount(latestVideos?.count, base.latestVideos.count),
+      title: String(latestVideos?.title ?? base.latestVideos.title).trim() || base.latestVideos.title,
+    },
+    categoryVideos: {
+      ...base.categoryVideos,
+      ...categoryVideos,
+      enabled: sectionVisibility.categoryVideos,
+      perCategoryCount: normalizeHomeVideoCount(categoryVideos?.perCategoryCount, base.categoryVideos.perCategoryCount),
+    },
+  };
+}
+
+function normalizeWorksCategoryOrder(items, videos) {
+  const detected = getWorksCategories(videos);
+  const seen = new Set();
+  const preserved = (Array.isArray(items) ? items : [])
+    .map((item) => String(item || "").trim())
+    .filter((item) => {
+      if (!item || seen.has(item) || !detected.includes(item)) return false;
+      seen.add(item);
+      return true;
+    });
+  const newCategories = detected.filter((category) => !seen.has(category));
+  return [...newCategories, ...preserved];
+}
+
+function getOrderedWorksCategories(videos = state.data.works?.videos, order = state.data.works?.categoryOrder) {
+  return normalizeWorksCategoryOrder(order, videos);
+}
+
+function normalizeWorksCategoryEntries(items, videos, order) {
+  const categories = getOrderedWorksCategories(videos, order);
+  const entryMap = new Map(
+    (Array.isArray(items) ? items : [])
+      .map((item) => ({
+        category: String(item?.category || "").trim(),
+        title: String(item?.title || "").trim(),
+        meta: String(item?.meta || item?.description || "").trim(),
+        displayMode: normalizeWorksCategoryDisplayMode(item?.displayMode),
+        columns: Number.isInteger(Number(item?.columns)) ? Number(item.columns) : null,
+        singleColumnSize: ["large", "medium", "small"].includes(String(item?.singleColumnSize || "").trim())
+          ? String(item.singleColumnSize).trim()
+          : "",
+      }))
+      .filter((item) => item.category)
+      .map((item) => [item.category, item]),
+  );
+
+  return categories.map((category) => {
+    const entry = entryMap.get(category);
+    return {
+      category,
+      title: String(entry?.title || "").trim(),
+      meta: String(entry?.meta || "").trim(),
+      displayMode: normalizeWorksCategoryDisplayMode(entry?.displayMode),
+      columns: Number.isInteger(Number(entry?.columns)) && Number(entry.columns) >= 1 && Number(entry.columns) <= 8
+        ? Number(entry.columns)
+        : null,
+      singleColumnSize: ["large", "medium", "small"].includes(String(entry?.singleColumnSize || "").trim())
+        ? String(entry.singleColumnSize).trim()
+        : "",
+    };
+  });
+}
+
+function normalizeWorksVideos(items) {
+  return Array.isArray(items)
+    ? items.map((video) => ({
+        id: String(video?.id || "").trim(),
+        title: String(video?.title || "").trim(),
+        date: String(video?.date || "").trim(),
+        type: video?.type === "short" ? "short" : "long",
+        category: String(video?.category || "").trim(),
+      })).filter((video) => video.id)
+    : [];
+}
+
+function videoThumb(id) {
+  return `https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`;
+}
+
+function videoHref(video) {
+  if (!video?.id) return "#";
+  return video.type === "short"
+    ? `https://www.youtube.com/shorts/${encodeURIComponent(video.id)}`
+    : `https://youtu.be/${encodeURIComponent(video.id)}`;
+}
+
+function parseYouTubeUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+
+  const plainId = raw.match(/^[a-zA-Z0-9_-]{11}$/);
+  if (plainId) return { id: raw, type: "long" };
+
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.replace(/^www\./, "");
+    const segments = url.pathname.split("/").filter(Boolean);
+    let id = "";
+    let type = "long";
+
+    if (host === "youtu.be") {
+      id = segments[0] || "";
+    } else if (host.endsWith("youtube.com")) {
+      if (url.searchParams.get("v")) {
+        id = url.searchParams.get("v") || "";
+      } else if (segments[0] === "shorts") {
+        id = segments[1] || "";
+        type = "short";
+      } else if (segments[0] === "embed") {
+        id = segments[1] || "";
+      }
+    }
+
+    id = id.split("?")[0].split("&")[0].trim();
+    if (!/^[a-zA-Z0-9_-]{11}$/.test(id)) return null;
+    return { id, type };
+  } catch (error) {
+    return null;
+  }
+}
+
+function formatDisplayDate(value) {
+  const iso = String(value || "").trim();
+  if (!iso) return "";
+  const [year, month, day] = iso.split("-");
+  if (!year || !month || !day) return iso;
+  return `${year}. ${month}. ${day}`;
+}
+
+function getWorksCategories(videos = state.data.works?.videos) {
+  const seen = new Set();
+  return (Array.isArray(videos) ? videos : []).reduce((result, video) => {
+    const category = String(video?.category || "").trim();
+    if (!category || seen.has(category)) return result;
+    seen.add(category);
+    result.push(category);
+    return result;
+  }, []);
+}
+
+function getSortedWorksVideos(videos = state.data.works?.videos) {
+  return (Array.isArray(videos) ? videos : [])
+    .filter((video) => video.id)
+    .slice();
+}
+
+function watchUrlFromVideoId(videoId) {
+  return `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
+}
+
+function normalizeYouTubeChannelUrl(input) {
+  const raw = String(input || "").trim();
+  if (!raw) return "";
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  const url = new URL(withProtocol);
+  const host = url.hostname.replace(/^www\./, "").toLowerCase();
+  if (!host.endsWith("youtube.com")) {
+    throw new Error("YouTube 채널 URL만 입력할 수 있습니다.");
+  }
+  return url.href;
+}
+
+function extractYouTubeChannelHandle(value) {
+  try {
+    const url = new URL(normalizeYouTubeChannelUrl(value));
+    const handleSegment = url.pathname.split("/").filter(Boolean).find((segment) => segment.startsWith("@"));
+    return handleSegment ? handleSegment : "";
+  } catch (error) {
+    const match = String(value || "").match(/(?:^|\/)(@[^/?#]+)/);
+    return match ? match[1] : "";
+  }
+}
+
+function extractYouTubeChannelIdFromUrl(value) {
+  const match = String(value || "").match(/\/channel\/(UC[a-zA-Z0-9_-]+)/);
+  return match ? match[1] : "";
+}
+
+function extractYouTubeChannelIdFromHtml(html) {
+  const source = String(html || "");
+  const patterns = [
+    /"channelId"\s*:\s*"(UC[^"]+)"/,
+    /"externalId"\s*:\s*"(UC[^"]+)"/,
+    /"browseId"\s*:\s*"(UC[^"]+)"/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = source.match(pattern);
+    if (match) return match[1];
+  }
+  return "";
+}
+
+function cleanYouTubeChannelTitle(value) {
+  return String(value || "")
+    .replace(/\s*-\s*YouTube\s*$/i, "")
+    .trim();
+}
+
+function getYouTubeChannelDataFromHtml(html, fallbackUrl) {
+  const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
+  const title = cleanYouTubeChannelTitle(
+    getMetaContent(doc, 'meta[property="og:title"]')
+      || getMetaContent(doc, 'meta[name="title"]')
+      || doc.querySelector("title")?.textContent
+      || "",
+  );
+  const image = getMetaContent(doc, 'meta[property="og:image"]');
+  const canonical = doc.querySelector('link[rel="canonical"]')?.getAttribute("href")
+    || getMetaContent(doc, 'meta[property="og:url"]')
+    || fallbackUrl;
+  const channelId = extractYouTubeChannelIdFromHtml(html) || extractYouTubeChannelIdFromUrl(canonical);
+  const handle = extractYouTubeChannelHandle(canonical) || extractYouTubeChannelHandle(fallbackUrl);
+
+  return {
+    title,
+    image,
+    url: canonical,
+    channelId,
+    handle,
+  };
+}
+
+function cleanYouTubeReaderLine(value) {
+  return String(value || "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/^[#*\s]+|[*\s]+$/g, "")
+    .trim();
+}
+
+function getYouTubeChannelDataFromReaderText(text, fallbackUrl) {
+  const source = String(text || "");
+  const titleMatch = source.match(/^Title:\s*(.+)$/im)
+    || source.match(/^#\s+(.+?)(?:\s+-\s*YouTube)?\s*$/m);
+  const imageMatch = source.match(/!\[[^\]]*\]\((https?:\/\/yt3\.googleusercontent\.com\/[^)\s]+)[^)]*\)/i);
+  const handleMatch = source.match(/^(@[A-Za-z0-9._-]+)\s*$/m);
+
+  return {
+    title: cleanYouTubeChannelTitle(cleanYouTubeReaderLine(titleMatch?.[1] || "")),
+    image: imageMatch?.[1] || "",
+    url: fallbackUrl,
+    channelId: extractYouTubeChannelIdFromHtml(source) || extractYouTubeChannelIdFromUrl(fallbackUrl),
+    handle: handleMatch?.[1] || extractYouTubeChannelHandle(fallbackUrl),
+  };
+}
+
+function hasYouTubeChannelPayload(data) {
+  return Boolean(data?.title || data?.image || data?.channelId || data?.handle);
+}
+
+function getYouTubeReaderUrl(normalizedUrl) {
+  const url = new URL(normalizedUrl);
+  return `https://r.jina.ai/http://${url.host}${url.pathname}${url.search}`;
+}
+
+async function fetchTextWithTimeout(url, timeoutMs = 9000) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`응답 오류 ${response.status}`);
+    return await response.text();
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
+async function fetchYouTubeChannelData(inputUrl) {
+  const normalizedUrl = normalizeYouTubeChannelUrl(inputUrl);
+  const encodedUrl = encodeURIComponent(normalizedUrl);
+  const attempts = [
+    async () => {
+      const html = await fetchTextWithTimeout(`https://api.allorigins.win/raw?url=${encodedUrl}`);
+      return getYouTubeChannelDataFromHtml(html, normalizedUrl);
+    },
+    async () => {
+      const payload = await fetchTextWithTimeout(`https://api.allorigins.win/get?url=${encodedUrl}`);
+      const parsed = JSON.parse(payload);
+      if (!parsed?.contents) throw new Error("보조 프록시 응답을 읽지 못했습니다.");
+      return getYouTubeChannelDataFromHtml(parsed.contents, normalizedUrl);
+    },
+    async () => {
+      const readerText = await fetchTextWithTimeout(getYouTubeReaderUrl(normalizedUrl), 11000);
+      return getYouTubeChannelDataFromReaderText(readerText, normalizedUrl);
+    },
+  ];
+  let lastError = null;
+
+  for (const attempt of attempts) {
+    try {
+      const data = await attempt();
+      if (hasYouTubeChannelPayload(data)) return data;
+      lastError = new Error("채널 정보를 찾지 못했습니다.");
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw new Error(lastError?.name === "AbortError"
+    ? "조회 시간이 초과되었습니다."
+    : lastError?.message || "YouTube 채널 페이지를 불러오지 못했습니다.");
+}
+
+function getCurrentYouTubeChannelLookupUrl() {
+  try {
+    return normalizeYouTubeChannelUrl(state.data.projects.youtubeChannel.url);
+  } catch (error) {
+    return "";
+  }
+}
+
+async function lookupYouTubeChannel(inputUrl) {
+  let normalizedUrl = "";
+  try {
+    normalizedUrl = normalizeYouTubeChannelUrl(inputUrl);
+  } catch (error) {
+    setYouTubeChannelFeedback(error.message || "YouTube 채널 URL을 확인해주세요.", "error");
+    return;
+  }
+
+  if (!normalizedUrl) {
+    setYouTubeChannelFeedback("채널 URL을 입력하면 자동으로 정보를 확인합니다.");
+    return;
+  }
+
+  const requestId = state.youtubeChannelRequestId + 1;
+  state.youtubeChannelRequestId = requestId;
+  state.lastYouTubeChannelLookupUrl = normalizedUrl;
+  setYouTubeChannelFeedback("채널 정보를 불러오는 중입니다...", "loading");
+
+  try {
+    const channelData = await fetchYouTubeChannelData(normalizedUrl);
+    if (
+      requestId !== state.youtubeChannelRequestId ||
+      getCurrentYouTubeChannelLookupUrl() !== normalizedUrl
+    ) {
+      return;
+    }
+
+    const channel = state.data.projects.youtubeChannel;
+    channel.url = channelData.url || normalizedUrl;
+    if (channelData.image) channel.avatarUrl = channelData.image;
+    if (channelData.title) channel.name = channelData.title;
+    if (channelData.handle) channel.handle = channelData.handle;
+
+    renderDirectInputs();
+    renderProjectInlinePreviews();
+    applyMinorChange(channelData.channelId
+      ? `유튜브 채널 정보를 자동으로 채웠습니다. 채널 ID: ${channelData.channelId}`
+      : "유튜브 채널 정보를 자동으로 채웠습니다.");
+    setYouTubeChannelFeedback("채널 정보를 자동으로 채웠습니다.", "success");
+  } catch (error) {
+    if (requestId !== state.youtubeChannelRequestId) return;
+    const channel = state.data.projects.youtubeChannel;
+    const fallbackHandle = extractYouTubeChannelHandle(normalizedUrl);
+    if (fallbackHandle && !channel.handle && getCurrentYouTubeChannelLookupUrl() === normalizedUrl) {
+      channel.handle = fallbackHandle;
+      renderDirectInputs();
+      renderProjectInlinePreviews();
+      applyMinorChange("유튜브 채널 핸들을 URL에서 보완했습니다.");
+    }
+    setYouTubeChannelFeedback(`자동 입력 실패: ${error.message || "직접 입력해주세요."} 직접 입력해주세요.`, "error");
+  }
+}
+
+function scheduleYouTubeChannelLookup(value) {
+  window.clearTimeout(state.youtubeChannelTimer);
+  const raw = String(value || "").trim();
+  if (!raw) {
+    state.lastYouTubeChannelLookupUrl = "";
+    setYouTubeChannelFeedback("채널 URL을 입력하면 자동으로 정보를 확인합니다.");
+    renderProjectInlinePreviews();
+    return;
+  }
+
+  let normalizedUrl = "";
+  try {
+    normalizedUrl = normalizeYouTubeChannelUrl(raw);
+  } catch (error) {
+    setYouTubeChannelFeedback(error.message || "YouTube 채널 URL을 확인해주세요.", "error");
+    return;
+  }
+
+  setYouTubeChannelFeedback("입력이 멈추면 채널 정보를 자동으로 확인합니다.", "loading");
+  state.youtubeChannelTimer = window.setTimeout(() => {
+    void lookupYouTubeChannel(raw);
+  }, 700);
+}
+
+function getWorksFormCategoryValue() {
+  const select = $("#works-video-category");
+  if (!select) return "";
+  if (select.value === "__new__") {
+    return String($("#works-new-category-name")?.value || "").trim();
+  }
+  return String(select.value || "").trim();
+}
+
+function renderWorksCategoryOptions(selected = getWorksFormCategoryValue()) {
+  const select = $("#works-video-category");
+  if (!select) return;
+  const categories = getOrderedWorksCategories();
+
+  const options = categories.map((category) => `
+    <option value="${escapeHTML(category)}">${escapeHTML(category)}</option>
+  `).join("");
+
+  select.innerHTML = `<option value="__new__">새 카테고리 작성</option>${options}`;
+  if (selected && categories.includes(selected)) {
+    select.value = selected;
+  } else {
+    select.value = "__new__";
+  }
+
+  toggleWorksNewCategoryField();
+}
+
+function toggleWorksNewCategoryField() {
+  const select = $("#works-video-category");
+  const field = $("#works-new-category-field");
+  if (!select || !field) return;
+  field.hidden = select.value !== "__new__";
+}
+
+function clearWorksVideoDetailInputs() {
+  const defaults = {
+    "works-video-title": "",
+    "works-video-date": "",
+    "works-new-category-name": "",
+  };
+
+  Object.entries(defaults).forEach(([id, value]) => {
+    const input = document.getElementById(id);
+    if (input) input.value = value;
+  });
+
+  const typeSelect = $("#works-video-type");
+  if (typeSelect) typeSelect.value = "long";
+  renderWorksCategoryOptions("");
+}
+
+function toggleWorksVideoFields() {
+  const parsed = parseYouTubeUrl($("#works-video-url")?.value || "");
+  const fields = $("#works-video-fields");
+  const preview = $("#works-new-video-preview");
+  const submit = $("#works-video-submit");
+  const footer = $("#works-video-form-footer");
+  const hint = $("#works-video-url-hint");
+
+  if (fields) fields.hidden = !parsed;
+  if (preview) preview.hidden = !parsed;
+  if (submit) submit.hidden = !parsed;
+  if (footer) footer.hidden = !parsed;
+  if (hint) {
+    hint.textContent = parsed ? `영상 ID: ${parsed.id}` : "링크를 입력하면 작성칸이 열립니다.";
+  }
+
+  return parsed;
+}
+
+function fetchVideoMetadata(videoId) {
+  return new Promise((resolve, reject) => {
+    const callbackName = `__worksMeta${Date.now()}${Math.random().toString(36).slice(2)}`;
+    const script = document.createElement("script");
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("메타데이터 조회 시간이 초과되었습니다."));
+    }, 9000);
+
+    function cleanup() {
+      window.clearTimeout(timeout);
+      delete window[callbackName];
+      script.remove();
+    }
+
+    window[callbackName] = (payload) => {
+      cleanup();
+      if (!payload || payload.error || (!payload.title && !payload.author_name)) {
+        reject(new Error(payload?.error || "제목과 채널명을 찾지 못했습니다."));
+        return;
+      }
+      resolve(payload);
+    };
+
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("Noembed 요청에 실패했습니다."));
+    };
+
+    script.src = `https://noembed.com/embed?url=${encodeURIComponent(watchUrlFromVideoId(videoId))}&callback=${encodeURIComponent(callbackName)}`;
+    document.head.appendChild(script);
+  });
+}
+
+function applyWorksVideoMetadata(meta) {
+  const title = String(meta?.title || "").trim();
+  const authorName = String(meta?.author_name || "").trim();
+  const titleInput = $("#works-video-title");
+  const select = $("#works-video-category");
+  const newCategoryInput = $("#works-new-category-name");
+  let changed = false;
+
+  if (title && titleInput && !titleInput.value.trim()) {
+    titleInput.value = title;
+    changed = true;
+  }
+
+  if (authorName && select && newCategoryInput) {
+    const categoryUntouched = select.value === "__new__" && !newCategoryInput.value.trim();
+    if (categoryUntouched) {
+      renderWorksCategoryOptions(authorName);
+      if (getWorksCategories().includes(authorName)) {
+        newCategoryInput.value = "";
+      } else {
+        select.value = "__new__";
+        newCategoryInput.value = authorName;
+        toggleWorksNewCategoryField();
+      }
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    renderWorksNewVideoPreview();
+  }
+
+  return changed;
+}
+
+function scheduleWorksVideoMetadataLookup(parsed) {
+  if (state.metadataTimer) {
+    window.clearTimeout(state.metadataTimer);
+    state.metadataTimer = null;
+  }
+
+  if (!parsed) return;
+  if (state.lastMetadataVideoId === parsed.id) return;
+
+  state.metadataTimer = window.setTimeout(async () => {
+    const requestId = state.metadataRequestId + 1;
+    state.metadataRequestId = requestId;
+    state.lastMetadataVideoId = parsed.id;
+
+    try {
+      setStatus("영상 제목과 채널명을 확인하는 중입니다...", "info");
+      const meta = await fetchVideoMetadata(parsed.id);
+      if (requestId !== state.metadataRequestId) return;
+      const changed = applyWorksVideoMetadata(meta);
+      setStatus(changed ? "영상 제목과 채널명을 자동으로 채웠습니다." : "영상 정보를 확인했습니다.", "success");
+    } catch (error) {
+      if (requestId !== state.metadataRequestId) return;
+      setStatus(`자동 입력 실패: ${error.message} 수동으로 입력해도 됩니다.`, "error");
+    }
+  }, 600);
+}
+
+function renderWorksNewVideoPreview() {
+  const preview = $("#works-new-video-preview");
+  if (!preview) return;
+
+  const parsed = toggleWorksVideoFields();
+  if (!parsed) {
+    preview.innerHTML = "";
+    return;
+  }
+
+  const title = String($("#works-video-title")?.value || "").trim() || "영상 제목 미입력";
+  const date = String($("#works-video-date")?.value || "").trim();
+  const type = String($("#works-video-type")?.value || "long").trim() === "short" ? "short" : "long";
+  const category = getWorksFormCategoryValue();
+  const meta = [category, formatDisplayDate(date)].filter(Boolean).join(" · ");
+
+  preview.innerHTML = `
+    <div class="mini-video-card">
+      <div class="mini-thumb">
+        <img src="${videoThumb(parsed.id)}" alt="" referrerpolicy="no-referrer">
+        <span class="type-badge type-${escapeHTML(type)}">${escapeHTML(type === "short" ? "쇼츠" : "동영상")}</span>
+      </div>
+      <div class="mini-body">
+        <strong>${escapeHTML(title)}</strong>
+        ${meta ? `<span>${escapeHTML(meta)}</span>` : ""}
+        <code>${escapeHTML(parsed.id)}</code>
+      </div>
+    </div>
+  `;
+}
+
+function syncWorksVideoUrlFeedback(options = {}) {
+  const raw = String($("#works-video-url")?.value || "").trim();
+  const parsed = toggleWorksVideoFields();
+
+  if (!raw) {
+    state.worksFormVideoId = "";
+    state.lastMetadataVideoId = "";
+    setWorksUrlFeedback("링크를 입력하면 영상 정보를 확인합니다.");
+    renderWorksNewVideoPreview();
+    return null;
+  }
+
+  if (!parsed) {
+    state.worksFormVideoId = "";
+    state.lastMetadataVideoId = "";
+    setWorksUrlFeedback("인식 가능한 YouTube 링크 또는 11자리 YouTube ID를 입력해주세요.", "error");
+    renderWorksNewVideoPreview();
+    return null;
+  }
+
+  if (state.worksFormVideoId !== parsed.id) {
+    clearWorksVideoDetailInputs();
+  }
+  if (state.worksFormVideoId !== parsed.id) {
+    const typeSelect = $("#works-video-type");
+    if (typeSelect) typeSelect.value = parsed.type;
+  }
+  state.worksFormVideoId = parsed.id;
+
+  setWorksUrlFeedback(
+    `감지된 ID: ${parsed.id} / 기본 타입: ${parsed.type === "short" ? "쇼츠" : "동영상"}`,
+    "success",
+  );
+  renderWorksNewVideoPreview();
+
+  if (!options.skipMetadata) {
+    scheduleWorksVideoMetadataLookup(parsed);
+  }
+
+  return parsed;
+}
+
+function resetWorksVideoForm() {
+  const form = $("#works-video-form");
+  form?.reset();
+  state.worksFormVideoId = "";
+  state.lastMetadataVideoId = "";
+  renderWorksCategoryOptions("");
+  toggleWorksNewCategoryField();
+  syncWorksVideoUrlFeedback({ skipMetadata: true });
+}
+
+function normalizeData(input) {
+  const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
+  const base = clone(DEFAULT_DATA);
+
+  return {
+    ...base,
+    ...source,
+    site: {
+      ...base.site,
+      ...(source.site || {}),
+      brand: {
+        ...base.site.brand,
+        ...(source.site?.brand || {}),
+      },
+      profile: {
+        ...base.site.profile,
+        ...(source.site?.profile || {}),
+        discordId: String(source.site?.profile?.discordId || "").trim(),
+        email: String(source.site?.profile?.email || "").trim(),
+      },
+      nav: {
+        ...base.site.nav,
+        ...(source.site?.nav || {}),
+        links: normalizeNavLinks(source.site?.nav?.links),
+      },
+      footer: {
+        ...base.site.footer,
+        ...(source.site?.footer || {}),
+        enabled: normalizeEnabled(source.site?.footer?.enabled, base.site.footer.enabled),
+        linksEnabled: normalizeEnabled(source.site?.footer?.linksEnabled, base.site.footer.linksEnabled),
+        links: normalizeFooterLinks(source.site?.footer?.links),
+      },
+    },
+    hero: {
+      ...base.hero,
+      ...(source.hero || {}),
+      actions: Array.isArray(source.hero?.actions)
+        ? source.hero.actions.map((action) => ({
+            label: String(action?.label || "").trim(),
+            href: String(action?.href || "").trim(),
+            variant: String(action?.variant || "primary").trim() || "primary",
+          })).filter((action) => action.label || action.href)
+        : [],
+      infoPanels: normalizeHeroInfoPanels(source.hero?.infoPanels),
+    },
+    projects: {
+      ...base.projects,
+      ...(source.projects || {}),
+      enabled: normalizeEnabled(source.projects?.enabled, base.projects.enabled),
+      youtubeChannel: normalizeProjectYouTubeChannel(source.projects?.youtubeChannel),
+      cards: Array.isArray(source.projects?.cards)
+        ? source.projects.cards.map((card) => ({
+            layout: ["featured", "secondary", "small"].includes(card?.layout) ? card.layout : "small",
+            tag: String(card?.tag || "").trim(),
+            duration: String(card?.duration || "").trim(),
+            title: String(card?.title || "").trim(),
+            description: String(card?.description || "").trim(),
+            ctaLabel: String(card?.ctaLabel || "").trim(),
+            href: String(card?.href || "").trim(),
+          })).filter((card) => card.title || card.description)
+        : [],
+    },
+    stats: {
+      enabled: normalizeEnabled(source.stats?.enabled, base.stats.enabled),
+      items: Array.isArray(source.stats?.items)
+        ? source.stats.items.map((item) => ({
+            value: String(item?.value || "").trim(),
+            label: String(item?.label || "").trim(),
+          })).filter((item) => item.value || item.label)
+        : [],
+    },
+    home: normalizeHomeSettings(source.home),
+    works: {
+      ...base.works,
+      ...(source.works || {}),
+      enabled: normalizeEnabled(source.works?.enabled, base.works.enabled),
+      visualPreset: normalizeWorksVisualPreset(source.works?.visualPreset),
+      displayMode: normalizeWorksDisplayMode(source.works?.displayMode),
+      gridColumns: normalizeWorksColumnCount(source.works?.gridColumns, base.works.gridColumns),
+      categoryStackColumns: normalizeWorksColumnCount(source.works?.categoryStackColumns, base.works.categoryStackColumns),
+      categoryStackTypeFilterEnabled: normalizeEnabled(source.works?.categoryStackTypeFilterEnabled, base.works.categoryStackTypeFilterEnabled),
+      categoryStackSingleColumnSize: normalizeWorksSingleColumnSize(source.works?.categoryStackSingleColumnSize),
+      videos: normalizeWorksVideos(source.works?.videos),
+      categoryOrder: normalizeWorksCategoryOrder(source.works?.categoryOrder, normalizeWorksVideos(source.works?.videos)),
+      categoryEntries: normalizeWorksCategoryEntries(source.works?.categoryEntries, normalizeWorksVideos(source.works?.videos), source.works?.categoryOrder),
+    },
+    pricing: {
+      ...base.pricing,
+      ...(source.pricing || {}),
+      gridColumns: normalizePricingGridColumns(source.pricing?.gridColumns, base.pricing.gridColumns),
+      processStyle: normalizePricingProcessStyle(source.pricing?.processStyle),
+      customWorksEnabled: normalizeEnabled(source.pricing?.customWorksEnabled, base.pricing.customWorksEnabled),
+      processEnabled: normalizeEnabled(source.pricing?.processEnabled, base.pricing.processEnabled),
+      plans: Array.isArray(source.pricing?.plans)
+        ? source.pricing.plans.map((plan) => ({
+            slug: String(plan?.slug || "").trim(),
+            design: normalizePricingPlanDesign(plan?.design, String(plan?.slug || "").trim() === "long" ? "longform" : "shortform"),
+            badge: String(plan?.badge || "").trim(),
+            icon: String(plan?.icon || "").trim(),
+            title: String(plan?.title || "").trim(),
+            description: String(plan?.description || "").trim(),
+            price: String(plan?.price || "").trim(),
+            priceUnit: String(plan?.priceUnit || "").trim(),
+            features: Array.isArray(plan?.features)
+              ? plan.features.map((feature) => String(feature || "").trim()).filter(Boolean)
+              : [],
+            cta: {
+              label: String(plan?.cta?.label || "").trim(),
+              href: String(plan?.cta?.href || "").trim(),
+          },
+        })).filter((plan) => plan.title || plan.price || plan.description)
+        : [],
+      customWorks: normalizeCustomWorks(source.pricing?.customWorks, source.pricing?.customWork),
+      processSteps: Array.isArray(source.pricing?.processSteps)
+        ? source.pricing.processSteps.map((step) => ({
+            number: String(step?.number || "").trim(),
+            title: String(step?.title || "").trim(),
+            description: String(step?.description || "").trim(),
+          })).filter((step) => step.number || step.title || step.description)
+        : [],
+    },
+    contact: {
+      ...base.contact,
+      ...(source.contact || {}),
+      detailsEnabled: normalizeEnabled(source.contact?.detailsEnabled, base.contact.detailsEnabled),
+      primaryCard: {
+        ...base.contact.primaryCard,
+        ...(source.contact?.primaryCard || {}),
+      },
+      details: Array.isArray(source.contact?.details)
+        ? source.contact.details.map((detail) => ({
+            label: String(detail?.label || "").trim(),
+            value: String(detail?.value || "").trim(),
+          })).filter((detail) => detail.label || detail.value)
+        : [],
+    },
+    freeContent: String(source.freeContent || ""),
+    freeContentEnabled: normalizeEnabled(source.freeContentEnabled, base.freeContentEnabled),
+  };
+}
+
+function setStatus(message, type = "info") {
+  const status = $("#editor-status");
+  if (!status) return;
+  status.textContent = message;
+  status.className = `status ${type}`;
+}
+
+function setWorksUrlFeedback(message, type = "") {
+  const feedback = $("#works-video-url-feedback");
+  if (!feedback) return;
+  feedback.textContent = message;
+  if (type) {
+    feedback.dataset.state = type;
+  } else {
+    delete feedback.dataset.state;
+  }
+}
+
+function setYouTubeChannelFeedback(message, type = "") {
+  const feedback = $("#projects-youtube-channel-feedback");
+  if (!feedback) return;
+  feedback.textContent = message;
+  if (type) {
+    feedback.dataset.state = type;
+  } else {
+    delete feedback.dataset.state;
+  }
+}
+
+function serializeData() {
+  const data = clone(state.data);
+  const effectiveRepo = getEffectiveGitHubRepo(data.site?.githubRepo);
+  data.site.githubRepo = effectiveRepo || normalizeGitHubRepo(data.site?.githubRepo) || "";
+  data.site.footer.links = getEffectiveFooterLinks(data.site?.footer?.links, data.site.githubRepo);
+  return data;
+}
+
+function buildJson() {
+  return `${JSON.stringify(serializeData(), null, 2)}\n`;
+}
+
+function refreshJsonOutput() {
+  const output = $("#json-output");
+  if (output) output.value = buildJson();
+}
+
+function renderGitHubRepoField({ preserveInputValue = false, sourceId = "" } = {}) {
+  const inputs = ["site-github-repo", "quickstart-site-github-repo"]
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+  if (!inputs.length) return;
+
+  const rawRepo = String(state.data.site?.githubRepo || "").trim();
+  const normalizedRepo = normalizeGitHubRepo(rawRepo);
+  const inferredRepo = resolveGitHubRepoFromPagesLocation();
+  const effectiveRepo = normalizedRepo || inferredRepo;
+  const displayValue = rawRepo || effectiveRepo || "";
+  const placeholder = effectiveRepo || "owner/repo";
+
+  inputs.forEach((input) => {
+    if (!(preserveInputValue && input.id === sourceId)) {
+      input.value = displayValue;
+    }
+    input.placeholder = placeholder;
+  });
+
+  const notes = ["site-github-repo-note", "quickstart-site-github-repo-note"]
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+  if (!notes.length) return;
+
+  let noteText = "GitHub Pages에서 열면 현재 repo를 자동으로 감지하고 기본 브랜치도 함께 확인합니다.";
+  if (rawRepo && normalizedRepo) {
+    noteText = `직접 입력한 GitHub Repo를 사용합니다.${getGitHubDefaultBranchNote(effectiveRepo)}`;
+  } else if (rawRepo && !normalizedRepo) {
+    noteText = inferredRepo
+      ? `owner/repo 형식이 아니어서 현재 GitHub Pages 주소의 ${inferredRepo}를 대신 사용합니다.${getGitHubDefaultBranchNote(inferredRepo)}`
+      : "owner/repo 형식으로 입력해주세요.";
+  } else if (inferredRepo) {
+    noteText = `현재 GitHub Pages 주소에서 ${inferredRepo}를 자동으로 감지해 사용합니다.${getGitHubDefaultBranchNote(inferredRepo)}`;
+  }
+
+  notes.forEach((note) => {
+    note.textContent = noteText;
+  });
+}
+
+function textOrFallback(value, fallback) {
+  const text = String(value || "").trim();
+  return text || fallback;
+}
+
+function getIconPickerOptions(selectedIcon, { emptyLabel = "없음", previewFallback = "" } = {}) {
+  const normalizedSelected = String(selectedIcon || "").trim();
+  const options = [
+    {
+      value: "",
+      label: emptyLabel,
+      keywords: `${emptyLabel} none empty 기본값 없음 비우기`,
+      displayName: previewFallback || "없음",
+      previewIcon: previewFallback || "hide_image",
+    },
+    ...MATERIAL_ICON_OPTIONS.map((option) => ({
+      ...option,
+      displayName: option.value,
+      previewIcon: option.value,
+    })),
+  ];
+
+  if (normalizedSelected && !options.some((option) => option.value === normalizedSelected)) {
+    options.unshift({
+      value: normalizedSelected,
+      label: "현재 저장된 아이콘",
+      keywords: normalizedSelected,
+      displayName: normalizedSelected,
+      previewIcon: normalizedSelected,
+    });
+  }
+
+  return options;
+}
+
+function renderIconPickerMarkup(selectedIcon, {
+  scope,
+  planIndex = null,
+  emptyLabel = "없음",
+  previewFallback = "",
+  helperText = "",
+} = {}) {
+  const normalizedSelected = String(selectedIcon || "").trim();
+  const options = getIconPickerOptions(normalizedSelected, { emptyLabel, previewFallback });
+  const selectedOption = options.find((option) => option.value === normalizedSelected) || options[0];
+  const previewIcon = normalizedSelected || previewFallback || "hide_image";
+  const summaryLabel = selectedOption?.label || "아이콘 선택";
+  const summaryName = normalizedSelected || (previewFallback ? `기본값 (${previewFallback})` : emptyLabel);
+  const pickerAttributes = [
+    `data-icon-picker`,
+    `data-icon-picker-scope="${escapeHTML(scope)}"`,
+    planIndex != null ? `data-plan-index="${escapeHTML(String(planIndex))}"` : "",
+  ].filter(Boolean).join(" ");
+
+  return `
+    <details class="icon-picker" ${pickerAttributes}>
+      <summary class="icon-picker-summary">
+        <div class="icon-picker-current">
+          <span class="material-symbols-outlined icon-picker-current-symbol">${escapeHTML(previewIcon)}</span>
+          <div class="icon-picker-current-copy">
+            <strong>${escapeHTML(summaryLabel)}</strong>
+            <span>${escapeHTML(summaryName)}</span>
+          </div>
+        </div>
+        <span class="icon-picker-summary-action">직접 고르기</span>
+      </summary>
+      <div class="icon-picker-body">
+        <label class="field icon-picker-search-field">
+          <span>검색</span>
+          <input type="search" data-icon-picker-search placeholder="메일, 채팅, 영상, phone 등으로 검색">
+        </label>
+        <div class="icon-picker-grid">
+          ${options.map((option) => {
+            const optionValue = String(option.value || "");
+            const optionPreview = String(option.previewIcon || optionValue || previewFallback || "hide_image");
+            const optionName = String(option.displayName || optionValue || emptyLabel);
+            const searchText = `${optionValue} ${option.label || ""} ${option.keywords || ""}`.toLowerCase();
+            return `
+              <button
+                class="icon-picker-option ${optionValue === normalizedSelected ? "is-selected" : ""}"
+                type="button"
+                data-icon-picker-value="${escapeHTML(optionValue)}"
+                data-icon-search="${escapeHTML(searchText)}"
+              >
+                <span class="material-symbols-outlined icon-picker-option-symbol">${escapeHTML(optionPreview)}</span>
+                <span class="icon-picker-option-label">${escapeHTML(option.label || optionName)}</span>
+                <span class="icon-picker-option-name">${escapeHTML(optionName)}</span>
+              </button>
+            `;
+          }).join("")}
+        </div>
+        <p class="icon-picker-empty" data-icon-picker-empty hidden>검색 결과가 없습니다.</p>
+        ${helperText ? `<p class="field-note">${escapeHTML(helperText)}</p>` : ""}
+      </div>
+    </details>
+  `;
+}
+
+function filterIconPickerOptions(picker, keyword = "") {
+  if (!picker) return;
+  const normalizedKeyword = String(keyword || "").trim().toLowerCase();
+  const buttons = [...picker.querySelectorAll("[data-icon-picker-value]")];
+  let visibleCount = 0;
+
+  buttons.forEach((button) => {
+    const haystack = String(button.dataset.iconSearch || "").toLowerCase();
+    const matches = !normalizedKeyword || haystack.includes(normalizedKeyword);
+    button.hidden = !matches;
+    if (matches) visibleCount += 1;
+  });
+
+  const empty = picker.querySelector("[data-icon-picker-empty]");
+  if (empty) empty.hidden = visibleCount > 0;
+}
+
+function renderContactCardIconPicker() {
+  const input = $("#contact-card-icon");
+  const container = $("#contact-card-icon-picker");
+  if (!input || !container) return;
+
+  input.value = String(state.data.contact.primaryCard.icon || "").trim();
+  container.innerHTML = renderIconPickerMarkup(state.data.contact.primaryCard.icon, {
+    scope: "contact-card",
+    emptyLabel: "기본값 사용",
+    previewFallback: "mail",
+    helperText: "문의 카드에 표시할 아이콘을 직접 고를 수 있습니다. 기본값 사용을 선택하면 공개 페이지에서는 mail 아이콘이 보입니다.",
+  });
+}
+
+function escapeWithBreaks(value) {
+  return escapeHTML(String(value || "")).replace(/\n/g, "<br>");
+}
+
+function resolvePreviewAssetUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (
+    /^https?:\/\//i.test(raw)
+    || raw.startsWith("data:")
+    || raw.startsWith("blob:")
+    || raw.startsWith("/")
+    || raw.startsWith("../")
+  ) {
+    return raw;
+  }
+  return `../${raw.replace(/^\.?\//, "")}`;
+}
+
+function compactText(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function normalizeMetaText(value) {
+  return String(value ?? "").replace(/\r\n?/g, "\n");
+}
+
+function trimMetaUrl(value) {
+  return String(value ?? "").trim();
+}
+
+function escapeAttribute(value) {
+  return String(value || "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;",
+  })[char]);
+}
+
+function decodeHTML(value) {
+  const textarea = document.createElement("textarea");
+  textarea.innerHTML = String(value || "");
+  return textarea.value;
+}
+
+function decodeMetaContent(value) {
+  return normalizeMetaText(decodeHTML(value));
+}
+
+function escapeMetaContent(value) {
+  return escapeAttribute(normalizeMetaText(value)).replace(/\n/g, "&#10;");
+}
+
+function metaTag(propertyType, key, value) {
+  return `<meta ${propertyType}="${escapeAttribute(key)}" content="${escapeMetaContent(value)}">`;
+}
+
+function getEmptyEmbedMeta() {
+  return {
+    title: "",
+    description: "",
+    image: "",
+    url: "",
+    imageAlt: "",
+    twitterCard: "summary_large_image",
+    imageMetaEnabled: true,
+  };
+}
+
+function buildEmbedHTML(meta = state.embedMeta) {
+  const title = normalizeMetaText(meta.title);
+  const description = normalizeMetaText(meta.description);
+  const image = trimMetaUrl(meta.image);
+  const url = trimMetaUrl(meta.url);
+  const imageAlt = normalizeMetaText(meta.imageAlt);
+  const twitterCard = compactText(meta.twitterCard) || "summary_large_image";
+  const includeImageMeta = meta.imageMetaEnabled !== false;
+
+  const lines = [
+    "<!-- OG START -->",
+    `<title>${escapeAttribute(title)}</title>`,
+    metaTag("property", "og:title", title),
+    metaTag("property", "og:description", description),
+  ];
+
+  if (includeImageMeta) {
+    lines.push(metaTag("property", "og:image", image));
+  }
+
+  lines.push(metaTag("property", "og:url", url));
+
+  if (includeImageMeta) {
+    lines.push(metaTag("property", "og:image:alt", imageAlt));
+  }
+
+  lines.push(
+    metaTag("name", "twitter:card", twitterCard),
+    metaTag("name", "twitter:title", title),
+    metaTag("name", "twitter:description", description),
+  );
+
+  if (includeImageMeta) {
+    lines.push(metaTag("name", "twitter:image", image));
+  }
+
+  lines.push("<!-- OG END -->");
+  return lines.join("\n");
+}
+
+function getMetaContent(doc, selector) {
+  return decodeMetaContent(doc.querySelector(selector)?.getAttribute("content") || "");
+}
+
+function getExistingMetaContent(doc, selector) {
+  const element = doc.querySelector(selector);
+  if (!element) return null;
+  return decodeMetaContent(element.getAttribute("content") || "");
+}
+
+function getFirstExistingMetaContent(doc, selectors) {
+  for (const selector of selectors) {
+    const value = getExistingMetaContent(doc, selector);
+    if (value !== null) return value;
+  }
+  return "";
+}
+
+function parseEmbedHTML(html) {
+  const source = String(html || "");
+  const doc = new DOMParser().parseFromString(`<head>${source}</head>`, "text/html");
+  const imageMetaEnabled = Boolean(doc.querySelector([
+    'meta[property="og:image"]',
+    'meta[name="twitter:image"]',
+    'meta[property="og:image:alt"]',
+  ].join(",")));
+  const title = getExistingMetaContent(doc, 'meta[property="og:title"]')
+    ?? normalizeMetaText(doc.querySelector("title")?.textContent);
+  const description = getFirstExistingMetaContent(doc, [
+    'meta[property="og:description"]',
+    'meta[name="twitter:description"]',
+  ]);
+  const image = getFirstExistingMetaContent(doc, [
+    'meta[property="og:image"]',
+    'meta[name="twitter:image"]',
+  ]);
+  const url = getExistingMetaContent(doc, 'meta[property="og:url"]') ?? "";
+  const imageAlt = getExistingMetaContent(doc, 'meta[property="og:image:alt"]') ?? "";
+
+  return {
+    title,
+    description,
+    image,
+    url,
+    imageAlt,
+    twitterCard: getExistingMetaContent(doc, 'meta[name="twitter:card"]') || "summary_large_image",
+    imageMetaEnabled,
+  };
+}
+
+function extractOGBlock(html) {
+  const match = String(html || "").match(/<!--\s*OG START\s*-->[\s\S]*?<!--\s*OG END\s*-->/i);
+  return match ? match[0].trim() : "";
+}
+
+function fallbackEmbedBlockFromHTML(html) {
+  const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
+  const defaults = getDefaultEmbedMeta();
+  const meta = {
+    title: normalizeMetaText(doc.querySelector("title")?.textContent).trim() || defaults.title,
+    description: getMetaContent(doc, 'meta[property="og:description"]')
+      || getMetaContent(doc, 'meta[name="description"]')
+      || defaults.description,
+    image: getMetaContent(doc, 'meta[property="og:image"]') || defaults.image,
+    url: getMetaContent(doc, 'meta[property="og:url"]') || defaults.url,
+    imageAlt: getMetaContent(doc, 'meta[property="og:image:alt"]') || defaults.imageAlt,
+    imageMetaEnabled: true,
+  };
+  return buildEmbedHTML(meta);
+}
+
+function shouldUseGeneratedEmbedUrl(value) {
+  return !trimMetaUrl(value);
+}
+
+function normalizeLoadedEmbedHTML(html) {
+  const meta = parseEmbedHTML(html);
+  const defaults = getDefaultEmbedMeta();
+  const imageMetaEnabled = meta.imageMetaEnabled !== false;
+  return buildEmbedHTML({
+    ...meta,
+    url: shouldUseGeneratedEmbedUrl(meta.url) ? defaults.url : meta.url,
+    image: imageMetaEnabled && shouldUseGeneratedEmbedUrl(meta.image) ? defaults.image : meta.image,
+    imageMetaEnabled,
+  });
+}
+
+function syncEmbedFields(meta) {
+  const fields = {
+    "embed-meta-title": meta.title,
+    "embed-meta-description": meta.description,
+    "embed-meta-image": meta.image,
+    "embed-meta-url": meta.url,
+    "embed-meta-image-alt": meta.imageAlt,
+    "quickstart-embed-meta-title": meta.title,
+    "quickstart-embed-meta-description": meta.description,
+    "quickstart-embed-meta-image": meta.image,
+    "quickstart-embed-meta-url": meta.url,
+    "quickstart-embed-meta-image-alt": meta.imageAlt,
+  };
+  Object.entries(fields).forEach(([id, value]) => {
+    const input = document.getElementById(id);
+    if (input) input.value = value || "";
+  });
+  syncEmbedImageMetaControls(meta);
+}
+
+function syncEmbedImageMetaControls(meta = state.embedMeta) {
+  const enabled = meta.imageMetaEnabled !== false;
+  const toggle = $("#toggle-embed-image-meta");
+  if (toggle) {
+    toggle.textContent = enabled ? "이미지 제거" : "이미지 추가";
+    toggle.classList.toggle("danger-action", enabled);
+    toggle.classList.toggle("primary-action", !enabled);
+    toggle.setAttribute("aria-pressed", String(!enabled));
+  }
+
+  ["embed-meta-image", "embed-meta-image-alt"].forEach((id) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    input.disabled = !enabled;
+    input.closest(".field")?.classList.toggle("is-disabled", !enabled);
+  });
+
+  const note = $("#embed-image-meta-note");
+  if (note) {
+    note.textContent = enabled
+      ? "이미지 제거를 누르면 og:image, og:image:alt, twitter:image 줄이 HTML 코드에서 삭제됩니다."
+      : "이미지 메타데이터가 제거된 상태입니다. 이미지 추가를 누르면 GitHub Pages의 assets/social-preview.png 링크로 다시 생성됩니다.";
+  }
+}
+
+function renderEmbedPreview(meta = state.embedMeta) {
+  const imageMetaEnabled = meta.imageMetaEnabled !== false;
+  const title = normalizeMetaText(meta.title);
+  const description = normalizeMetaText(meta.description);
+  const image = imageMetaEnabled ? trimMetaUrl(meta.image) : "";
+  const url = trimMetaUrl(meta.url);
+  const domain = (() => {
+    try {
+      return new URL(url).hostname;
+    } catch (error) {
+      return url || "미리보기 URL";
+    }
+  })();
+
+  const imageElement = $("#embed-preview-image");
+  const imageEmpty = $("#embed-preview-image-empty");
+  if (imageElement && imageEmpty) {
+    if (image) {
+      imageElement.hidden = false;
+      imageElement.src = image;
+      imageElement.alt = meta.imageAlt || title;
+      imageEmpty.hidden = true;
+      imageEmpty.textContent = "이미지 URL을 입력하면 이곳에 표시됩니다.";
+    } else {
+      imageElement.hidden = true;
+      imageElement.removeAttribute("src");
+      imageEmpty.hidden = false;
+      imageEmpty.textContent = imageMetaEnabled
+        ? "이미지 URL을 입력하면 이곳에 표시됩니다."
+        : "이미지 메타데이터가 제거되어 카드 이미지를 표시하지 않습니다.";
+    }
+  }
+
+  const titleElement = $("#embed-preview-title");
+  const descriptionElement = $("#embed-preview-description");
+  const domainElement = $("#embed-preview-domain");
+  if (titleElement) titleElement.textContent = title || "카드 제목이 비어 있습니다.";
+  if (domainElement) domainElement.textContent = domain;
+  if (descriptionElement) {
+    descriptionElement.textContent = description;
+    descriptionElement.hidden = !description;
+  }
+}
+
+function syncEmbedEditorFromHTML(html, { updateTextarea = false } = {}) {
+  const raw = String(html || "").trim();
+  const source = raw || buildEmbedHTML(getEmptyEmbedMeta());
+  state.embedHtml = source;
+  state.embedMeta = parseEmbedHTML(source);
+  syncEmbedFields(state.embedMeta);
+  renderEmbedPreview(state.embedMeta);
+  if (updateTextarea || !raw) {
+    const output = $("#embed-html-output");
+    if (output) output.value = source;
+  }
+}
+
+function getEmbedMetaFromFieldPrefix(prefix) {
+  return {
+    title: $(`#${prefix}-title`)?.value || "",
+    description: $(`#${prefix}-description`)?.value || "",
+    image: $(`#${prefix}-image`)?.value || "",
+    url: $(`#${prefix}-url`)?.value || "",
+    imageAlt: $(`#${prefix}-image-alt`)?.value || "",
+    imageMetaEnabled: state.embedMeta.imageMetaEnabled !== false,
+  };
+}
+
+function syncEmbedEditorFromFieldPrefix(prefix) {
+  const meta = getEmbedMetaFromFieldPrefix(prefix);
+  const html = buildEmbedHTML(meta);
+  const output = $("#embed-html-output");
+  if (output) output.value = html;
+  syncEmbedEditorFromHTML(html);
+}
+
+function syncEmbedEditorFromFields() {
+  syncEmbedEditorFromFieldPrefix("embed-meta");
+}
+
+function syncEmbedEditorFromQuickstartFields() {
+  syncEmbedEditorFromFieldPrefix("quickstart-embed-meta");
+}
+
+function toggleEmbedImageMeta() {
+  const enabled = state.embedMeta.imageMetaEnabled !== false;
+  const defaults = getDefaultEmbedMeta();
+  const nextMeta = {
+    ...state.embedMeta,
+    imageMetaEnabled: !enabled,
+  };
+
+  if (enabled) {
+    nextMeta.image = "";
+    nextMeta.imageAlt = "";
+  } else {
+    nextMeta.image = defaults.image;
+    nextMeta.imageAlt = defaults.imageAlt;
+  }
+
+  const html = buildEmbedHTML(nextMeta);
+  const output = $("#embed-html-output");
+  if (output) output.value = html;
+  syncEmbedEditorFromHTML(html);
+}
+
+async function loadEmbedHTMLFromIndex({ force = false } = {}) {
+  if (state.embedLoaded && !force) {
+    syncEmbedEditorFromHTML(state.embedHtml, { updateTextarea: true });
+    return;
+  }
+
+  const status = $("#embed-card-status");
+  if (status) status.textContent = "index.html의 임베드 카드 코드를 불러오는 중입니다...";
+
+  try {
+    const response = await fetch(indexHtmlPath, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const html = await response.text();
+    const block = extractOGBlock(html);
+    const nextHTML = block ? normalizeLoadedEmbedHTML(block) : fallbackEmbedBlockFromHTML(html);
+    state.embedLoaded = true;
+    syncEmbedEditorFromHTML(nextHTML, { updateTextarea: true });
+    if (status) {
+      status.textContent = block
+        ? "index.html에서 OG 블록을 불러왔습니다."
+        : "OG 블록이 없어 현재 head 정보를 기준으로 기본 코드를 만들었습니다.";
+    }
+  } catch (error) {
+    state.embedLoaded = true;
+    syncEmbedEditorFromHTML(buildEmbedHTML(getDefaultEmbedMeta()), { updateTextarea: true });
+    if (status) status.textContent = `index.html을 불러오지 못해 기본 코드로 시작합니다: ${error.message}`;
+  }
+}
+
+async function copyEmbedHTML() {
+  const output = $("#embed-html-output");
+  const code = output ? output.value : state.embedHtml || buildEmbedHTML(getDefaultEmbedMeta());
+  const effectiveRepo = getEffectiveGitHubRepo(state.data.site.githubRepo, window.location);
+  const githubTab = effectiveRepo ? window.open("", "_blank") : null;
+  let copied = false;
+
+  try {
+    await navigator.clipboard.writeText(code);
+    copied = true;
+  } catch (error) {
+    output?.focus();
+    output?.select();
+  }
+
+  if (effectiveRepo) {
+    await ensureGitHubDefaultBranch(state.data.site.githubRepo, window.location);
+  }
+
+  const githubUrl = effectiveRepo ? buildGitHubRepoFileUrl("index.html", "edit") : "";
+  if (githubUrl) {
+    if (githubTab) {
+      githubTab.opener = null;
+      githubTab.location.href = githubUrl;
+    } else {
+      window.open(githubUrl, "_blank", "noopener");
+    }
+  } else if (githubTab && !githubTab.closed) {
+    githubTab.close();
+  }
+
+  if (copied && githubUrl) {
+    setStatus("임베드 카드 HTML 코드를 복사하고 GitHub index.html 편집 화면을 열었습니다.", "success");
+  } else if (copied) {
+    setStatus("임베드 카드 HTML 코드를 복사했습니다. GitHub 이동은 GitHub Repo가 있거나 GitHub Pages 주소에서만 동작합니다.", "success");
+  } else if (githubUrl) {
+    setStatus("클립보드 복사는 막혔지만 GitHub index.html 편집 화면은 열었습니다. 코드 영역을 직접 복사해주세요.", "error");
+  } else {
+    setStatus("클립보드 복사가 막혔습니다. 코드 영역을 직접 복사해주세요.", "error");
+  }
+}
+
+function buildGitHubRepoFileUrl(filePath, mode = "blob") {
+  const repo = getEffectiveGitHubRepo(state.data.site.githubRepo, window.location);
+  if (!repo) return "";
+  const branch = getGitHubDefaultBranch(repo);
+  return `https://github.com/${repo}/${mode}/${encodeURIComponent(branch)}/${filePath.replace(/^\/+/, "")}`;
+}
+
+async function openGitHubRepoPath(filePath, mode = "edit") {
+  const repo = getEffectiveGitHubRepo(state.data.site.githubRepo, window.location);
+  if (!repo) {
+    setStatus("GitHub Repo를 입력하거나 GitHub Pages 배포 주소에서 열어주세요.", "error");
+    return;
+  }
+
+  const popup = window.open("", "_blank");
+  await ensureGitHubDefaultBranch(state.data.site.githubRepo, window.location);
+  const url = buildGitHubRepoFileUrl(filePath, mode);
+  if (!url) {
+    popup?.close();
+    setStatus("GitHub 경로를 만들지 못했습니다. GitHub Repo 설정을 확인해주세요.", "error");
+    return;
+  }
+  if (popup) {
+    popup.opener = null;
+    popup.location.href = url;
+  } else {
+    window.open(url, "_blank", "noopener");
+  }
+}
+
+function buildGitHubAssetsUploadUrl() {
+  const repo = getEffectiveGitHubRepo(state.data.site.githubRepo, window.location);
+  if (!repo) return "";
+  const branch = getGitHubDefaultBranch(repo);
+  return `https://github.com/${repo}/upload/${encodeURIComponent(branch)}/assets`;
+}
+
+async function openAssetsUploadPage() {
+  const repo = getEffectiveGitHubRepo(state.data.site.githubRepo, window.location);
+  if (!repo) {
+    setStatus("GitHub Repo를 입력하거나 GitHub Pages 배포 주소에서 열어주세요.", "error");
+    return;
+  }
+
+  const popup = window.open("", "_blank");
+  await ensureGitHubDefaultBranch(state.data.site.githubRepo, window.location);
+  const url = buildGitHubAssetsUploadUrl();
+  if (popup) {
+    popup.opener = null;
+    popup.location.href = url;
+  } else {
+    window.open(url, "_blank", "noopener");
+  }
+}
+
+function getSocialPreviewPreset() {
+  return socialPreviewPresets.find((preset) => preset.id === state.socialPreviewPresetId) || socialPreviewPresets[0];
+}
+
+function getSocialPreviewAspect() {
+  const preset = getSocialPreviewPreset();
+  return preset.width / preset.height;
+}
+
+function getSocialPreviewSizeText(preset = getSocialPreviewPreset()) {
+  return `${preset.width}×${preset.height}`;
+}
+
+function syncSocialPreviewPresetUI() {
+  const preset = getSocialPreviewPreset();
+  const select = $("#embed-image-ratio");
+  if (select && select.value !== preset.id) select.value = preset.id;
+
+  const note = $("#embed-image-ratio-note");
+  if (note) {
+    note.textContent = `현재 출력 크기: ${getSocialPreviewSizeText(preset)} PNG`;
+  }
+
+  const outputNote = $("#embed-image-output-note");
+  if (outputNote) {
+    outputNote.textContent = `선택 박스 안의 영역만 ${getSocialPreviewSizeText(preset)} PNG로 저장됩니다.`;
+  }
+}
+
+function updateCropPreviewCanvasSize() {
+  const preset = getSocialPreviewPreset();
+  $$(".crop-preview-canvas").forEach((previewCanvas) => {
+    if (previewCanvas.width !== preset.width) previewCanvas.width = preset.width;
+    if (previewCanvas.height !== preset.height) previewCanvas.height = preset.height;
+  });
+}
+
+function changeSocialPreviewPreset(presetId) {
+  const nextPreset = socialPreviewPresets.find((preset) => preset.id === presetId);
+  if (!nextPreset || nextPreset.id === state.socialPreviewPresetId) return;
+  state.socialPreviewPresetId = nextPreset.id;
+  state.cropSelection = null;
+  state.cropInteraction = null;
+  syncSocialPreviewPresetUI();
+  renderCropCanvases();
+  setEmbedImageStatus(`${nextPreset.label} 비율로 변경했습니다. 선택 박스를 다시 맞춰주세요.`, "info");
+}
+
+function setEmbedImageStatus(message, type = "info") {
+  ["#embed-image-status", "#quickstart-embed-image-status"].forEach((selector) => {
+    const status = $(selector);
+    if (!status) return;
+    status.textContent = message;
+    status.dataset.state = type;
+  });
+}
+
+function clampNumber(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getCropCanvasPoint(event, canvas = $("#embed-crop-canvas")) {
+  if (!canvas) return { x: 0, y: 0 };
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = rect.width ? canvas.width / rect.width : 1;
+  const scaleY = rect.height ? canvas.height / rect.height : 1;
+  return {
+    x: (event.clientX - rect.left) * scaleX,
+    y: (event.clientY - rect.top) * scaleY,
+  };
+}
+
+function getCropImageRect(canvas = $("#embed-crop-canvas")) {
+  const image = state.cropImage;
+  if (!canvas || !image?.naturalWidth || !image?.naturalHeight) return null;
+  const scale = Math.min(canvas.width / image.naturalWidth, canvas.height / image.naturalHeight);
+  const width = image.naturalWidth * scale;
+  const height = image.naturalHeight * scale;
+  return {
+    x: (canvas.width - width) / 2,
+    y: (canvas.height - height) / 2,
+    width,
+    height,
+  };
+}
+
+function getCropSelectionMaxWidth(bounds) {
+  if (!bounds) return 0;
+  return Math.max(1, Math.min(bounds.width, bounds.height * getSocialPreviewAspect()));
+}
+
+function fitCropSelectionToBounds(selection, bounds = state.cropImageRect) {
+  if (!bounds) return null;
+  const aspect = getSocialPreviewAspect();
+  const maxWidth = getCropSelectionMaxWidth(bounds);
+  const minWidth = Math.min(120, maxWidth);
+  const fallbackWidth = Math.min(maxWidth, bounds.width * 0.82, bounds.height * aspect * 0.82);
+  const width = clampNumber(Number(selection?.width) || fallbackWidth || maxWidth, minWidth, maxWidth);
+  const height = width / aspect;
+  const fallbackX = bounds.x + (bounds.width - width) / 2;
+  const fallbackY = bounds.y + (bounds.height - height) / 2;
+  const x = clampNumber(
+    Number.isFinite(selection?.x) ? selection.x : fallbackX,
+    bounds.x,
+    bounds.x + bounds.width - width,
+  );
+  const y = clampNumber(
+    Number.isFinite(selection?.y) ? selection.y : fallbackY,
+    bounds.y,
+    bounds.y + bounds.height - height,
+  );
+  return { x, y, width, height };
+}
+
+function createInitialCropSelection(bounds) {
+  if (!bounds) return null;
+  const aspect = getSocialPreviewAspect();
+  const maxWidth = getCropSelectionMaxWidth(bounds);
+  const width = Math.min(maxWidth, bounds.width * 0.82, bounds.height * aspect * 0.82);
+  return fitCropSelectionToBounds({ width }, bounds);
+}
+
+function updateCropSelectionOverlay(canvas = $("#embed-crop-canvas")) {
+  const selectionElement = $("#embed-crop-selection");
+  if (!selectionElement || !canvas || !state.cropImage || !state.cropSelection) {
+    if (selectionElement) selectionElement.hidden = true;
+    return;
+  }
+
+  const { x, y, width, height } = state.cropSelection;
+  selectionElement.hidden = false;
+  selectionElement.style.left = `${(x / canvas.width) * 100}%`;
+  selectionElement.style.top = `${(y / canvas.height) * 100}%`;
+  selectionElement.style.width = `${(width / canvas.width) * 100}%`;
+  selectionElement.style.height = `${(height / canvas.height) * 100}%`;
+}
+
+function drawCropEditorCanvas(canvas) {
+  if (!canvas) return;
+  const context = canvas.getContext("2d");
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = "#10131a";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (!state.cropImage) {
+    state.cropImageRect = null;
+    state.cropSelection = null;
+    updateCropSelectionOverlay(canvas);
+    return;
+  }
+
+  const rect = getCropImageRect(canvas);
+  state.cropImageRect = rect;
+  state.cropSelection = state.cropSelection
+    ? fitCropSelectionToBounds(state.cropSelection, rect)
+    : createInitialCropSelection(rect);
+
+  context.drawImage(state.cropImage, rect.x, rect.y, rect.width, rect.height);
+  updateCropSelectionOverlay(canvas);
+}
+
+function getCropSourceRect(canvas = $("#embed-crop-canvas")) {
+  if (!canvas || !state.cropImage || !state.cropSelection) return null;
+  const imageRect = state.cropImageRect || getCropImageRect(canvas);
+  if (!imageRect) return null;
+  const selection = fitCropSelectionToBounds(state.cropSelection, imageRect);
+  state.cropSelection = selection;
+  return {
+    x: clampNumber(((selection.x - imageRect.x) / imageRect.width) * state.cropImage.naturalWidth, 0, state.cropImage.naturalWidth),
+    y: clampNumber(((selection.y - imageRect.y) / imageRect.height) * state.cropImage.naturalHeight, 0, state.cropImage.naturalHeight),
+    width: clampNumber((selection.width / imageRect.width) * state.cropImage.naturalWidth, 1, state.cropImage.naturalWidth),
+    height: clampNumber((selection.height / imageRect.height) * state.cropImage.naturalHeight, 1, state.cropImage.naturalHeight),
+  };
+}
+
+function drawCropPreviewCanvas(canvas) {
+  if (!canvas) return;
+  const context = canvas.getContext("2d");
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = "#10131a";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  const sourceRect = getCropSourceRect();
+  if (!sourceRect) return;
+  context.drawImage(
+    state.cropImage,
+    sourceRect.x,
+    sourceRect.y,
+    sourceRect.width,
+    sourceRect.height,
+    0,
+    0,
+    canvas.width,
+    canvas.height,
+  );
+}
+
+function renderCropCanvases() {
+  const editorCanvas = $("#embed-crop-canvas");
+  updateCropPreviewCanvasSize();
+  syncSocialPreviewPresetUI();
+  drawCropEditorCanvas(editorCanvas);
+  $$(".crop-preview-canvas").forEach((previewCanvas) => drawCropPreviewCanvas(previewCanvas));
+
+  const placeholder = $("#embed-crop-placeholder");
+  if (placeholder) placeholder.hidden = Boolean(state.cropImage);
+}
+
+function resetCropSelection() {
+  state.cropImageRect = getCropImageRect();
+  state.cropSelection = createInitialCropSelection(state.cropImageRect);
+  renderCropCanvases();
+}
+
+function centerCropSelection() {
+  const bounds = state.cropImageRect || getCropImageRect();
+  if (!bounds || !state.cropSelection) return;
+  state.cropSelection = fitCropSelectionToBounds({
+    ...state.cropSelection,
+    x: bounds.x + (bounds.width - state.cropSelection.width) / 2,
+    y: bounds.y + (bounds.height - state.cropSelection.height) / 2,
+  }, bounds);
+  renderCropCanvases();
+}
+
+function resizeCropSelectionFromHandle(handle, point) {
+  const start = state.cropInteractionStartSelection;
+  const bounds = state.cropImageRect;
+  if (!start || !bounds) return null;
+  const aspect = getSocialPreviewAspect();
+
+  const dx = point.x - state.cropInteractionStartX;
+  const dy = point.y - state.cropInteractionStartY;
+  const touchesLeft = handle.includes("w");
+  const touchesRight = handle.includes("e");
+  const touchesTop = handle.includes("n");
+  const touchesBottom = handle.includes("s");
+  const touchesHorizontal = touchesLeft || touchesRight;
+  const touchesVertical = touchesTop || touchesBottom;
+
+  let nextWidth = start.width;
+  if (touchesHorizontal) {
+    nextWidth = start.width + (touchesRight ? dx : -dx);
+  }
+  if (touchesVertical) {
+    const nextHeight = start.height + (touchesBottom ? dy : -dy);
+    const widthFromHeight = nextHeight * aspect;
+    if (!touchesHorizontal || Math.abs(widthFromHeight - start.width) > Math.abs(nextWidth - start.width)) {
+      nextWidth = widthFromHeight;
+    }
+  }
+
+  const maxWidth = getCropSelectionMaxWidth(bounds);
+  const minWidth = Math.min(120, maxWidth);
+  const width = clampNumber(nextWidth, minWidth, maxWidth);
+  const height = width / aspect;
+  let x = start.x;
+  let y = start.y;
+
+  if (touchesLeft) {
+    x = start.x + start.width - width;
+  } else if (!touchesRight) {
+    x = start.x + (start.width - width) / 2;
+  }
+
+  if (touchesTop) {
+    y = start.y + start.height - height;
+  } else if (!touchesBottom) {
+    y = start.y + (start.height - height) / 2;
+  }
+
+  return fitCropSelectionToBounds({ x, y, width }, bounds);
+}
+
+function updateCropSelectionFromPointer(event) {
+  if (!state.cropInteraction || !state.cropImage || !state.cropInteractionStartSelection) return;
+
+  const point = getCropCanvasPoint(event);
+  if (state.cropInteraction === "move") {
+    const start = state.cropInteractionStartSelection;
+    const dx = point.x - state.cropInteractionStartX;
+    const dy = point.y - state.cropInteractionStartY;
+    state.cropSelection = fitCropSelectionToBounds({
+      ...start,
+      x: start.x + dx,
+      y: start.y + dy,
+    }, state.cropImageRect);
+  } else {
+    state.cropSelection = resizeCropSelectionFromHandle(state.cropInteraction, point);
+  }
+
+  renderCropCanvases();
+}
+
+function startCropSelectionInteraction(event) {
+  if (!state.cropImage || !state.cropSelection) return;
+  const selectionElement = $("#embed-crop-selection");
+  if (!selectionElement) return;
+
+  event.preventDefault();
+  const handle = event.target?.dataset?.handle || "move";
+  const point = getCropCanvasPoint(event);
+  state.cropInteraction = handle;
+  state.cropInteractionPointerId = event.pointerId;
+  state.cropInteractionStartX = point.x;
+  state.cropInteractionStartY = point.y;
+  state.cropInteractionStartSelection = { ...state.cropSelection };
+  selectionElement.classList.add("is-dragging");
+  selectionElement.setPointerCapture(event.pointerId);
+}
+
+function finishCropSelectionInteraction(event) {
+  const selectionElement = $("#embed-crop-selection");
+  if (!state.cropInteraction) return;
+  if (
+    event?.pointerId != null &&
+    selectionElement?.hasPointerCapture?.(event.pointerId)
+  ) {
+    selectionElement.releasePointerCapture(event.pointerId);
+  }
+  selectionElement?.classList.remove("is-dragging");
+  state.cropInteraction = null;
+  state.cropInteractionPointerId = null;
+  state.cropInteractionStartSelection = null;
+}
+
+function loadCropImage(src, { revokePrevious = false } = {}) {
+  const image = new Image();
+  image.crossOrigin = "anonymous";
+  image.onload = () => {
+    if (revokePrevious && state.cropObjectUrl) URL.revokeObjectURL(state.cropObjectUrl);
+    state.cropImage = image;
+    state.cropImageRect = null;
+    state.cropSelection = null;
+    state.cropInteraction = null;
+    renderCropCanvases();
+    setEmbedImageStatus("이미지를 불러왔습니다. 선택 박스를 움직이거나 크기를 조절해 구도를 맞춰주세요.", "success");
+  };
+  image.onerror = () => {
+    setEmbedImageStatus("이미지를 불러오지 못했습니다. 파일 업로드 또는 접근 가능한 이미지 URL을 사용해주세요.", "error");
+  };
+  image.src = src;
+}
+
+function loadCropImageFile(file) {
+  if (!file) return;
+  if (state.cropObjectUrl) URL.revokeObjectURL(state.cropObjectUrl);
+  state.cropObjectUrl = URL.createObjectURL(file);
+  loadCropImage(state.cropObjectUrl);
+}
+
+function loadCropImageFromUrlInput(inputId) {
+  const url = String($(inputId)?.value || "").trim();
+  if (!url) {
+    setEmbedImageStatus("이미지 URL을 입력해주세요.", "error");
+    return;
+  }
+  const peerInputId = inputId === "#quickstart-embed-image-url" ? "#embed-image-url" : "#quickstart-embed-image-url";
+  const peerInput = $(peerInputId);
+  if (peerInput && peerInput.value !== url) peerInput.value = url;
+  loadCropImage(url);
+}
+
+function downloadSocialPreviewPNG() {
+  const canvas = $("#embed-crop-canvas");
+  if (!canvas || !state.cropImage) {
+    setEmbedImageStatus("먼저 이미지를 불러와주세요.", "error");
+    return;
+  }
+
+  try {
+    const sourceRect = getCropSourceRect(canvas);
+    if (!sourceRect) {
+      setEmbedImageStatus("다운로드할 선택 영역을 찾지 못했습니다.", "error");
+      return;
+    }
+
+    const outputCanvas = document.createElement("canvas");
+    const preset = getSocialPreviewPreset();
+    outputCanvas.width = preset.width;
+    outputCanvas.height = preset.height;
+    const context = outputCanvas.getContext("2d");
+    context.drawImage(
+      state.cropImage,
+      sourceRect.x,
+      sourceRect.y,
+      sourceRect.width,
+      sourceRect.height,
+      0,
+      0,
+      outputCanvas.width,
+      outputCanvas.height,
+    );
+
+    outputCanvas.toBlob((blob) => {
+      if (!blob) {
+        setEmbedImageStatus("PNG 다운로드를 만들지 못했습니다. URL 이미지라면 파일 업로드로 다시 시도해주세요.", "error");
+        return;
+      }
+      const downloadUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = "social-preview.png";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+      setEmbedImageStatus(`${getSocialPreviewSizeText(preset)} social-preview.png 파일을 다운로드했습니다.`, "success");
+    }, "image/png");
+  } catch (error) {
+    setEmbedImageStatus("브라우저 보안 정책 때문에 PNG 다운로드가 막혔습니다. 파일 업로드로 다시 시도하세요.", "error");
+  }
+}
+
+function mountLivePreview() {
+  const card = $("#live-preview-card");
+  const panel = $(`.tab-panel[data-panel="${state.activeTab}"]`);
+  const head = panel?.querySelector(".panel-head");
+  if (!card || !panel || !head) return;
+
+  if (embedCardTabs.has(state.activeTab)) {
+    card.hidden = true;
+    return;
+  }
+
+  if (head.nextElementSibling !== card) {
+    head.insertAdjacentElement("afterend", card);
+  }
+  card.hidden = false;
+}
+
+function getEffectivePreviewTab(tab = state.activeTab) {
+  return tab;
+}
+
+function previewConfigForTab(tab = state.activeTab) {
+  if (tab === "quickstart") {
+    const step = getQuickstartStep();
+    const target = getQuickstartPreviewTarget();
+    const base = previewTargets[target] || previewTargets.json;
+    return {
+      ...base,
+      title: `퀵스타트 · ${String(state.quickstartStepIndex + 1).padStart(2, "0")} ${step.title} 미리보기`,
+      description: step.description || base.description,
+    };
+  }
+
+  const effectiveTab = getEffectivePreviewTab(tab);
+  const config = previewTargets[effectiveTab] || previewTargets.brand;
+  if (effectiveTab !== "projects") return config;
+
+  if (state.data.projects.enabled === false) {
+    return {
+      ...config,
+      pathText: "index.html#works",
+      openHref: "../index.html#works",
+    };
+  }
+
+  return config;
+}
+
+function renderPreviewAccentText(text, accent, accentClass) {
+  const raw = String(text || "");
+  const markers = normalizeAccentKeywords(accent)
+    .slice()
+    .sort((left, right) => right.length - left.length || left.localeCompare(right));
+  if (!raw) return "";
+  if (!markers.length) return escapeWithBreaks(raw);
+
+  let output = "";
+  let index = 0;
+
+  while (index < raw.length) {
+    const match = markers.find((marker) => raw.startsWith(marker, index));
+    if (match) {
+      output += `<span class="${accentClass}">${escapeHTML(match)}</span>`;
+      index += match.length;
+      continue;
+    }
+
+    const char = raw[index];
+    output += char === "\n" ? "<br>" : escapeHTML(char);
+    index += 1;
+  }
+
+  return output;
+}
+
+function renderPreviewNavLinks() {
+  const links = state.data.site.nav.links.filter((link) => link.label);
+  if (!links.length) {
+    return '<span class="text-sm font-medium text-[#8b8577]">내비 링크를 추가하면 이 영역에 반영됩니다.</span>';
+  }
+
+  return links.map((link, index) => `
+    <span class="${index === 0 ? "border-b-2 border-[#FDE047] pb-1 text-sm font-bold text-[#FDE047]" : "text-sm font-medium text-[#cec6ad]"}">${escapeHTML(link.label)}</span>
+  `).join("");
+}
+
+function getPreviewChannelBrandName() {
+  return String(state.data.site.brand.name || "").trim();
+}
+
+function getPreviewChannelDisplayName() {
+  return textOrFallback(state.data.site.brand.displayName, "채널 표시 이름");
+}
+
+function getPreviewChannelDiscordId() {
+  return String(state.data.site.profile?.discordId || "").trim();
+}
+
+function getPreviewChannelEmail() {
+  return String(state.data.site.profile?.email || "").trim();
+}
+
+function renderPreviewChannelMetaParts() {
+  return [
+    getPreviewChannelBrandName(),
+    getPreviewChannelDiscordId(),
+    getPreviewChannelEmail(),
+  ].filter(Boolean);
+}
+
+function renderPreviewLightTopBar() {
+  const brand = getPreviewChannelDisplayName();
+  const ctaLabel = textOrFallback(state.data.site.nav.ctaLabel, "문의하기");
+  return `
+    <header class="sticky top-0 z-10 border-b border-[#e5e5e5] bg-white">
+      <div class="flex min-h-[64px] items-center justify-between gap-4 px-5">
+        <div class="flex min-w-0 items-center gap-3">
+          <span class="flex h-8 w-11 shrink-0 items-center justify-center rounded-lg bg-[#ff0033] text-white">
+            <span class="material-symbols-outlined text-[21px]">play_arrow</span>
+          </span>
+          <div class="min-w-0">
+            <div class="truncate text-xl font-black leading-tight text-[#0f0f0f]">${escapeHTML(brand)}</div>
+            <div class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#606060]">channel portfolio</div>
+          </div>
+        </div>
+        <div class="flex shrink-0 items-center gap-2">
+          <span class="flex h-9 w-9 items-center justify-center rounded-full text-[#0f0f0f]">
+            <span class="material-symbols-outlined text-[22px]">more_vert</span>
+          </span>
+          <span class="inline-flex rounded-full bg-[#0f0f0f] px-4 py-2 text-sm font-bold text-white">${escapeHTML(ctaLabel)}</span>
+        </div>
+      </div>
+    </header>
+  `;
+}
+
+function renderPreviewLightTabs(activeTab = "home") {
+  const tabs = [
+    ["home", "홈"],
+    ["works", "동영상"],
+    ["pricing", "가격"],
+    ["contact", "문의하기"],
+  ];
+  return `
+    <nav class="flex gap-7 border-b border-[#e5e5e5] px-1 pt-4 text-sm font-bold text-[#606060]">
+      ${tabs.map(([key, label]) => `
+        <span class="${key === activeTab ? "border-b-2 border-[#0f0f0f] pb-3 text-[#0f0f0f]" : "pb-3"}">${escapeHTML(label)}</span>
+      `).join("")}
+    </nav>
+  `;
+}
+
+function renderPreviewLightSidebar(activeTab = "home") {
+  const videos = getSortedWorksVideos(state.data.works?.videos || []);
+  const categories = getOrderedWorksCategories(videos, state.data.works?.categoryOrder || []);
+  const categoryEntries = normalizeWorksCategoryEntries(
+    state.data.works?.categoryEntries,
+    videos,
+    state.data.works?.categoryOrder,
+  );
+  const entryMap = new Map(categoryEntries.map((entry) => [entry.category, entry]));
+  const fallbackCategories = categories.length ? categories : ["Shorts", "Long-form", "Pricing"];
+
+  return `
+    <aside class="w-[168px] shrink-0 border-r border-[#e5e5e5] bg-white px-3 py-5 md:w-[210px] md:px-4">
+      <div class="grid gap-1">
+        ${[
+          ["home", "home", "홈"],
+          ["works", "smart_display", "동영상"],
+          ["pricing", "sell", "가격"],
+          ["contact", "mail", "문의"],
+        ].map(([key, icon, label]) => `
+          <div class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-bold ${key === activeTab ? "bg-[#f2f2f2] text-[#0f0f0f]" : "text-[#0f0f0f]"}">
+            <span class="material-symbols-outlined text-[22px]">${escapeHTML(icon)}</span>
+            <span>${escapeHTML(label)}</span>
+          </div>
+        `).join("")}
+      </div>
+      <div class="my-5 h-px bg-[#e5e5e5]"></div>
+      <div class="mb-2 px-3 text-[11px] font-black uppercase tracking-[0.14em] text-[#606060]">영상 카테고리</div>
+      <div class="grid gap-1">
+        ${fallbackCategories.slice(0, 8).map((category) => {
+          const entry = entryMap.get(category);
+          const label = entry?.title || category;
+          return `
+            <div class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-bold text-[#0f0f0f]">
+              <span class="material-symbols-outlined text-[21px]">play_circle</span>
+              <span class="min-w-0 truncate">${escapeHTML(label)}</span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </aside>
+  `;
+}
+
+function renderPreviewChannelHero(activeTab = "home") {
+  const brand = getPreviewChannelDisplayName();
+  const hero = state.data.hero;
+  const description = textOrFallback(hero.description, DEFAULT_DATA.hero.description);
+  return `
+    <section class="bg-white text-[#0f0f0f]">
+      <div class="overflow-hidden rounded-xl border border-[#e5e5e5] bg-[#111]">
+        <div class="flex aspect-[6/1] min-h-[118px] items-center justify-between gap-6 bg-[linear-gradient(110deg,#171717,#30240f_48%,#0f0f0f)] px-7 text-white">
+          <div>
+            <div class="text-xs font-black uppercase tracking-[0.34em] text-[#facc15]">${escapeHTML(textOrFallback(hero.eyebrow, DEFAULT_DATA.hero.eyebrow))}</div>
+            <div class="mt-3 text-3xl font-black leading-none md:text-5xl">${renderPreviewAccentText(textOrFallback(hero.title, DEFAULT_DATA.hero.title), hero.titleAccent, "text-[#facc15]")}</div>
+          </div>
+          <span class="hidden h-20 w-28 items-center justify-center rounded-2xl border border-white/15 bg-[#facc15] text-[#111] md:flex">
+            <span class="material-symbols-outlined text-5xl">play_arrow</span>
+          </span>
+        </div>
+      </div>
+      <div class="flex flex-col gap-5 pt-6 md:flex-row md:items-start">
+        <div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-4 border-white bg-[#0f0f0f] text-white shadow-[0_12px_32px_rgba(15,15,15,0.12)] md:h-32 md:w-32">
+          <span class="material-symbols-outlined text-4xl md:text-5xl">play_arrow</span>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h2 class="mb-2 text-4xl font-black leading-none tracking-normal text-[#0f0f0f] md:text-5xl">${escapeHTML(brand)}</h2>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold text-[#606060]">
+            ${renderPreviewChannelMetaParts().map((part) => `<span>${escapeHTML(part)}</span>`).join("")}
+          </div>
+          <p class="mt-4 max-w-4xl text-base font-semibold leading-relaxed text-[#3f3f3f]">${escapeWithBreaks(description)}</p>
+          ${renderPreviewHeroStatus(hero)}
+          <div class="mt-5 flex flex-wrap gap-3">
+            ${renderPreviewHeroActions(hero.actions, "light")}
+          </div>
+          ${renderPreviewLightTabs(activeTab)}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderPreviewLightShell(activeTab, content) {
+  return `
+    <section class="preview-render-root bg-white text-[#0f0f0f]" style="${previewFontFamilyStyle}">
+      ${renderPreviewLightTopBar()}
+      <div class="flex min-h-[640px] bg-white">
+        ${renderPreviewLightSidebar(activeTab)}
+        <main class="min-w-0 flex-1 px-5 py-6 md:px-8">
+          <div class="mx-auto max-w-screen-xl">
+            ${renderPreviewChannelHero(activeTab)}
+            ${content}
+          </div>
+        </main>
+      </div>
+    </section>
+  `;
+}
+
+function renderPreviewLightVideoCards(videos) {
+  if (!videos.length) {
+    return `
+      <div class="rounded-xl border border-dashed border-[#d9d9d9] bg-[#f8f8f8] px-6 py-10 text-center text-sm font-bold text-[#606060]">
+        ${escapeHTML(textOrFallback(state.data.works.emptyText, "영상 항목을 추가하면 이 영역이 자동으로 채워집니다."))}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="grid gap-x-4 gap-y-8 md:grid-cols-3 xl:grid-cols-4">
+      ${videos.slice(0, 8).map((video) => `
+        <article class="min-w-0">
+          <div class="relative overflow-hidden rounded-lg bg-[#f2f2f2]" style="aspect-ratio:${video.type === "short" ? "9 / 14" : "16 / 9"};">
+            <img class="h-full w-full object-cover" alt="${escapeHTML(video.title || "영상 썸네일")}" src="${escapeHTML(videoThumb(video.id))}" referrerpolicy="no-referrer">
+            <span class="absolute bottom-2 right-2 rounded bg-black/80 px-2 py-1 text-[11px] font-bold text-white">${escapeHTML(video.type === "short" ? "Shorts" : "Video")}</span>
+          </div>
+          <div class="mt-3 grid grid-cols-[32px_minmax(0,1fr)] gap-3">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[#0f0f0f] text-white">
+              <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+            </span>
+            <div class="min-w-0">
+              <h3 class="mb-1 line-clamp-2 text-sm font-black leading-snug text-[#0f0f0f]">${escapeHTML(textOrFallback(video.title, "제목 미입력"))}</h3>
+              <p class="text-xs font-semibold text-[#606060]">${escapeHTML([video.category, video.date ? formatDisplayDate(video.date) : ""].filter(Boolean).join(" · ") || "영상 카테고리")}</p>
+            </div>
+          </div>
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderPreviewPlanCheckIcon() {
+  return `
+    <svg class="w-5 h-5 mr-3 text-yt-red flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+    </svg>
+  `;
+}
+
+function renderPreviewExternalLinkIcon() {
+  return `
+    <svg class="project-youtube-subscribe-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M7 17L17 7"></path>
+      <path d="M9 7h8v8"></path>
+    </svg>
+  `;
+}
+
+function renderPreviewLightPlanCards() {
+  const plans = state.data.pricing.plans.filter((plan) => plan.title || plan.price || plan.description);
+  if (!plans.length) {
+    return '<div class="works-empty">가격 플랜을 추가하면 이곳에 표시됩니다.</div>';
+  }
+
+  const columns = normalizePricingGridColumns(state.data.pricing.gridColumns, DEFAULT_DATA.pricing.gridColumns);
+  return `
+    <div id="pricing-plans" class="pricing-plans" data-columns="${columns}">
+      ${plans.map((plan) => {
+        const href = resolvePreviewAwareHref(plan.cta?.href);
+        const external = isExternalHref(href) ? ' target="_blank" rel="noopener"' : "";
+        const highlighted = normalizePricingPlanDesign(plan.design, String(plan.slug || "").trim() === "long" ? "longform" : "shortform") === "longform";
+        const buttonClass = highlighted
+          ? "inline-flex w-full items-center justify-center rounded-lg bg-primary-container px-6 py-4 font-black text-on-primary-container transition-all duration-300 hover:bg-primary-fixed-dim"
+          : "inline-flex w-full items-center justify-center rounded-lg border border-outline-variant bg-transparent px-6 py-4 font-bold text-on-surface transition-all duration-300 hover:border-primary-container hover:bg-primary-container hover:text-on-primary-container";
+
+        return `
+          <article class="plan-card ${highlighted ? "highlighted border-primary-container bg-surface-container-high relative overflow-hidden p-10" : "bg-surface-container-low p-10"}">
+            ${plan.badge ? `<div class="${highlighted ? "absolute right-0 top-0 p-4" : "mb-8"}"><span class="${highlighted ? "bg-primary-container px-2 py-1 text-[0.625rem] font-black uppercase tracking-tight text-on-primary-fixed" : "text-[0.6875rem] font-bold uppercase tracking-widest text-outline"}">${escapeHTML(plan.badge)}</span></div>` : ""}
+            <div class="mb-12 flex items-start justify-between gap-3">
+              ${plan.icon ? `<span class="material-symbols-outlined text-4xl text-primary-container">${escapeHTML(plan.icon)}</span>` : ""}
+            </div>
+            <h3 class="plan-card-title mb-2 text-3xl font-bold ${highlighted ? "text-primary-container" : ""}">${escapeWithBreaks(textOrFallback(plan.title, "플랜 제목"))}</h3>
+            <p class="plan-card-description mb-8 text-sm leading-relaxed text-on-surface-variant">${escapeWithBreaks(textOrFallback(plan.description, "플랜 설명이 이곳에 표시됩니다."))}</p>
+            <ul class="mb-12 space-y-4">
+              ${(plan.features || []).length
+                ? plan.features.map((feature) => `
+                    <li class="flex items-start text-sm">
+                      ${renderPreviewPlanCheckIcon()}
+                      <span>${escapeHTML(feature)}</span>
+                    </li>
+                  `).join("")
+                : '<li class="text-sm text-on-surface-variant">포함 항목을 추가하면 여기에 표시됩니다.</li>'}
+            </ul>
+            <div>
+              <div class="mb-6 text-4xl font-black tracking-tighter">
+                ${escapeHTML(textOrFallback(plan.price, "₩0"))}
+                ${plan.priceUnit ? `<span class="text-sm font-normal text-outline">${escapeHTML(plan.priceUnit)}</span>` : ""}
+              </div>
+              ${plan.cta?.label && href ? `<a href="${escapeHTML(href)}" class="${buttonClass}"${external}>${escapeHTML(plan.cta.label)}</a>` : ""}
+            </div>
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderPreviewHeroStatus(hero = state.data.hero, tone = "light") {
+  const statusLabel = String(hero?.statusLabel || "").trim();
+  const statusText = String(hero?.statusText || "").trim();
+  if (!statusLabel && !statusText) {
+    return "";
+  }
+
+  const isDark = tone === "dark";
+  const wrapperClass = isDark
+    ? "mt-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-white/80"
+    : "mt-5 inline-flex items-center gap-2 rounded-full border border-[#e5e5e5] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#606060]";
+  const labelClass = isDark ? "text-[#facc15]" : "text-[#ff0033]";
+
+  return `
+    <div class="${wrapperClass}">
+      ${statusLabel ? `<span class="${labelClass}">${escapeHTML(statusLabel)}</span>` : ""}
+      ${statusText ? `<span>${escapeHTML(statusText)}</span>` : ""}
+    </div>
+  `;
+}
+
+function renderPreviewHeroActions(actions = state.data.hero.actions, tone = "dark") {
+  const visibleActions = (Array.isArray(actions) ? actions : []).filter((action) => String(action?.label || "").trim());
+  if (!visibleActions.length) {
+    const placeholderClass = tone === "light"
+      ? "preview-placeholder inline-flex rounded-full border border-dashed border-[#d8dce2] bg-[#f8f8f8] px-5 py-2 text-sm font-bold text-[#606060]"
+      : "preview-placeholder inline-flex rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/70";
+    return `<span class="${placeholderClass}">액션 버튼을 추가하면 여기에 표시됩니다.</span>`;
+  }
+
+  const styles = tone === "light"
+    ? {
+        primary: "inline-flex min-h-[36px] items-center rounded-full border border-[#0f0f0f] bg-[#0f0f0f] px-4 text-sm font-extrabold text-white transition-all hover:bg-[#272727]",
+        ghost: "inline-flex min-h-[36px] items-center rounded-full border border-[#d8dce2] bg-[#f2f2f2] px-4 text-sm font-extrabold text-[#0f0f0f] transition-all hover:border-[#0f0f0f] hover:bg-white",
+      }
+    : {
+        primary: "inline-flex rounded-lg bg-[#fde047] px-6 py-3 text-sm font-bold text-[#393000] transition-transform active:scale-95",
+        ghost: "inline-flex rounded-lg border border-white/20 bg-white/5 px-6 py-3 text-sm font-bold text-white transition-all hover:border-[#FDE047] hover:text-[#FDE047]",
+      };
+
+  return visibleActions.map((action) => {
+    const variant = action.variant === "ghost" ? "ghost" : "primary";
+    const href = resolvePreviewAwareHref(action.href) || "#";
+    const external = isExternalHref(href) ? ' target="_blank" rel="noopener"' : "";
+    return `<a href="${escapeHTML(href)}" class="${styles[variant]}" data-hero-action-variant="${variant}"${external}>${escapeHTML(action.label)}</a>`;
+  }).join("");
+}
+
+function getPreviewHeroCareerActiveContent(panel) {
+  const mode = normalizeHeroCareerMode(panel?.mode);
+  if (mode === "simple") {
+    return (panel?.simpleItems || []).filter((item) => item.text || item.period);
+  }
+  if (mode === "freeform") {
+    return String(panel?.freeformText || "").trim();
+  }
+  return (panel?.structuredItems || []).filter((item) => item.title || item.period || item.description);
+}
+
+function getPreviewHeroLogoItems(panel) {
+  return (panel?.items || []).filter((item) => item.name || item.logoUrl || item.logoAlt);
+}
+
+function hasPreviewHeroPanelContent(panelKey, panel) {
+  if (panelKey === "career") {
+    const activeContent = getPreviewHeroCareerActiveContent(panel);
+    return Array.isArray(activeContent) ? activeContent.length > 0 : Boolean(activeContent);
+  }
+  return getPreviewHeroLogoItems(panel).length > 0;
+}
+
+function renderPreviewHeroCareerBody(panel) {
+  const mode = normalizeHeroCareerMode(panel?.mode);
+
+  if (mode === "simple") {
+    const items = getPreviewHeroCareerActiveContent(panel);
+    return `
+      <div class="grid gap-4">
+        ${items.map((item) => `
+          <div class="border-b border-white/10 pb-4 last:border-b-0 last:pb-0">
+            <div class="flex flex-wrap items-baseline justify-between gap-3">
+              <span class="hero-preview-entry-title text-white">${escapeHTML(item.text || "")}</span>
+              ${item.period ? `<span class="text-[11px] font-bold uppercase tracking-[0.18em] text-[#fde047]">${escapeHTML(item.period)}</span>` : ""}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  if (mode === "freeform") {
+    return `<div class="hero-preview-freeform text-[#cec6ad]">${escapeWithBreaks(panel?.freeformText || "")}</div>`;
+  }
+
+  const items = getPreviewHeroCareerActiveContent(panel);
+  return `
+    <div class="grid gap-4">
+      ${items.map((item) => `
+        <div class="border-b border-white/10 pb-4 last:border-b-0 last:pb-0">
+          <div class="flex flex-wrap items-baseline justify-between gap-3">
+            <span class="hero-preview-entry-title text-white">${escapeHTML(item.title || "")}</span>
+            ${item.period ? `<span class="text-[11px] font-bold uppercase tracking-[0.18em] text-[#fde047]">${escapeHTML(item.period)}</span>` : ""}
+          </div>
+          ${item.description ? `<div class="hero-preview-entry-copy mt-2 text-[#cec6ad]">${escapeWithBreaks(item.description)}</div>` : ""}
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderPreviewHeroResourceBody(panel) {
+  const items = getPreviewHeroLogoItems(panel);
+  return `
+    <div class="grid gap-4">
+      ${items.map((item) => `
+        <div class="flex items-center gap-3 min-w-0">
+          ${item.logoUrl ? `
+            <span class="hero-preview-resource-logo">
+              <img
+                alt="${escapeHTML(item.logoAlt || item.name || "")}"
+                src="${escapeHTML(resolvePreviewAssetUrl(item.logoUrl))}"
+                referrerpolicy="no-referrer"
+                onerror="this.parentElement.style.display='none'; this.remove();">
+            </span>
+          ` : ""}
+          <span class="hero-preview-resource-name min-w-0 break-words text-[#f4ffff]">${escapeHTML(item.name || item.logoAlt || "항목")}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderPreviewHeroInfoCard(panelKey, panel) {
+  const body = panelKey === "career"
+    ? renderPreviewHeroCareerBody(panel)
+    : renderPreviewHeroResourceBody(panel);
+
+  return `
+    <article class="hero-preview-info-card min-w-0 rounded-[1.5rem] border border-white/10 bg-[#1e1c12]/80 p-6 backdrop-blur-sm" data-panel="${escapeHTML(panelKey)}">
+      <div class="mb-4 text-2xl font-extrabold tracking-tight text-white">${escapeHTML(panel.title || "")}</div>
+      ${body}
+    </article>
+  `;
+}
+
+function renderPreviewHeroInfoPanels() {
+  const infoPanels = state.data.hero.infoPanels || DEFAULT_DATA.hero.infoPanels;
+  const layoutPreset = normalizeHeroInfoLayoutPreset(infoPanels.layoutPreset);
+  const visiblePanels = [
+    { key: "career", panel: infoPanels.career },
+    { key: "tools", panel: infoPanels.tools },
+    { key: "bgm", panel: infoPanels.bgm },
+  ].filter(({ key, panel }) => hasPreviewHeroPanelContent(key, panel));
+
+  if (!visiblePanels.length) return "";
+
+  const hasSplitLayout = visiblePanels.length === 3
+    && visiblePanels.some(({ key }) => key === "career")
+    && visiblePanels.some(({ key }) => key === "tools")
+    && visiblePanels.some(({ key }) => key === "bgm");
+
+  if (hasSplitLayout) {
+    return `
+      <div class="hero-preview-info-grid is-split" data-layout-preset="${escapeHTML(layoutPreset)}">
+        ${renderPreviewHeroInfoCard("career", infoPanels.career)}
+        <div class="hero-preview-info-stack">
+          ${renderPreviewHeroInfoCard("tools", infoPanels.tools)}
+          ${renderPreviewHeroInfoCard("bgm", infoPanels.bgm)}
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="hero-preview-info-grid is-generic" data-count="${visiblePanels.length}">
+      ${visiblePanels.map(({ key, panel }) => renderPreviewHeroInfoCard(key, panel)).join("")}
+    </div>
+  `;
+}
+
+function renderPreviewStatsItems() {
+  const items = state.data.stats.items.filter((item) => item.value || item.label);
+  if (!items.length) {
+    return '<div class="rounded-2xl border border-dashed border-white/10 px-6 py-8 text-center text-sm font-medium text-[#8b8577]">통계 아이템을 추가하면 이곳에 표시됩니다.</div>';
+  }
+
+  return items.map((item) => `
+    <div>
+      <span class="mb-4 block text-4xl font-black tracking-tighter text-primary-container md:text-5xl">${escapeHTML(textOrFallback(item.value, "00"))}</span>
+      <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">${escapeHTML(textOrFallback(item.label, "LABEL"))}</span>
+    </div>
+  `).join("");
+}
+
+function renderPreviewWorksCard(video, options = {}) {
+  const preset = normalizeWorksVisualPreset(options.preset || state.data.works?.visualPreset);
+  const metaParts = [];
+  if (video.category) metaParts.push(video.category);
+  if (video.date) metaParts.push(formatDisplayDate(video.date));
+  const metaClass = preset === "reference"
+    ? "flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.18em] text-[#97917a]"
+    : "flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.18em] text-[#97917a]";
+  const metaMarkup = metaParts.length
+    ? `<div class="${metaClass}">
+         ${metaParts.map((item) => `<span>${escapeHTML(item)}</span>`).join("")}
+       </div>`
+    : "";
+  const mediaStyle = options.mediaHeight
+    ? `height:${options.mediaHeight};`
+    : "aspect-ratio:16 / 9;";
+  const articleClass = preset === "reference"
+    ? "group"
+    : preset === "minimal"
+      ? "overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]"
+      : "overflow-hidden rounded-2xl border border-white/10 bg-[#1e1c12]";
+  const thumbClass = preset === "reference"
+    ? "relative overflow-hidden rounded-2xl border border-white/10 bg-[#2d2a1f] shadow-[0_18px_42px_rgba(0,0,0,0.18)]"
+    : "relative overflow-hidden bg-[#2d2a1f]";
+  const bodyClass = preset === "reference"
+    ? "grid gap-3 pt-4"
+    : "grid gap-3 p-5";
+  const titleClass = preset === "reference"
+    ? "text-base font-bold leading-snug tracking-tight text-white"
+    : "text-lg font-bold leading-snug tracking-tight text-white";
+
+  return `
+    <article class="${articleClass}">
+      <div class="${thumbClass}" style="${mediaStyle}">
+        <img class="h-full w-full object-cover" alt="${escapeHTML(video.title || "영상 썸네일")}" src="${escapeHTML(videoThumb(video.id))}" referrerpolicy="no-referrer">
+        <span class="absolute right-4 top-4 rounded-full border ${video.type === "short" ? "border-[#3bf7ff]/30 text-[#8ffcff]" : "border-[#fde047]/30 text-[#fde047]"} bg-[#16130a]/85 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em]">${escapeHTML(video.type === "short" ? "쇼츠" : "동영상")}</span>
+      </div>
+      <div class="${bodyClass}">
+        <div class="${titleClass}">${escapeHTML(textOrFallback(video.title, "제목 미입력"))}</div>
+        ${metaMarkup}
+      </div>
+    </article>
+  `;
+}
+
+function getPreviewWorksSingleColumnCardWidth(singleSize) {
+  const size = normalizeWorksSingleColumnSize(singleSize);
+  if (size === "small") return "min(100%, calc((100% - 3rem) / 3))";
+  if (size === "medium") return "min(100%, calc((100% - 1.5rem) / 2))";
+  return "100%";
+}
+
+function renderPreviewGridWorksFilters(categories, hasShortVideos, preset = state.data.works?.visualPreset) {
+  const visualPreset = normalizeWorksVisualPreset(preset);
+  const activeClass = visualPreset === "panel"
+    ? "rounded-full border border-[#fde047]/30 bg-[#fde047]/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#fde047]"
+    : "rounded-full border border-[#fde047]/30 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#fde047]";
+  const neutralClass = visualPreset === "panel"
+    ? "rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#cec6ad]"
+    : "rounded-full border border-white/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#cec6ad]";
+  const chips = [
+    `<span class="${activeClass}">전체</span>`,
+    `<span class="${neutralClass}">동영상</span>`,
+    ...(hasShortVideos
+      ? [`<span class="${neutralClass}">쇼츠</span>`]
+      : []),
+  ];
+
+  const categoryChips = [
+    `<span class="${neutralClass}">전체 카테고리</span>`,
+    ...categories.map((category) => `
+      <span class="${neutralClass}">${escapeHTML(category)}</span>
+    `),
+  ];
+
+  return `
+    <div class="flex flex-wrap items-center gap-3">
+      ${chips.join("")}
+      <span class="hidden h-5 w-px bg-white/10 md:block"></span>
+      ${categoryChips.join("")}
+    </div>
+  `;
+}
+
+function renderPreviewCategoryStackWorksFilters(hasShortVideos, preset = state.data.works?.visualPreset) {
+  const visualPreset = normalizeWorksVisualPreset(preset);
+  const activeClass = visualPreset === "panel"
+    ? "rounded-full border border-[#fde047]/30 bg-[#fde047]/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#fde047]"
+    : "rounded-full border border-[#fde047]/30 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#fde047]";
+  const neutralClass = visualPreset === "panel"
+    ? "rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#cec6ad]"
+    : "rounded-full border border-white/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#cec6ad]";
+  return `
+    <div class="flex flex-wrap items-center gap-3">
+      <span class="${activeClass}">전체</span>
+      <span class="${neutralClass}">동영상</span>
+      ${hasShortVideos ? `<span class="${neutralClass}">쇼츠</span>` : ""}
+    </div>
+  `;
+}
+
+function renderPreviewWorksGrid(videos, columns, preset = state.data.works?.visualPreset) {
+  if (!videos.length) {
+    return `
+      <div class="rounded-2xl border border-dashed border-white/10 px-6 py-8 text-center text-sm font-medium text-[#8b8577]">
+        ${escapeHTML(textOrFallback(state.data.works.emptyText, "해당 조건의 영상이 없습니다."))}
+      </div>
+    `;
+  }
+
+  const safeColumns = normalizeWorksColumnCount(columns, DEFAULT_DATA.works.gridColumns);
+  const gapClass = normalizeWorksVisualPreset(preset) === "reference" ? "gap-7" : "gap-6";
+
+  return `
+    <div class="grid ${gapClass}" style="grid-template-columns:repeat(${safeColumns}, minmax(0, 1fr));">
+      ${videos.map((video) => renderPreviewWorksCard(video, { preset })).join("")}
+    </div>
+  `;
+}
+
+function renderPreviewWorksCategoryStack(videos, categories, works, preset = state.data.works?.visualPreset) {
+  const visualPreset = normalizeWorksVisualPreset(preset);
+  const safeColumns = normalizeWorksColumnCount(works.categoryStackColumns, DEFAULT_DATA.works.categoryStackColumns);
+  const singleSize = normalizeWorksSingleColumnSize(works.categoryStackSingleColumnSize);
+  const categoryEntryMap = new Map(
+    normalizeWorksCategoryEntries(works.categoryEntries, works.videos, works.categoryOrder)
+      .map((entry) => [entry.category, entry]),
+  );
+
+  if (!videos.length) {
+    return `
+      <div class="rounded-2xl border border-dashed border-white/10 px-6 py-8 text-center text-sm font-medium text-[#8b8577]">
+        ${escapeHTML(textOrFallback(state.data.works.emptyText, "해당 조건의 영상이 없습니다."))}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="grid ${visualPreset === "reference" ? "gap-10" : "gap-12"}">
+      ${categories.map((category) => {
+        const categoryVideos = videos
+          .filter((video) => video.category === category)
+          .slice();
+        const categoryEntry = categoryEntryMap.get(category) || { title: "", meta: "" };
+        const displayTitle = categoryEntry.title || category;
+        const resolvedColumns = Number.isInteger(categoryEntry.columns)
+          ? normalizeWorksColumnCount(categoryEntry.columns, safeColumns)
+          : safeColumns;
+        const resolvedSingleSize = categoryEntry.singleColumnSize
+          ? normalizeWorksSingleColumnSize(categoryEntry.singleColumnSize)
+          : singleSize;
+        const cardWidth = resolvedColumns === 1 ? getPreviewWorksSingleColumnCardWidth(resolvedSingleSize) : "100%";
+
+        if (!categoryVideos.length) return "";
+
+        return `
+          <section class="grid ${visualPreset === "reference" ? "gap-4" : "gap-5"}">
+            <div class="grid gap-2 border-b border-white/10 pb-4">
+              <span class="text-[11px] font-black uppercase tracking-[0.22em] text-[#97917a]">Category</span>
+              <h3 class="mb-0 ${visualPreset === "reference" ? "text-[1.65rem]" : "text-3xl"} font-black tracking-tight text-white">${escapeHTML(displayTitle)}</h3>
+              ${categoryEntry.meta ? `<div class="text-[12px] leading-relaxed text-[#cec6ad]">${escapeWithBreaks(categoryEntry.meta)}</div>` : ""}
+            </div>
+            <div class="grid gap-6" style="grid-template-columns:repeat(${resolvedColumns}, minmax(0, 1fr));${resolvedColumns === 1 ? "justify-items:center;" : ""}">
+              ${categoryVideos.map((video) => `
+                <div style="width:${cardWidth};max-width:100%;">
+                  ${renderPreviewWorksCard(video, { preset })}
+                </div>
+              `).join("")}
+            </div>
+          </section>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function getHybridWorksSegments(videos, categories, works) {
+  const categoryEntryMap = new Map(
+    normalizeWorksCategoryEntries(works.categoryEntries, works.videos, works.categoryOrder)
+      .map((entry) => [entry.category, entry]),
+  );
+  const stackCategorySet = new Set(
+    categories.filter((category) => categoryEntryMap.get(category)?.displayMode === "category-stack"),
+  );
+
+  return {
+    stackCategories: categories.filter((category) => stackCategorySet.has(category)),
+    gridCategories: categories.filter((category) => !stackCategorySet.has(category)),
+    stackVideos: videos.filter((video) => stackCategorySet.has(video.category)),
+    gridVideos: videos.filter((video) => !stackCategorySet.has(video.category)),
+  };
+}
+
+function renderPreviewWorksHybrid(videos, categories, works, preset = state.data.works?.visualPreset) {
+  const segments = getHybridWorksSegments(videos, categories, works);
+  if (!segments.stackVideos.length && !segments.gridVideos.length) {
+    return `
+      <div class="rounded-2xl border border-dashed border-white/10 px-6 py-8 text-center text-sm font-medium text-[#8b8577]">
+        ${escapeHTML(textOrFallback(state.data.works.emptyText, "해당 조건의 영상이 없습니다."))}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="grid gap-10">
+      ${segments.stackVideos.length ? renderPreviewWorksCategoryStack(segments.stackVideos, segments.stackCategories, works, preset) : ""}
+      ${segments.gridVideos.length ? `<div>${renderPreviewGridWorksFilters(segments.gridCategories, segments.gridVideos.some((video) => video.type === "short"), preset)}</div>` : ""}
+      ${segments.gridVideos.length ? renderPreviewWorksGrid(segments.gridVideos, works.gridColumns, preset) : ""}
+    </div>
+  `;
+}
+
+function getPreviewProcessStepNumber(step, index) {
+  const value = String(step?.number || "").trim();
+  return value || String(index + 1).padStart(2, "0");
+}
+
+function renderPreviewProcessRows(steps, variant) {
+  return chunkProcessSteps(steps).map((row, rowIndex) => `
+    <div class="process-grid-row" data-columns="${row.length}">
+      ${row.map((step, index) => {
+        const stepIndex = rowIndex * 4 + index;
+        const title = String(step.title || "").trim() || `단계 ${stepIndex + 1}`;
+        const description = String(step.description || "").trim();
+
+        return `
+          <article class="process-step-card" data-variant="${escapeHTML(variant)}" data-step-index="${stepIndex + 1}">
+            <div class="process-step-top">
+              <div class="process-step-number-wrap">
+                <div class="process-step-number">${escapeHTML(getPreviewProcessStepNumber(step, stepIndex))}</div>
+                <span class="process-step-rule" aria-hidden="true"></span>
+              </div>
+              <h4 class="process-step-title">${escapeHTML(title)}</h4>
+            </div>
+            ${description ? `<p class="process-step-copy">${escapeWithBreaks(description)}</p>` : ""}
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `).join("");
+}
+
+function renderPreviewEditorialProcessSteps(steps) {
+  return `
+    <div class="process-editorial-list">
+      ${steps.map((step, index) => {
+        const title = String(step.title || "").trim() || `단계 ${index + 1}`;
+        const description = String(step.description || "").trim();
+        return `
+          <article class="process-editorial-step" data-step-index="${index + 1}">
+            <div class="process-editorial-number">${escapeHTML(getPreviewProcessStepNumber(step, index))}</div>
+            <div class="process-editorial-body">
+              <span class="process-editorial-kicker">Step ${String(index + 1).padStart(2, "0")}</span>
+              <h4 class="process-step-title">${escapeHTML(title)}</h4>
+              ${description ? `<p class="process-step-copy">${escapeWithBreaks(description)}</p>` : ""}
+            </div>
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderPreviewProcessSteps(style) {
+  const steps = state.data.pricing.processSteps.filter((step) => step.number || step.title || step.description);
+  if (!steps.length) {
+    return previewHiddenBlock("프로세스 단계를 추가하면 이곳에 표시됩니다.");
+  }
+
+  const processStyle = normalizePricingProcessStyle(style);
+  if (processStyle === "editorial") {
+    return renderPreviewEditorialProcessSteps(steps);
+  }
+
+  return renderPreviewProcessRows(steps, processStyle);
+}
+
+function renderPreviewCustomWorks() {
+  const blocks = (state.data.pricing.customWorks || []).filter(hasCustomWorkContent);
+  if (!blocks.length) {
+    return previewHiddenBlock("커스텀 작업 블록을 추가하면 이곳에 표시됩니다.");
+  }
+
+  return blocks.map((block, index) => {
+    const mediaFirst = index % 2 === 1;
+    const textSection = `
+      <section class="flex flex-col justify-center bg-[#1e1c12] p-10">
+        <div class="mb-6 text-3xl font-bold leading-[1.2] text-white">${escapeWithBreaks(textOrFallback(block.title, "커스텀 작업 제목"))}</div>
+        <div class="mb-8 leading-relaxed text-[#cec6ad]">${escapeWithBreaks(textOrFallback(block.description, "커스텀 작업 설명이 이곳에 표시됩니다."))}</div>
+        <div class="flex items-center gap-4">
+          <span class="text-xl font-black italic tracking-tight text-[#fde047]">${escapeHTML(textOrFallback(block.highlight, "FAST & ACCURATE"))}</span>
+          <span class="h-px flex-1 bg-white/10"></span>
+        </div>
+      </section>
+    `;
+    const mediaSection = `
+      <section class="relative min-h-[280px] overflow-hidden bg-[#2d2a1f]">
+        ${block.imageUrl
+          ? `<img class="h-full w-full object-cover" alt="${escapeHTML(block.imageAlt || block.title || "")}" src="${escapeHTML(resolvePreviewAssetUrl(block.imageUrl))}">`
+          : '<div class="flex h-full min-h-[280px] items-center justify-center text-sm font-medium text-[#8b8577]">커스텀 작업 이미지를 입력하면 이 영역에 표시됩니다.</div>'}
+        <div class="absolute inset-0 bg-gradient-to-t from-[#16130a] to-transparent opacity-70"></div>
+        <div class="absolute bottom-8 left-8 right-8">
+          <div class="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-[#fde047]">${escapeHTML(textOrFallback(block.eyebrow, "Studio Quality"))}</div>
+          <div class="text-2xl font-bold leading-[1.2] text-white">${escapeWithBreaks(textOrFallback(block.caption || block.title, "압도적인 퀄리티의 비결"))}</div>
+        </div>
+      </section>
+    `;
+
+    return `
+      <div class="grid gap-6 md:grid-cols-2">
+        ${mediaFirst ? `${mediaSection}${textSection}` : `${textSection}${mediaSection}`}
+      </div>
+    `;
+  }).join("");
+}
+
+function renderPreviewProjectCards() {
+  const cards = state.data.projects.cards.filter((card) => card.title || card.description);
+  if (!cards.length) {
+    return '<div class="works-empty md:col-span-12">프로젝트 카드를 추가하면 이곳에 표시됩니다.</div>';
+  }
+
+  const layoutClassMap = {
+    featured: "md:col-span-8 border-primary-container/30",
+    secondary: "md:col-span-4 border-outline-variant/30",
+    small: "md:col-span-4 border-outline-variant/20",
+  };
+
+  return cards.map((card) => {
+    const href = resolvePreviewAwareHref(card.href);
+    const external = isExternalHref(href) ? ' target="_blank" rel="noopener"' : "";
+    const layoutClass = layoutClassMap[card.layout] || layoutClassMap.small;
+    return `
+      <article class="project-card ${layoutClass}" data-layout="${escapeHTML(card.layout || "small")}">
+        <div class="mb-6 flex items-center gap-3">
+          ${card.tag ? `<span class="rounded-full bg-surface-container px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-on-surface">${escapeHTML(card.tag)}</span>` : ""}
+          ${card.duration ? `<span class="text-sm font-bold tracking-tight text-primary-container">${escapeHTML(card.duration)}</span>` : ""}
+        </div>
+        <h3 class="project-title mb-4 text-3xl font-bold leading-none ${card.layout === "featured" ? "md:text-6xl text-4xl" : ""}">${escapeHTML(textOrFallback(card.title, "프로젝트 제목"))}</h3>
+        ${card.description ? `<p class="text-sm leading-relaxed text-on-surface-variant ${card.layout === "featured" ? "max-w-2xl text-lg" : ""}">${escapeHTML(card.description)}</p>` : ""}
+        ${card.ctaLabel ? `<a class="mt-6 inline-flex items-center gap-2 text-xs font-bold tracking-[0.08em] text-primary-container" href="${escapeHTML(href || "#")}"${external}>${escapeHTML(card.ctaLabel)} <span class="material-symbols-outlined text-sm">arrow_forward</span></a>` : ""}
+      </article>
+    `;
+  }).join("");
+}
+
+function renderPreviewProjectYouTubeChannelCard(options = {}) {
+  const channel = normalizeProjectYouTubeChannel(state.data.projects.youtubeChannel);
+  const hasPreviewContent = Boolean(channel.url && (channel.name || channel.handle || channel.avatarUrl));
+  if (options.ignoreEnabled) {
+    if (!hasPreviewContent) return "";
+  } else if (!hasProjectYouTubeChannel(channel)) {
+    return "";
+  }
+
+  const avatarMarkup = channel.avatarUrl
+    ? `<img class="project-youtube-avatar-image" src="${escapeHTML(resolvePreviewAssetUrl(channel.avatarUrl))}" alt="${escapeHTML(channel.name || "유튜브 채널 프로필")}" loading="lazy" referrerpolicy="no-referrer">`
+    : `<span class="project-youtube-avatar-fallback">${escapeHTML(String(channel.name || channel.handle || "YT").trim().replace(/^@/, "").slice(0, 2).toUpperCase() || "YT")}</span>`;
+  const stats = [channel.subscriberText, channel.videoCountText].filter(Boolean);
+
+  return `
+    <article class="project-youtube-card">
+      <div class="project-youtube-avatar">
+        ${avatarMarkup}
+      </div>
+      <div class="project-youtube-copy bg-white text-[#606060]">
+        <span class="project-youtube-label text-[#606060]">YouTube Channel</span>
+        <div class="project-youtube-title-row">
+          <strong class="project-youtube-name text-[#0f0f0f]">${escapeHTML(channel.name || channel.handle)}</strong>
+          ${channel.handle ? `<span class="project-youtube-handle">${escapeHTML(channel.handle)}</span>` : ""}
+        </div>
+        ${stats.length ? `<div class="project-youtube-stats">${stats.map((item) => `<span class="project-youtube-stat">${escapeHTML(item)}</span>`).join("")}</div>` : ""}
+        ${channel.description ? `<p class="project-youtube-description">${escapeWithBreaks(channel.description)}</p>` : ""}
+      </div>
+      <div class="project-youtube-actions">
+        <a href="${escapeHTML(channel.url)}" class="project-youtube-subscribe" target="_blank" rel="noopener">
+          <span>채널 보기</span>
+          ${renderPreviewExternalLinkIcon()}
+        </a>
+      </div>
+    </article>
+  `;
+}
+
+function renderInlinePreviewShell(title, content, emptyText) {
+  return `
+    <div class="inline-preview-label">${escapeHTML(title)}</div>
+    <div class="inline-preview-surface">
+      ${content || `<div class="inline-preview-empty">${escapeHTML(emptyText)}</div>`}
+    </div>
+  `;
+}
+
+function renderProjectInlinePreviews() {
+  const channelPreview = $("#projects-youtube-channel-preview");
+  if (channelPreview) {
+    channelPreview.innerHTML = renderInlinePreviewShell(
+      "유튜브 채널 카드 미리보기",
+      renderPreviewProjectYouTubeChannelCard({ ignoreEnabled: true }),
+      "채널 URL과 채널명을 입력하면 이곳에 카드가 표시됩니다.",
+    );
+  }
+
+  const cardsPreview = $("#projects-card-only-preview");
+  if (cardsPreview) {
+    cardsPreview.innerHTML = renderInlinePreviewShell(
+      "프로젝트 카드 미리보기",
+      `<div class="preview-project-card-grid grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-12">${renderPreviewProjectCards()}</div>`,
+      "프로젝트 카드를 추가하면 이곳에 표시됩니다.",
+    );
+  }
+}
+
+function renderPreviewPlanCards() {
+  const plans = state.data.pricing.plans.filter((plan) => plan.title || plan.price || plan.description);
+  if (!plans.length) {
+    return '<div class="rounded-2xl border border-dashed border-white/10 px-6 py-8 text-center text-sm font-medium text-[#8b8577] md:col-span-2">가격 플랜을 추가하면 이곳에 표시됩니다.</div>';
+  }
+
+  return plans.map((plan) => {
+    const highlighted = normalizePricingPlanDesign(plan.design, String(plan.slug || "").trim() === "long" ? "longform" : "shortform") === "longform";
+    return `
+      <article class="${highlighted ? "relative overflow-hidden border-t-4 border-[#fde047] bg-[#2d2a1f]" : "bg-[#1e1c12]"} rounded-2xl p-8">
+        ${plan.badge ? `<div class="${highlighted ? "absolute right-0 top-0 p-4" : "mb-8"}"><span class="${highlighted ? "bg-[#fde047] px-2 py-1 text-[0.625rem] font-black uppercase tracking-tight text-[#211b00]" : "text-[0.6875rem] font-bold uppercase tracking-widest text-[#97917a]"}">${escapeHTML(plan.badge)}</span></div>` : ""}
+        <div class="mb-10 flex items-start justify-between gap-3">
+          ${plan.icon ? `<span class="material-symbols-outlined text-4xl text-[#fde047]">${escapeHTML(plan.icon)}</span>` : ""}
+        </div>
+        <div class="mb-2 text-3xl font-bold leading-[1.2] ${highlighted ? "text-[#fde047]" : "text-white"}">${escapeWithBreaks(textOrFallback(plan.title, "플랜 제목"))}</div>
+        <div class="mb-8 text-sm leading-relaxed text-[#cec6ad]">${escapeWithBreaks(textOrFallback(plan.description, "플랜 설명이 이곳에 표시됩니다."))}</div>
+        <ul class="mb-10 space-y-4">
+          ${(plan.features || []).length
+            ? plan.features.map((feature) => `
+                <li class="flex items-start text-sm">
+                  ${renderPreviewPlanCheckIcon()}
+                  <span>${escapeHTML(feature)}</span>
+                </li>
+              `).join("")
+            : '<li class="text-sm text-[#8b8577]">포함 항목을 추가하면 여기에 표시됩니다.</li>'}
+        </ul>
+        <div class="mb-6 text-4xl font-black tracking-tighter text-white">
+          ${escapeHTML(textOrFallback(plan.price, "₩0"))}
+          ${plan.priceUnit ? `<span class="text-sm font-normal text-[#97917a]">${escapeHTML(plan.priceUnit)}</span>` : ""}
+        </div>
+        ${plan.cta?.label ? `<span class="${highlighted ? "bg-[#fde047] text-[#211b00]" : "border border-white/10 text-white"} inline-flex w-full items-center justify-center rounded-lg px-6 py-4 text-sm font-bold">${escapeHTML(plan.cta.label)}</span>` : ""}
+      </article>
+    `;
+  }).join("");
+}
+
+function renderPreviewFooterLinks() {
+  const links = getEffectiveFooterLinks(state.data.site.footer.links).filter((link) => link.label);
+  if (!links.length) {
+    return '<span class="text-xs uppercase tracking-[0.2em] text-[#8b8577]">푸터 링크를 추가하면 이곳에 표시됩니다.</span>';
+  }
+
+  return links.map((link) => `
+    <span class="text-xs uppercase tracking-[0.2em] text-[#cec6ad]">${escapeHTML(link.label)}</span>
+  `).join("");
+}
+
+function buildBrandPreview() {
+  const content = `
+    <section class="mt-8 grid gap-5 border-t border-[#e5e5e5] pt-6">
+      <div class="grid gap-3 md:grid-cols-3">
+        ${renderPreviewChannelMetaParts().map((part) => `
+          <div class="rounded-xl border border-[#e5e5e5] bg-[#fafafa] p-4">
+            <div class="text-[11px] font-black uppercase tracking-[0.14em] text-[#606060]">channel meta</div>
+            <div class="mt-2 break-words text-base font-black text-[#0f0f0f]">${escapeHTML(part)}</div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="rounded-xl border border-[#e5e5e5] bg-white p-5">
+        <div class="mb-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#606060]">site copy</div>
+        <div class="text-2xl font-black text-[#0f0f0f]">${escapeHTML(textOrFallback(state.data.site.title, "영상 포트폴리오 템플릿"))}</div>
+        <p class="mt-2 text-sm font-semibold leading-relaxed text-[#606060]">${escapeHTML(textOrFallback(state.data.site.description, "영상 편집자와 크리에이터를 위한 정적 포트폴리오 템플릿입니다."))}</p>
+      </div>
+    </section>
+  `;
+  return renderPreviewLightShell("home", content);
+}
+
+function buildHeroPreview() {
+  const hero = state.data.hero;
+  const content = `
+    <section class="mt-8 grid gap-5 border-t border-[#e5e5e5] pt-6">
+      <div class="rounded-xl border border-[#e5e5e5] bg-[#fafafa] p-5">
+        <div class="mb-3 text-[11px] font-black uppercase tracking-[0.18em] text-[#ff0033]">${escapeHTML(textOrFallback(hero.eyebrow, DEFAULT_DATA.hero.eyebrow))}</div>
+        <div class="text-3xl font-black leading-tight text-[#0f0f0f] md:text-4xl">${renderPreviewAccentText(textOrFallback(hero.title, DEFAULT_DATA.hero.title), hero.titleAccent, "text-[#ff0033]")}</div>
+        <p class="mt-4 max-w-3xl text-sm font-semibold leading-relaxed text-[#606060]">${escapeWithBreaks(textOrFallback(hero.description, DEFAULT_DATA.hero.description))}</p>
+        ${renderPreviewHeroStatus(hero)}
+        <div class="mt-5 flex flex-wrap gap-3">
+          ${renderPreviewHeroActions(hero.actions, "light")}
+        </div>
+      </div>
+      <div class="rounded-xl border border-[#e5e5e5] bg-white p-5">
+        <div class="mb-4 text-lg font-black text-[#0f0f0f]">홈 하단 고급 패널</div>
+        ${renderPreviewHeroInfoPanels() || '<div class="rounded-xl border border-dashed border-[#d9d9d9] bg-[#fafafa] px-6 py-8 text-center text-sm font-bold text-[#606060]">경력, 툴, BGM 항목을 추가하면 이곳에 표시됩니다.</div>'}
+      </div>
+    </section>
+  `;
+  return renderPreviewLightShell("home", content);
+}
+
+function renderHomePreviewCard(sectionKey, title, description, body) {
+  return `
+    <article class="rounded-2xl border border-[#e5e5e5] bg-white p-5 shadow-[0_10px_24px_rgba(15,15,15,0.06)]" data-home-preview-section="${escapeHTML(sectionKey)}">
+      <div class="mb-5 flex flex-col gap-1 border-b border-[#e5e5e5] pb-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <div class="mb-1 text-[11px] font-black uppercase tracking-[0.2em] text-[#ff0033]">${escapeHTML(sectionKey)}</div>
+          <h3 class="text-2xl font-black tracking-tight text-[#0f0f0f]">${escapeHTML(title)}</h3>
+        </div>
+        ${description ? `<p class="max-w-xl text-sm font-semibold leading-relaxed text-[#606060] md:text-right">${escapeWithBreaks(description)}</p>` : ""}
+      </div>
+      ${body}
+    </article>
+  `;
+}
+
+function renderHomeFeaturedPreviewSection() {
+  const featuredVideo = getSortedWorksVideos(state.data.works.videos)[0];
+  const videoTitle = featuredVideo?.title || "대표 영상";
+  const videoMeta = [featuredVideo?.category, featuredVideo?.date ? formatDisplayDate(featuredVideo.date) : ""].filter(Boolean).join(" · ");
+  return renderHomePreviewCard(
+    "featured",
+    HOME_SECTION_LABELS.featured,
+    "홈 탭 상단에 가장 먼저 노출되는 대표 영역입니다.",
+    `
+      <div class="grid gap-5 md:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] md:items-center">
+        <div class="relative overflow-hidden rounded-xl bg-[#f2f2f2]" style="aspect-ratio:16/9;">
+          ${featuredVideo?.id
+            ? `<img class="h-full w-full object-cover" src="${escapeHTML(videoThumb(featuredVideo.id))}" alt="${escapeHTML(videoTitle)}" referrerpolicy="no-referrer">`
+            : '<div class="flex h-full min-h-[180px] items-center justify-center text-sm font-black text-[#606060]">대표 영상이 없습니다.</div>'}
+          <span class="absolute bottom-3 left-3 rounded-full bg-[#0f0f0f] px-3 py-1 text-xs font-black text-white">대표 영상</span>
+        </div>
+        <div>
+          <div class="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#ff0033]">${escapeHTML(textOrFallback(state.data.hero.eyebrow, "VIDEO PORTFOLIO"))}</div>
+          <div class="text-3xl font-black leading-tight text-[#0f0f0f]">${renderPreviewAccentText(textOrFallback(state.data.hero.title, videoTitle), state.data.hero.titleAccent, "text-[#ff0033]")}</div>
+          <p class="mt-3 text-sm font-semibold leading-relaxed text-[#606060]">${escapeWithBreaks(textOrFallback(state.data.hero.description, videoMeta || "홈 탭 대표 영상 설명"))}</p>
+        </div>
+      </div>
+    `,
+  );
+}
+
+function renderHomeInfoPanelsPreviewSection() {
+  return renderHomePreviewCard(
+    "infoPanels",
+    HOME_SECTION_LABELS.infoPanels,
+    "경력사항, 사용 가능한 툴, BGM 카드가 표시됩니다.",
+    renderPreviewHeroInfoPanels() || '<div class="rounded-xl border border-dashed border-[#d9d9d9] bg-[#fafafa] px-6 py-8 text-center text-sm font-bold text-[#606060]">경력, 툴, BGM 항목을 추가하면 이곳에 표시됩니다.</div>',
+  );
+}
+
+function renderHomeLatestPreviewSection(home) {
+  const videos = home.latestVideos.enabled === false
+    ? []
+    : getSortedWorksVideos(state.data.works.videos).slice(0, normalizeHomeVideoCount(home.latestVideos.count, DEFAULT_DATA.home.latestVideos.count));
+  return renderHomePreviewCard(
+    "latestVideos",
+    home.latestVideos.title || HOME_SECTION_LABELS.latestVideos,
+    `최근 등록순 ${normalizeHomeVideoCount(home.latestVideos.count, DEFAULT_DATA.home.latestVideos.count)}개를 홈 탭에 표시합니다.`,
+    home.latestVideos.enabled === false
+      ? previewHiddenBlock("최신 영상 섹션이 꺼져 있습니다.")
+      : renderPreviewLightVideoCards(videos),
+  );
+}
+
+function renderHomeCategoryPreviewSection(home) {
+  const works = state.data.works || DEFAULT_DATA.works;
+  const sortedVideos = getSortedWorksVideos(works.videos);
+  const perCategoryCount = normalizeHomeVideoCount(home.categoryVideos.perCategoryCount, DEFAULT_DATA.home.categoryVideos.perCategoryCount);
+  const entries = normalizeWorksCategoryEntries(works.categoryEntries, works.videos, works.categoryOrder);
+  const groups = getOrderedWorksCategories(works.videos, works.categoryOrder).map((category) => {
+    const videos = sortedVideos.filter((video) => video.category === category).slice(0, perCategoryCount);
+    if (!videos.length) return "";
+    const entry = entries.find((candidate) => candidate.category === category) || {};
+    return `
+      <section class="grid gap-3 rounded-xl border border-[#e5e5e5] bg-[#fafafa] p-4">
+        <div>
+          <h4 class="text-lg font-black text-[#0f0f0f]">${escapeHTML(entry.title || category)}</h4>
+          ${entry.meta ? `<p class="mt-1 text-xs font-semibold leading-relaxed text-[#606060]">${escapeWithBreaks(entry.meta)}</p>` : ""}
+        </div>
+        ${renderPreviewLightVideoCards(videos)}
+      </section>
+    `;
+  }).filter(Boolean);
+
+  return renderHomePreviewCard(
+    "categoryVideos",
+    HOME_SECTION_LABELS.categoryVideos,
+    `카테고리마다 최대 ${perCategoryCount}개를 홈 탭에 표시합니다.`,
+    home.categoryVideos.enabled === false
+      ? previewHiddenBlock("카테고리별 영상 섹션이 꺼져 있습니다.")
+      : (groups.length ? `<div class="grid gap-5">${groups.join("")}</div>` : previewHiddenBlock("표시할 카테고리별 영상이 없습니다.")),
+  );
+}
+
+function renderHomeProjectsPreviewSection() {
+  const channel = normalizeProjectYouTubeChannel(state.data.projects.youtubeChannel);
+  const channelCard = channel.enabled === false ? "" : renderPreviewProjectYouTubeChannelCard();
+  const projectCount = state.data.projects.enabled === false ? 0 : state.data.projects.cards.length;
+  return renderHomePreviewCard(
+    "projects",
+    HOME_SECTION_LABELS.projects,
+    "프로젝트 섹션과 유튜브 채널 카드가 홈 탭 하단에 표시됩니다.",
+    `
+      ${channel.enabled === false ? previewHiddenBlock("유튜브 채널 카드가 꺼져 있습니다.") : (channelCard || previewHiddenBlock("채널 URL과 채널명을 입력하면 카드가 표시됩니다."))}
+      <div class="mt-4 rounded-xl border border-[#e5e5e5] bg-[#fafafa] p-4 text-sm font-bold text-[#606060]">
+        프로젝트 카드 ${escapeHTML(String(projectCount))}개가 홈 탭 프로젝트 영역에 연결됩니다.
+      </div>
+    `,
+  );
+}
+
+function renderHomeStatsPreviewSection() {
+  const items = state.data.stats.items.filter((item) => item.value || item.label);
+  return renderHomePreviewCard(
+    "stats",
+    HOME_SECTION_LABELS.stats,
+    "홈 탭 통계 섹션입니다.",
+    state.data.stats.enabled === false
+      ? previewHiddenBlock("통계 섹션이 꺼져 있습니다.")
+      : `<div class="grid gap-3 md:grid-cols-3">${items.length ? items.map((item) => `
+          <div class="rounded-xl border border-[#e5e5e5] bg-[#fafafa] p-4">
+            <div class="text-3xl font-black text-[#ff0033]">${escapeHTML(item.value || "0")}</div>
+            <div class="mt-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#606060]">${escapeHTML(item.label || "STAT")}</div>
+          </div>
+        `).join("") : '<div class="rounded-xl border border-dashed border-[#d9d9d9] bg-[#fafafa] px-6 py-8 text-center text-sm font-bold text-[#606060] md:col-span-3">통계 항목을 추가하면 이곳에 표시됩니다.</div>'}</div>`,
+  );
+}
+
+function renderHomePreviewSection(sectionKey, home) {
+  if (!isHomeSectionVisible(home, sectionKey)) return "";
+  switch (sectionKey) {
+    case "featured":
+      return renderHomeFeaturedPreviewSection();
+    case "infoPanels":
+      return renderHomeInfoPanelsPreviewSection();
+    case "latestVideos":
+      return renderHomeLatestPreviewSection(home);
+    case "categoryVideos":
+      return renderHomeCategoryPreviewSection(home);
+    case "projects":
+      return renderHomeProjectsPreviewSection();
+    case "stats":
+      return renderHomeStatsPreviewSection();
+    default:
+      return "";
+  }
+}
+
+function buildHomePreview() {
+  const home = normalizeHomeSettings(state.data.home);
+  const content = `
+    <section class="mt-8 border-t border-[#e5e5e5] pt-7">
+      <div class="mb-6 rounded-xl border border-[#e5e5e5] bg-[#fafafa] p-5">
+        <div class="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#ff0033]">home layout</div>
+        <h2 class="text-3xl font-black text-[#0f0f0f] md:text-4xl">홈 탭 콘텐츠 순서</h2>
+        <p class="mt-2 text-sm font-semibold leading-relaxed text-[#606060]">왼쪽 섹션 순서 편집과 표시 옵션이 홈 탭 레이아웃에 반영됩니다.</p>
+      </div>
+      <div class="grid gap-5">
+        ${home.sectionOrder.map((sectionKey) => renderHomePreviewSection(sectionKey, home)).join("")}
+      </div>
+    </section>
+  `;
+  return renderPreviewLightShell("home", content);
+}
+
+function renderPreviewPublicSectionHead({ kicker = "", title = "", description = "", titleTag = "h2" } = {}) {
+  const safeTitleTag = titleTag === "h3" ? "h3" : "h2";
+  return `
+    <div class="section-head">
+      <div>
+        ${kicker ? `<p class="section-kicker">${escapeHTML(kicker)}</p>` : ""}
+        <${safeTitleTag} class="section-title">${escapeWithBreaks(title)}</${safeTitleTag}>
+        ${description ? `<p class="section-description">${escapeWithBreaks(description)}</p>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function renderPreviewPublicContent(content) {
+  return `<div class="preview-public-content">${content}</div>`;
+}
+
+function buildProjectsPreview() {
+  const channel = normalizeProjectYouTubeChannel(state.data.projects.youtubeChannel);
+  const channelCard = renderPreviewProjectYouTubeChannelCard();
+  const channelPreview = channel.enabled === false
+    ? previewHiddenBlock("유튜브 채널 카드가 꺼져 있습니다.")
+    : channelCard || previewHiddenBlock("유튜브 채널 카드 URL과 채널명을 입력하면 이곳에 표시됩니다.");
+  const projectCards = state.data.projects.enabled === false
+    ? previewHiddenBlock("프로젝트 섹션이 꺼져 있습니다. 내부 작업물 링크는 영상 포트폴리오로 이동합니다.")
+    : renderPreviewProjectCards();
+  const content = renderPreviewPublicContent(`
+    <section id="projects" class="page-section home-section" data-home-section="projects">
+      ${renderPreviewPublicSectionHead({
+        kicker: textOrFallback(state.data.projects.sectionEyebrow, "Featured Works"),
+        title: textOrFallback(state.data.projects.sectionTitle, "SELECTED PROJECT"),
+        description: textOrFallback(state.data.projects.sectionMeta, "2024 COLLECTION"),
+      })}
+      <div id="projects-channel" class="projects-channel">${channelPreview}</div>
+      <div id="projects-grid" class="projects-grid">${projectCards}</div>
+    </section>
+  `);
+
+  return renderPreviewLightShell("projects", content);
+}
+
+function renderPreviewStatsSection() {
+  if (state.data.stats.enabled === false) {
+    return `
+      <section id="stats" class="page-section home-section" data-home-section="stats">
+        ${previewHiddenBlock("통계 섹션이 꺼져 있습니다.")}
+      </section>
+    `;
+  }
+
+  const items = state.data.stats.items.filter((item) => item.value || item.label);
+  return `
+    <section id="stats" class="page-section home-section" data-home-section="stats">
+      <div id="stats-grid" class="stats-grid">
+        ${items.length ? renderPreviewStatsItems() : '<div class="works-empty">통계 항목을 추가하면 이곳에 표시됩니다.</div>'}
+      </div>
+    </section>
+  `;
+}
+
+function buildStatsPreview() {
+  return renderPreviewLightShell("home", renderPreviewPublicContent(renderPreviewStatsSection()));
+}
+
+function renderPreviewProcessSection() {
+  if (state.data.pricing.processEnabled === false) {
+    return `
+      <section id="process-section" class="page-section">
+        ${previewHiddenBlock("진행 프로세스 섹션이 꺼져 있습니다.")}
+      </section>
+    `;
+  }
+
+  const processStyle = normalizePricingProcessStyle(state.data.pricing.processStyle);
+  return `
+    <section id="process-section" class="page-section" data-process-style="${escapeHTML(processStyle)}">
+      ${renderPreviewPublicSectionHead({
+        title: textOrFallback(state.data.pricing.processTitle, "진행 프로세스 및 정책"),
+        titleTag: "h3",
+      })}
+      <div id="process-grid" class="process-grid">
+        ${renderPreviewProcessSteps(processStyle)}
+      </div>
+    </section>
+  `;
+}
+
+function buildProcessPreview() {
+  return renderPreviewLightShell("pricing", renderPreviewPublicContent(renderPreviewProcessSection()));
+}
+
+function buildStatsProcessPreview() {
+  return renderPreviewLightShell("pricing", renderPreviewPublicContent(`
+    ${renderPreviewStatsSection()}
+    ${renderPreviewProcessSection()}
+  `));
+}
+
+function buildPricingPreview({ includeCustomWorks = false } = {}) {
+  const content = renderPreviewPublicContent(`
+    <section id="pricing" class="page-section pricing-section channel-tab-panel" data-channel-panel="pricing">
+      ${renderPreviewPublicSectionHead({
+        kicker: textOrFallback(state.data.pricing.sectionEyebrow, "Pricing Template"),
+        title: textOrFallback(state.data.pricing.title, "서비스 구조를 바로 안내할 수 있게 준비해두세요."),
+        description: textOrFallback(state.data.pricing.description, "패키지, 포함 항목, 문의 CTA를 예시로 남겨두었습니다."),
+      })}
+      ${renderPreviewLightPlanCards()}
+      ${includeCustomWorks && state.data.pricing.customWorksEnabled !== false
+        ? `<section id="custom-works-section" class="page-section">
+             <div id="custom-works-list" class="custom-work-list">${renderPreviewCustomWorks()}</div>
+           </section>`
+        : ""}
+    </section>
+  `);
+  return renderPreviewLightShell("pricing", content);
+}
+function buildWorksPreview() {
+  const works = state.data.works || DEFAULT_DATA.works;
+  if (works.enabled === false) {
+    return renderPreviewLightShell("works", `
+      <div class="mt-8 rounded-xl border border-dashed border-[#d9d9d9] bg-[#fafafa] px-6 py-10 text-center text-sm font-bold text-[#606060]">
+        영상 포트폴리오 섹션이 꺼져 있습니다.
+      </div>
+    `);
+  }
+
+  const displayTitle = String(works.sectionTitle || "").trim() || DEFAULT_DATA.works.sectionTitle || "영상 포트폴리오";
+  const description = String(state.data.works.sectionDescription || "").trim();
+  const videos = getSortedWorksVideos(state.data.works.videos);
+  const categories = getOrderedWorksCategories(videos, works.categoryOrder);
+  const hasVideos = videos.length > 0;
+  const hasShortVideos = videos.some((video) => video.type === "short");
+
+  const categoryChips = categories.length
+    ? categories.map((category) => `<span class="rounded-full border border-[#e5e5e5] bg-white px-4 py-2 text-xs font-black text-[#0f0f0f]">${escapeHTML(category)}</span>`).join("")
+    : '<span class="rounded-full border border-[#e5e5e5] bg-white px-4 py-2 text-xs font-black text-[#606060]">카테고리 없음</span>';
+  const content = `
+    <section class="mt-8 border-t border-[#e5e5e5] pt-7">
+      <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <div class="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#ff0033]">videos</div>
+          <h2 class="text-3xl font-black text-[#0f0f0f] md:text-4xl">${escapeHTML(displayTitle)}</h2>
+          ${description ? `<p class="mt-2 max-w-2xl text-sm font-semibold leading-relaxed text-[#606060]">${escapeWithBreaks(description)}</p>` : ""}
+        </div>
+        <div class="flex items-center gap-2 text-sm font-black text-[#0f0f0f]">
+          <span class="material-symbols-outlined text-[22px]">play_arrow</span>
+          <span>모두 재생</span>
+        </div>
+      </div>
+      <div class="mb-6 flex flex-wrap gap-2">
+        <span class="rounded-full bg-[#0f0f0f] px-4 py-2 text-xs font-black text-white">전체</span>
+        <span class="rounded-full border border-[#e5e5e5] bg-white px-4 py-2 text-xs font-black text-[#0f0f0f]">동영상</span>
+        ${hasShortVideos ? '<span class="rounded-full border border-[#e5e5e5] bg-white px-4 py-2 text-xs font-black text-[#0f0f0f]">쇼츠</span>' : ""}
+        <span class="hidden h-8 w-px bg-[#e5e5e5] md:inline-block"></span>
+        ${hasVideos ? categoryChips : ""}
+      </div>
+      ${renderPreviewLightVideoCards(videos)}
+    </section>
+  `;
+  return renderPreviewLightShell("works", content);
+}
+
+function buildContactFooterPreview() {
+  const details = state.data.contact.details.filter((detail) => detail.label || detail.value);
+  const detailsEnabled = state.data.contact.detailsEnabled !== false;
+  const footerEnabled = state.data.site.footer.enabled !== false;
+  const detailGridClass = details.length <= 1
+    ? "md:grid-cols-1"
+    : details.length === 2
+      ? "md:grid-cols-2"
+      : "md:grid-cols-3";
+
+  const content = `
+    <section class="mt-8 border-t border-[#e5e5e5] pt-7">
+      <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.72fr)] lg:items-start">
+        <div>
+          <div class="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#ff0033]">${escapeHTML(textOrFallback(state.data.contact.eyebrow, "CONTACT"))}</div>
+          <h2 class="text-4xl font-black leading-tight text-[#0f0f0f] md:text-5xl">${renderPreviewAccentText(textOrFallback(state.data.contact.title, "프로젝트 문의는\n이메일로 남겨주세요."), state.data.contact.titleAccent, "text-[#ff0033]")}</h2>
+          <p class="mt-4 max-w-2xl text-base font-semibold leading-relaxed text-[#606060]">${escapeWithBreaks(textOrFallback(state.data.contact.description, "메일 주소와 응답 정책을 템플릿으로 남겨두었습니다."))}</p>
+          ${detailsEnabled ? `<div class="mt-8 grid gap-3 ${detailGridClass}">
+            ${details.length
+              ? details.map((detail) => `
+                  <div class="rounded-xl border border-[#e5e5e5] bg-[#fafafa] p-4">
+                    <div class="mb-1 text-[11px] font-black uppercase tracking-[0.16em] text-[#606060]">${escapeHTML(textOrFallback(detail.label, "LABEL"))}</div>
+                    <div class="text-lg font-black text-[#0f0f0f]">${escapeHTML(textOrFallback(detail.value, "VALUE"))}</div>
+                  </div>
+                `).join("")
+              : '<div class="rounded-xl border border-dashed border-[#d9d9d9] bg-[#fafafa] px-6 py-8 text-center text-sm font-bold text-[#606060]">문의 상세 정보를 추가하면 이곳에 표시됩니다.</div>'}
+          </div>` : ""}
+        </div>
+        <div class="rounded-xl border border-[#e5e5e5] bg-white p-7 shadow-[0_10px_24px_rgba(15,15,15,0.06)]">
+          <div class="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#ff0033] text-white">
+            <span class="material-symbols-outlined text-3xl">${escapeHTML(textOrFallback(state.data.contact.primaryCard.icon, "mail"))}</span>
+          </div>
+          <div class="mb-2 text-[11px] font-black uppercase tracking-[0.22em] text-[#606060]">${escapeHTML(textOrFallback(state.data.contact.primaryCard.label, "Email"))}</div>
+          <div class="break-words text-3xl font-black leading-tight text-[#0f0f0f]">${escapeHTML(textOrFallback(state.data.contact.primaryCard.value, "your@email.com"))}</div>
+          ${state.data.contact.primaryCard.note ? `
+            <div class="mt-5 flex gap-2 text-sm font-bold text-[#606060]">
+              <span class="material-symbols-outlined text-[18px] text-[#ff0033]">info</span>
+              <span>${escapeHTML(state.data.contact.primaryCard.note)}</span>
+            </div>` : ""}
+        </div>
+      </div>
+      ${state.data.freeContent
+        ? `<div class="mt-8 rounded-xl border border-[#e5e5e5] bg-[#fafafa] p-6">
+             <div class="preview-free-copy text-sm font-semibold leading-relaxed text-[#3f3f3f]">${escapeWithBreaks(state.data.freeContent)}</div>
+           </div>`
+        : ""}
+      ${footerEnabled
+        ? `<footer class="mt-10 border-t border-[#e5e5e5] pt-6">
+             <div class="flex flex-col gap-3 text-left">
+               <div class="text-2xl font-black uppercase text-[#0f0f0f]">${escapeHTML(textOrFallback(state.data.site.footer.title, "STUDIO YOUR-NAME"))}</div>
+               ${state.data.site.footer.linksEnabled === false
+                 ? ""
+                 : `<div class="flex flex-wrap items-center gap-3 text-xs font-black uppercase tracking-[0.12em] text-[#606060]">
+                      ${renderPreviewFooterLinks()}
+                    </div>`}
+               <div class="text-xs font-semibold text-[#606060]">${escapeWithBreaks(textOrFallback(state.data.site.footer.copy, "© 2026 STUDIO YOUR-NAME. 모든 권리 보유."))}</div>
+             </div>
+           </footer>`
+        : `<div class="mt-8 rounded-xl border border-dashed border-[#d9d9d9] bg-[#fafafa] px-6 py-8 text-center text-sm font-bold text-[#606060]">푸터가 꺼져 있습니다.</div>`}
+    </section>
+  `;
+  return renderPreviewLightShell("contact", content);
+}
+
+function buildJsonOverviewPreview() {
+  return `
+    <div class="grid gap-4">
+      ${buildBrandPreview()}
+      ${buildHeroPreview()}
+      ${buildProjectsPreview()}
+      ${buildStatsPreview()}
+      ${buildWorksPreview()}
+      ${buildPricingPreview()}
+      ${buildProcessPreview()}
+      ${buildContactFooterPreview()}
+    </div>
+  `;
+}
+
+function buildQuickstartEmbedImagePreview() {
+  const preset = getSocialPreviewPreset();
+  const imageState = state.cropImage ? "이미지가 로드되어 자르기 준비가 되었습니다." : "이미지 수정 탭에서 대표 이미지를 먼저 불러오세요.";
+  return `
+    <div class="quickstart-preview-card">
+      <span class="preview-kicker">EMBED IMAGE</span>
+      <h3>대표 이미지 준비</h3>
+      <p>${escapeHTML(imageState)}</p>
+      <div class="quickstart-preview-steps">
+        <span>1. 이미지 불러오기</span>
+        <span>2. 구도 맞추기</span>
+        <span>3. ${escapeHTML(getSocialPreviewSizeText(preset))} PNG 다운로드</span>
+      </div>
+    </div>
+  `;
+}
+
+function buildQuickstartEmbedUploadPreview() {
+  const repo = getEffectiveGitHubRepo(state.data.site.githubRepo) || "owner/repo";
+  return `
+    <div class="quickstart-preview-card">
+      <span class="preview-kicker">GITHUB ASSETS</span>
+      <h3>assets 폴더 업로드</h3>
+      <p><strong>${escapeHTML(repo)}</strong> 레포의 <code>assets/</code> 폴더에 <code>social-preview.png</code>, <code>프로필이미지.png</code>, <code>배너이미지.png</code> 파일을 업로드할 수 있습니다.</p>
+      <div class="quickstart-preview-state ${state.quickstartEmbedUploadDone ? "is-done" : ""}">
+        ${state.quickstartEmbedUploadDone ? "업로드 완료로 표시됨" : "업로드 완료 체크 전"}
+      </div>
+    </div>
+  `;
+}
+
+function buildQuickstartEmbedCardPreview() {
+  const meta = state.embedMeta || getDefaultEmbedMeta();
+  const image = meta.imageMetaEnabled === false ? "" : trimMetaUrl(meta.image);
+  const title = normalizeMetaText(meta.title) || "카드 제목";
+  const description = normalizeMetaText(meta.description) || "카드 설명이 이곳에 표시됩니다.";
+  const domain = (() => {
+    try {
+      const url = new URL(trimMetaUrl(meta.url) || resolveCurrentSiteBaseUrl() || "https://example.com");
+      return url.hostname;
+    } catch (error) {
+      return "example.com";
+    }
+  })();
+  return `
+    <article class="embed-card-preview quickstart-embed-preview" aria-label="퀵스타트 임베드 카드 미리보기">
+      <div class="embed-preview-image-wrap">
+        ${image ? `<img src="${escapeAttribute(image)}" alt="" loading="lazy">` : `<div class="embed-preview-placeholder">대표 이미지 URL을 확인하세요.</div>`}
+      </div>
+      <div class="embed-preview-body">
+        <div class="embed-preview-domain">${escapeHTML(domain)}</div>
+        <h3>${escapeHTML(title)}</h3>
+        <p>${escapeHTML(description)}</p>
+      </div>
+    </article>
+  `;
+}
+
+function buildQuickstartEmbedIndexPreview() {
+  const code = buildEmbedHTML(state.embedMeta || getDefaultEmbedMeta());
+  return `
+    <div class="quickstart-preview-card">
+      <span class="preview-kicker">INDEX.HTML</span>
+      <h3>OG 블록 교체</h3>
+      <p><code>&lt;!-- OG START --&gt;</code>부터 <code>&lt;!-- OG END --&gt;</code>까지 아래 코드로 교체합니다.</p>
+      <pre class="quickstart-code-preview">${escapeHTML(code.slice(0, 900))}${code.length > 900 ? "\n..." : ""}</pre>
+      <div class="quickstart-preview-state ${state.quickstartEmbedIndexDone ? "is-done" : ""}">
+        ${state.quickstartEmbedIndexDone ? "index.html 수정 완료로 표시됨" : "index.html 수정 완료 체크 전"}
+      </div>
+    </div>
+  `;
+}
+
+function getCurrentLivePreviewTarget(tab = state.activeTab) {
+  return tab === "quickstart" ? getQuickstartPreviewTarget() : getEffectivePreviewTab(tab);
+}
+
+function isPublicPagePreviewTarget(target = getCurrentLivePreviewTarget()) {
+  return publicPagePreviewTargets.has(target);
+}
+
+function getPublicPreviewHash(target = getCurrentLivePreviewTarget()) {
+  switch (target) {
+    case "brand":
+    case "home":
+    case "hero":
+    case "hero-panels":
+    case "json":
+      return "#home";
+    case "projects":
+      return state.data.projects?.enabled === false ? "#works" : "#projects";
+    case "works":
+      return "#works";
+    case "stats-process":
+      return state.data.stats?.enabled === false ? "#process-section" : "#stats";
+    case "process":
+      return "#process-section";
+    case "pricing":
+      return "#pricing";
+    case "contact-footer":
+      return "#contact";
+    default:
+      return "#home";
+  }
+}
+
+function getPublicPreviewHref(target = getCurrentLivePreviewTarget()) {
+  const previewTarget = encodeURIComponent(target || "home");
+  return `../index.html?preview=admin&previewTarget=${previewTarget}${getPublicPreviewHash(target)}`;
+}
+
+function persistPublicPreviewData() {
+  try {
+    window.localStorage.setItem(publicPreviewStorageKey, JSON.stringify(serializeData()));
+  } catch (error) {
+    console.warn("Failed to persist public preview data:", error);
+  }
+}
+
+function getPublicPreviewPostTargetOrigin() {
+  return window.location.origin && window.location.origin !== "null" ? window.location.origin : "*";
+}
+
+function syncPublicPreviewFrames(surface = $("#live-preview-surface")) {
+  if (!surface) return;
+  const frames = surface.querySelectorAll(".public-preview-frame");
+  if (!frames.length) return;
+  const payload = serializeData();
+  frames.forEach((frame) => {
+    try {
+      frame.contentWindow?.postMessage({
+        type: publicPreviewMessageType,
+        payload,
+      }, getPublicPreviewPostTargetOrigin());
+    } catch (error) {
+      console.warn("Failed to post public preview data:", error);
+    }
+  });
+}
+
+function bindPublicPreviewFrames(surface = $("#live-preview-surface")) {
+  if (!surface) return;
+  surface.querySelectorAll(".public-preview-frame").forEach((frame) => {
+    if (frame.dataset.previewBound === "true") return;
+    frame.dataset.previewBound = "true";
+    frame.addEventListener("load", () => syncPublicPreviewFrames(surface));
+  });
+}
+
+function buildPublicPagePreviewMarkup(target = getCurrentLivePreviewTarget()) {
+  const href = getPublicPreviewHref(target);
+  return `
+    <div class="public-preview-frame-shell" data-preview-target="${escapeHTML(target)}">
+      <div class="public-preview-frame-bar">
+        <span>실제 index.html 렌더링</span>
+        <strong>${escapeHTML(href.replace(/^\.\.\//, ""))}</strong>
+      </div>
+      <iframe
+        class="public-preview-frame"
+        title="실제 공개 페이지 미리보기"
+        src="${escapeHTML(href)}"
+        loading="eager"
+        referrerpolicy="no-referrer">
+      </iframe>
+    </div>
+  `;
+}
+
+function buildQuickstartPreviewMarkup() {
+  switch (getQuickstartPreviewTarget()) {
+    case "brand":
+      return buildBrandPreview();
+    case "hero":
+    case "hero-panels":
+      return buildHeroPreview();
+    case "stats-process":
+      return buildStatsProcessPreview();
+    case "process":
+      return buildProcessPreview();
+    case "pricing":
+      return buildPricingPreview();
+    case "contact-footer":
+      return buildContactFooterPreview();
+    case "embed-image":
+      return buildQuickstartEmbedImagePreview();
+    case "embed-upload":
+      return buildQuickstartEmbedUploadPreview();
+    case "embed-card":
+      return buildQuickstartEmbedCardPreview();
+    case "embed-index":
+      return buildQuickstartEmbedIndexPreview();
+    case "json":
+    default:
+      return buildJsonOverviewPreview();
+  }
+}
+
+function buildLivePreviewMarkup() {
+  switch (getEffectivePreviewTab()) {
+    case "quickstart":
+      return buildQuickstartPreviewMarkup();
+    case "brand":
+      return buildBrandPreview();
+    case "home":
+      return buildHomePreview();
+    case "hero":
+    case "hero-panels":
+      return buildHeroPreview();
+    case "projects":
+      return buildProjectsPreview();
+    case "works":
+      return buildWorksPreview();
+    case "stats-process":
+      return buildStatsProcessPreview();
+    case "process":
+      return buildProcessPreview();
+    case "pricing":
+      return buildPricingPreview();
+    case "contact-footer":
+      return buildContactFooterPreview();
+    case "json":
+      return buildJsonOverviewPreview();
+    default:
+      return buildBrandPreview();
+  }
+}
+
+function renderLivePreview() {
+  if (embedCardTabs.has(state.activeTab)) return;
+  mountLivePreview();
+  const config = previewConfigForTab();
+  $("#live-preview-title").textContent = config.title;
+  $("#live-preview-description").textContent = config.description;
+  $("#live-preview-path").textContent = config.pathText;
+  const openLink = $("#preview-open-page");
+  if (openLink) openLink.href = config.openHref;
+  const surface = $("#live-preview-surface");
+  if (!surface) return;
+
+  const target = getCurrentLivePreviewTarget();
+  if (isPublicPagePreviewTarget(target)) {
+    persistPublicPreviewData();
+    const href = getPublicPreviewHref(target);
+    if (
+      surface.dataset.previewMode !== "public-page" ||
+      surface.dataset.previewTarget !== target ||
+      surface.dataset.previewHref !== href
+    ) {
+      surface.innerHTML = buildPublicPagePreviewMarkup(target);
+      surface.dataset.previewMode = "public-page";
+      surface.dataset.previewTarget = target;
+      surface.dataset.previewHref = href;
+      bindPublicPreviewFrames(surface);
+    }
+    syncPublicPreviewFrames(surface);
+    return;
+  }
+
+  surface.dataset.previewMode = "inline";
+  surface.dataset.previewTarget = target;
+  surface.dataset.previewHref = "";
+  surface.innerHTML = buildLivePreviewMarkup();
+}
+
+function getByPath(path) {
+  return path.reduce((accumulator, key) => (accumulator == null ? "" : accumulator[key]), state.data) ?? "";
+}
+
+function setByPath(path, value) {
+  let target = state.data;
+  path.slice(0, -1).forEach((key) => {
+    if (!target[key] || typeof target[key] !== "object") target[key] = {};
+    target = target[key];
+  });
+  target[path[path.length - 1]] = value;
+}
+
+function directBindingEntries() {
+  return Object.entries({
+    ...DIRECT_BINDINGS,
+    ...QUICKSTART_DIRECT_BINDINGS,
+  });
+}
+
+function checkboxBindingEntries() {
+  return Object.entries({
+    ...CHECKBOX_BINDINGS,
+    ...QUICKSTART_CHECKBOX_BINDINGS,
+  });
+}
+
+function pathsEqual(left, right) {
+  return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((key, index) => key === right[index]);
+}
+
+function syncDirectInputPeers(sourceId, path) {
+  directBindingEntries().forEach(([id, candidatePath]) => {
+    if (id === sourceId || !pathsEqual(candidatePath, path)) return;
+    const input = document.getElementById(id);
+    if (!input) return;
+    input.value = getByPath(candidatePath);
+  });
+
+  if (pathsEqual(path, ["pricing", "processStyle"])) {
+    const value = normalizePricingProcessStyle(getByPath(path));
+    ["pricing-process-style", "quickstart-pricing-process-style"].forEach((id) => {
+      if (id === sourceId) return;
+      const input = document.getElementById(id);
+      if (input) input.value = value;
+    });
+  }
+}
+
+function syncCheckboxInputPeers(sourceId, path) {
+  checkboxBindingEntries().forEach(([id, candidatePath]) => {
+    if (id === sourceId || !pathsEqual(candidatePath, path)) return;
+    const input = document.getElementById(id);
+    if (!input) return;
+    input.checked = Boolean(getByPath(candidatePath));
+  });
+}
+
+function renderDirectInputs() {
+  directBindingEntries().forEach(([id, path]) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    input.value = getByPath(path);
+  });
+}
+
+function renderCheckboxInputs() {
+  checkboxBindingEntries().forEach(([id, path]) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    input.checked = Boolean(getByPath(path));
+  });
+}
+
+function renderSummary() {
+  $("#summary-nav-links").textContent = String(state.data.site.nav.links.length);
+  $("#summary-projects").textContent = String(state.data.projects.cards.length);
+  $("#summary-works").textContent = String(state.data.works.videos.length);
+  $("#summary-plans").textContent = String(state.data.pricing.plans.length);
+  $("#summary-steps").textContent = String(state.data.pricing.processSteps.length);
+  const repo = getEffectiveGitHubRepo(state.data.site.githubRepo) || "-";
+  $("#summary-footer").textContent = `${getEffectiveFooterLinks(state.data.site.footer.links).length} / ${repo}`;
+}
+
+function rowActions(listKey, index, deleteLabel = "삭제") {
+  return `
+    <div class="inline-row-actions">
+      <button type="button" data-move-list="${escapeHTML(listKey)}" data-index="${index}" data-direction="-1">위로</button>
+      <button type="button" data-move-list="${escapeHTML(listKey)}" data-index="${index}" data-direction="1">아래로</button>
+      <button type="button" data-copy-list="${escapeHTML(listKey)}" data-index="${index}">복사</button>
+      <button class="danger-action" type="button" data-delete-list="${escapeHTML(listKey)}" data-index="${index}">${escapeHTML(deleteLabel)}</button>
+    </div>
+  `;
+}
+
+function moveOnlyActions(listKey, index) {
+  return `
+    <div class="inline-row-actions">
+      <button type="button" data-move-list="${escapeHTML(listKey)}" data-index="${index}" data-direction="-1">위로</button>
+      <button type="button" data-move-list="${escapeHTML(listKey)}" data-index="${index}" data-direction="1">아래로</button>
+    </div>
+  `;
+}
+
+function getStoredToggleValue(map, key, fallbackValue) {
+  return typeof map[key] === "boolean" ? map[key] : fallbackValue;
+}
+
+function isDetailSectionExpanded(key, fallbackValue) {
+  return getStoredToggleValue(state.detailSectionState, key, fallbackValue);
+}
+
+function setDetailSectionExpanded(key, isExpanded) {
+  state.detailSectionState[key] = Boolean(isExpanded);
+  saveStoredState(detailSectionStateStorageKey, state.detailSectionState);
+}
+
+function isEditorCardExpanded(key, fallbackValue = false) {
+  return getStoredToggleValue(state.editorCardState, key, fallbackValue);
+}
+
+function setEditorCardExpanded(key, isExpanded) {
+  state.editorCardState[key] = Boolean(isExpanded);
+  saveStoredState(editorCardStateStorageKey, state.editorCardState);
+}
+
+function getProjectCardEditorKey(card, index) {
+  return `projects:${slugifyToken(card?.title) || slugifyToken(card?.href) || "card"}:${index}`;
+}
+
+function getPricingPlanEditorKey(plan, index) {
+  return `plans:${slugifyToken(plan?.slug) || slugifyToken(plan?.title) || "plan"}:${index}`;
+}
+
+function getWorksVideoEditorKey(video, index) {
+  return `works-videos:${slugifyToken(video?.id) || "video"}:${index}`;
+}
+
+function renderCollapsibleEditorHead({ title, summary, key, expanded, actions = "" }) {
+  return `
+    <div class="collapsible-editor-head">
+      <button type="button" class="collapsible-editor-toggle" data-toggle-editor-card="${escapeHTML(key)}" aria-expanded="${expanded ? "true" : "false"}">
+        <span class="collapsible-editor-title">
+          <span class="material-symbols-outlined collapsible-editor-toggle-icon" aria-hidden="true">expand_more</span>
+          <span>${escapeHTML(title)}</span>
+        </span>
+        ${summary ? `<span class="collapsible-editor-summary">${escapeHTML(summary)}</span>` : ""}
+      </button>
+      ${actions}
+    </div>
+  `;
+}
+
+function createDetailSectionToggleButton(title, note, key, expanded) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "detail-section-toggle";
+  button.dataset.toggleDetailSection = key;
+  button.setAttribute("aria-expanded", expanded ? "true" : "false");
+  button.innerHTML = `
+    <span class="detail-section-toggle-title">
+      <span class="material-symbols-outlined detail-section-toggle-icon" aria-hidden="true">expand_more</span>
+      <span>${escapeHTML(title || "세부 설정")}</span>
+    </span>
+    ${note ? `<span class="detail-section-toggle-note">${escapeHTML(note)}</span>` : ""}
+  `;
+  return button;
+}
+
+function applyDetailSectionExpanded(section, isExpanded) {
+  const button = section.querySelector("[data-toggle-detail-section]");
+  const body = section.querySelector(".detail-section-body");
+  section.classList.toggle("is-collapsed", !isExpanded);
+  if (button) button.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+  if (body) body.hidden = !isExpanded;
+}
+
+function applyEditorCardExpanded(container, isExpanded) {
+  const button = container.querySelector("[data-toggle-editor-card]");
+  const body = container.querySelector(".collapsible-editor-body");
+  container.classList.toggle("is-collapsed", !isExpanded);
+  if (button) button.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+  if (body) body.hidden = !isExpanded;
+}
+
+function shouldSkipDetailSectionToggle(section) {
+  return section?.dataset?.noDetailToggle === "true";
+}
+
+function getVisibleDetailSections(panel) {
+  return [...(panel?.querySelectorAll(":scope > .editor-card.detail-section") || [])]
+    .filter((section) => !section.hidden && !shouldSkipDetailSectionToggle(section));
+}
+
+function updateDetailSectionBulkToggle(panel) {
+  const button = panel?.querySelector("[data-detail-section-bulk-toggle]");
+  if (!button) return;
+  const sections = getVisibleDetailSections(panel);
+  const shouldOpen = sections.some((section) => section.classList.contains("is-collapsed"));
+  button.disabled = !sections.length;
+  button.textContent = shouldOpen ? "전체 열기" : "전체 닫기";
+  button.setAttribute("aria-label", shouldOpen ? "현재 탭의 모든 섹션 열기" : "현재 탭의 모든 섹션 닫기");
+}
+
+function updateAllDetailSectionBulkToggles() {
+  $$(".tab-panel").forEach((panel) => updateDetailSectionBulkToggle(panel));
+}
+
+function setPanelDetailSectionsExpanded(panel, expanded) {
+  getVisibleDetailSections(panel).forEach((section) => {
+    const detailKey = String(section.dataset.detailSectionKey || "").trim();
+    if (!detailKey) return;
+    setDetailSectionExpanded(detailKey, expanded);
+    applyDetailSectionExpanded(section, expanded);
+  });
+  updateDetailSectionBulkToggle(panel);
+}
+
+function setupDetailSectionBulkToggles() {
+  $$(".tab-panel").forEach((panel) => {
+    if (panel.dataset.bulkToggleReady === "true") return;
+    const head = panel.querySelector(":scope > .panel-head");
+    if (!head || !getVisibleDetailSections(panel).length) return;
+    const actions = document.createElement("div");
+    actions.className = "panel-head-actions";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "detail-section-bulk-toggle";
+    button.dataset.detailSectionBulkToggle = panel.dataset.panel || "";
+    actions.append(button);
+    head.append(actions);
+    panel.dataset.bulkToggleReady = "true";
+    updateDetailSectionBulkToggle(panel);
+  });
+}
+
+function setupDetailSectionCollapsibles() {
+  $$(".tab-panel").forEach((panel) => {
+    const panelKey = panel.dataset.panel || "panel";
+    const sections = [...panel.querySelectorAll(":scope > .editor-card.detail-section")]
+      .filter((section) => !shouldSkipDetailSectionToggle(section));
+
+    sections.forEach((section, index) => {
+      if (section.dataset.collapseReady === "true") return;
+
+      const headingNode = section.querySelector(":scope > h3, :scope > .section-row-head h3");
+      const title = String(headingNode?.textContent || "세부 설정").trim();
+      const sectionKey = `${panelKey}:${section.id || slugifyToken(title) || index}`;
+      const expanded = isDetailSectionExpanded(sectionKey, index === 0);
+      let firstChild = section.firstElementChild;
+      while (firstChild?.classList?.contains("detail-section-preheader")) {
+        firstChild = firstChild.nextElementSibling;
+      }
+      let headerRow = null;
+
+      if (firstChild?.classList?.contains("section-row-head")) {
+        headerRow = firstChild;
+        const contentNode = [...headerRow.children].find((child) => child.tagName === "H3" || child.querySelector?.("h3"));
+        const note = String(contentNode?.querySelector?.(".field-note")?.textContent || "").trim();
+        const actionNodes = [...headerRow.children].filter((child) => child !== contentNode);
+        const toggleButton = createDetailSectionToggleButton(title, note, sectionKey, expanded);
+        headerRow.innerHTML = "";
+        headerRow.classList.add("detail-section-toggle-row");
+        headerRow.append(toggleButton);
+        actionNodes.forEach((node) => headerRow.append(node));
+      } else {
+        let insertTarget = firstChild;
+        if (firstChild?.tagName === "H3") {
+          insertTarget = firstChild.nextSibling;
+          firstChild.remove();
+        }
+        headerRow = document.createElement("div");
+        headerRow.className = "detail-section-toggle-row";
+        headerRow.append(createDetailSectionToggleButton(title, "", sectionKey, expanded));
+        section.insertBefore(headerRow, insertTarget);
+      }
+
+      const body = document.createElement("div");
+      body.className = "detail-section-body";
+      while (headerRow.nextSibling) {
+        body.append(headerRow.nextSibling);
+      }
+      section.append(body);
+      section.dataset.collapseReady = "true";
+      section.dataset.detailSectionKey = sectionKey;
+      applyDetailSectionExpanded(section, expanded);
+    });
+  });
+}
+
+function renderNavLinkList() {
+  const list = $("#nav-link-list");
+  if (!list) return;
+  if (!state.data.site.nav.links.length) {
+    list.innerHTML = '<div class="empty-state slim">등록된 내비 링크가 없습니다.</div>';
+    return;
+  }
+  list.innerHTML = state.data.site.nav.links.map((link, index) => `
+    <article class="editor-row three-col" data-nav-index="${index}">
+      <label class="field">
+        <span>라벨</span>
+        <input type="text" value="${escapeHTML(link.label)}" data-nav-field="label">
+      </label>
+      <label class="field">
+        <span>링크</span>
+        <input type="text" value="${escapeHTML(link.href)}" data-nav-field="href">
+      </label>
+      ${rowActions("nav", index)}
+    </article>
+  `).join("");
+}
+
+function hasNavLinkPreset(preset) {
+  const presetHref = normalizeNavPresetHrefForCompare(preset.href);
+  return state.data.site.nav.links.some((link) => (
+    String(link?.label || "").trim() === preset.label &&
+    normalizeNavPresetHrefForCompare(link?.href) === presetHref
+  ));
+}
+
+function normalizeNavPresetHrefForCompare(href) {
+  const raw = String(href || "").trim();
+  const match = raw.match(/^(?:\.\/)?(?:index\.html)?(#[\w-]+)$/i);
+  if (!match) return raw;
+  const hash = match[1].toLowerCase() === "#work" ? "#works" : match[1].toLowerCase();
+  return `index.html${hash}`;
+}
+
+function renderNavLinkPresetButtons() {
+  const container = $("#nav-link-presets");
+  if (!container) return;
+
+  const allAdded = NAV_LINK_QUICK_PRESETS.every((preset) => hasNavLinkPreset(preset));
+  const allButton = `
+    <button type="button" data-nav-preset="all" ${allAdded ? "disabled" : ""}>
+      <strong>기본 4개 전체 추가</strong>
+      <span>홈, 영상 포트폴리오, 서비스 및 가격, 문의하기를 한 번에 추가합니다.</span>
+    </button>
+  `;
+  const presetButtons = NAV_LINK_QUICK_PRESETS.map((preset) => `
+    <button type="button" data-nav-preset="${escapeHTML(preset.key)}" ${hasNavLinkPreset(preset) ? "disabled" : ""}>
+      <strong>${escapeHTML(preset.label)}</strong>
+      <span>${escapeHTML(preset.href)}</span>
+    </button>
+  `).join("");
+
+  container.innerHTML = `${allButton}${presetButtons}`;
+}
+
+function getScenarioSectionHref(hash, scenario, fromOtherPage = false) {
+  const data = {
+    ...state.data,
+    projects: {
+      ...state.data.projects,
+      enabled: scenario.projectsEnabled,
+    },
+    works: {
+      ...state.data.works,
+      enabled: scenario.worksEnabled,
+    },
+  };
+  const target = resolveVisibleHomeSectionHash(hash, data);
+  return fromOtherPage ? `index.html${target}` : target;
+}
+
+function renderNavTestSession() {
+  const container = $("#nav-test-session-list");
+  if (!container) return;
+
+  const currentProjectsEnabled = isProjectsSectionEnabled();
+  const currentWorksEnabled = isWorksSectionEnabled();
+  const quickPresetState = NAV_LINK_QUICK_PRESETS.every((preset) => hasNavLinkPreset(preset))
+    ? "기본 4개가 모두 추가된 상태"
+    : "빠른 추가 버튼으로 기본 4개 추가 가능";
+  const scenarios = [
+    { projectsEnabled: true, worksEnabled: true },
+    { projectsEnabled: true, worksEnabled: false },
+    { projectsEnabled: false, worksEnabled: true },
+    { projectsEnabled: false, worksEnabled: false },
+  ];
+
+  container.innerHTML = scenarios.map((scenario) => {
+    const isCurrent = scenario.projectsEnabled === currentProjectsEnabled && scenario.worksEnabled === currentWorksEnabled;
+    const projectHref = getScenarioSectionHref("#projects", scenario);
+    const worksHref = getScenarioSectionHref("#works", scenario);
+    const otherPageWorksHref = getScenarioSectionHref("#works", scenario, true);
+    const projectLabel = scenario.projectsEnabled ? "프로젝트 ON" : "프로젝트 OFF";
+    const worksLabel = scenario.worksEnabled ? "영상 포트폴리오 ON" : "영상 포트폴리오 OFF";
+    return `
+      <article class="nav-test-card ${isCurrent ? "is-current" : ""}">
+        <h4>${escapeHTML(projectLabel)} / ${escapeHTML(worksLabel)}${isCurrent ? " · 현재 설정" : ""}</h4>
+        <p>프로젝트 링크 예상 이동: <code>${escapeHTML(projectHref)}</code></p>
+        <p>영상 포트폴리오 링크 예상 이동: <code>${escapeHTML(worksHref)}</code></p>
+        <p>다른 페이지에서 영상 포트폴리오 클릭: <code>${escapeHTML(otherPageWorksHref)}</code></p>
+        <p>빠른 추가 테스트: ${escapeHTML(quickPresetState)}</p>
+      </article>
+    `;
+  }).join("");
+}
+
+function addNavLinkPreset(presetKey) {
+  if (presetKey === "all") {
+    const missingPresets = NAV_LINK_QUICK_PRESETS.filter((preset) => !hasNavLinkPreset(preset));
+    if (!missingPresets.length) {
+      setStatus("기본 내비 링크 4개가 이미 모두 등록되어 있습니다.", "info");
+      return;
+    }
+
+    state.data.site.nav.links = sortNavLinksByPresetOrder([
+      ...state.data.site.nav.links,
+      ...missingPresets.map((preset) => ({
+        label: preset.label,
+        href: preset.href,
+      })),
+    ]);
+    applyDataChange(`${missingPresets.length}개의 기본 내비 링크를 추가했습니다.`);
+    return;
+  }
+
+  const preset = NAV_LINK_QUICK_PRESETS.find((item) => item.key === presetKey);
+  if (!preset) {
+    setStatus("알 수 없는 내비 링크 프리셋입니다.", "error");
+    return;
+  }
+
+  if (hasNavLinkPreset(preset)) {
+    setStatus(`${preset.label} 링크는 이미 등록되어 있습니다.`, "info");
+    return;
+  }
+
+  state.data.site.nav.links = sortNavLinksByPresetOrder([
+    ...state.data.site.nav.links,
+    {
+      label: preset.label,
+      href: preset.href,
+    },
+  ]);
+  applyDataChange(`${preset.label} 링크를 추가했습니다.`);
+}
+
+function renderHeroActionList() {
+  const list = $("#hero-action-list");
+  if (!list) return;
+  if (!state.data.hero.actions.length) {
+    list.innerHTML = '<div class="empty-state slim">등록된 히어로 액션이 없습니다.</div>';
+    return;
+  }
+  list.innerHTML = state.data.hero.actions.map((action, index) => `
+    <article class="editor-row four-col" data-hero-action-index="${index}">
+      <label class="field">
+        <span>버튼 스타일</span>
+        <select data-hero-action-field="variant">
+          <option value="primary" ${action.variant === "primary" ? "selected" : ""}>Primary</option>
+          <option value="ghost" ${action.variant === "ghost" ? "selected" : ""}>Ghost</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>라벨</span>
+        <input type="text" value="${escapeHTML(action.label)}" data-hero-action-field="label">
+      </label>
+      <label class="field">
+        <span>링크</span>
+        <input type="text" value="${escapeHTML(action.href)}" data-hero-action-field="href">
+      </label>
+      ${rowActions("hero-actions", index)}
+    </article>
+  `).join("");
+}
+
+function syncHeroCareerModeState() {
+  const mode = normalizeHeroCareerMode(state.data.hero.infoPanels?.career?.mode);
+  const select = $("#hero-career-mode");
+  if (select) select.value = mode;
+
+  [
+    ["structured", "#hero-career-structured-group"],
+    ["simple", "#hero-career-simple-group"],
+    ["freeform", "#hero-career-freeform-group"],
+  ].forEach(([groupMode, selector]) => {
+    const group = $(selector);
+    if (!group) return;
+    const isActive = groupMode === mode;
+    group.classList.toggle("is-active", isActive);
+    group.hidden = !isActive;
+  });
+}
+
+function syncHeroInfoLayoutState() {
+  const select = $("#hero-info-layout-preset");
+  if (select) {
+    select.value = normalizeHeroInfoLayoutPreset(state.data.hero.infoPanels?.layoutPreset);
+  }
+}
+
+function renderHeroCareerStructuredList() {
+  const list = $("#hero-career-structured-list");
+  if (!list) return;
+  const items = state.data.hero.infoPanels?.career?.structuredItems || [];
+  if (!items.length) {
+    list.innerHTML = '<div class="empty-state slim">등록된 구조형 경력이 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML = items.map((item, index) => `
+    <article class="editor-row" data-career-structured-index="${index}">
+      <div class="section-row-head">
+        <h3>항목 ${index + 1}</h3>
+        ${rowActions("career-structured", index)}
+      </div>
+      <div class="form-grid">
+        <label class="field">
+          <span>제목</span>
+          <input type="text" value="${escapeHTML(item.title)}" data-career-structured-field="title">
+        </label>
+        <label class="field">
+          <span>기간</span>
+          <input type="text" value="${escapeHTML(item.period)}" data-career-structured-field="period" placeholder="2024.01 - 2025.03">
+        </label>
+        <label class="field span-2">
+          <span>설명</span>
+          <textarea rows="4" data-career-structured-field="description">${escapeHTML(item.description)}</textarea>
+        </label>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderHeroCareerSimpleList() {
+  const list = $("#hero-career-simple-list");
+  if (!list) return;
+  const items = state.data.hero.infoPanels?.career?.simpleItems || [];
+  if (!items.length) {
+    list.innerHTML = '<div class="empty-state slim">등록된 간단형 경력이 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML = items.map((item, index) => `
+    <article class="editor-row three-col" data-career-simple-index="${index}">
+      <label class="field">
+        <span>문장</span>
+        <input type="text" value="${escapeHTML(item.text)}" data-career-simple-field="text">
+      </label>
+      <label class="field">
+        <span>기간</span>
+        <input type="text" value="${escapeHTML(item.period)}" data-career-simple-field="period" placeholder="2024.01~">
+      </label>
+      ${rowActions("career-simple", index)}
+    </article>
+  `).join("");
+}
+
+function renderHeroResourceEditorList(listSelector, listKey, items, emptyMessage) {
+  const list = $(listSelector);
+  if (!list) return;
+  if (!items.length) {
+    list.innerHTML = `<div class="empty-state slim">${escapeHTML(emptyMessage)}</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map((item, index) => `
+    <article class="editor-row hero-logo-row" data-${listKey}-index="${index}">
+      <label class="field">
+        <span>이름</span>
+        <input type="text" value="${escapeHTML(item.name)}" data-${listKey}-field="name">
+      </label>
+      <label class="field">
+        <span>로고 URL</span>
+        <input type="text" value="${escapeHTML(item.logoUrl)}" data-${listKey}-field="logoUrl" placeholder="assets/tool-presets/premiere-pro.svg">
+      </label>
+      <label class="field">
+        <span>이미지 설명</span>
+        <input type="text" value="${escapeHTML(item.logoAlt)}" data-${listKey}-field="logoAlt" placeholder="logo alt text">
+      </label>
+      ${rowActions(listKey, index)}
+    </article>
+  `).join("");
+}
+
+function renderHeroToolPresetButtons() {
+  ["#hero-tool-presets", "#quickstart-tool-presets"].forEach((selector) => {
+    const container = $(selector);
+    if (!container) return;
+    container.innerHTML = Object.entries(HERO_TOOL_PRESETS).map(([key, preset]) => `
+      <button type="button" data-hero-tool-preset="${escapeHTML(key)}">${escapeHTML(preset.name)}</button>
+    `).join("");
+  });
+}
+
+function renderHeroBgmPresetButtons() {
+  ["#hero-bgm-presets", "#quickstart-bgm-presets"].forEach((selector) => {
+    const container = $(selector);
+    if (!container) return;
+    container.innerHTML = Object.entries(HERO_BGM_PRESETS).map(([key, preset]) => `
+      <button type="button" data-hero-bgm-preset="${escapeHTML(key)}">${escapeHTML(preset.name)}</button>
+    `).join("");
+  });
+}
+
+function renderHeroInfoEditors() {
+  syncHeroInfoLayoutState();
+  syncHeroCareerModeState();
+  renderHeroToolPresetButtons();
+  renderHeroBgmPresetButtons();
+  renderHeroCareerStructuredList();
+  renderHeroCareerSimpleList();
+  renderHeroResourceEditorList(
+    "#hero-tools-list",
+    "hero-tools",
+    state.data.hero.infoPanels?.tools?.items || [],
+    "등록된 툴이 없습니다.",
+  );
+  renderHeroResourceEditorList(
+    "#hero-bgm-list",
+    "hero-bgm",
+    state.data.hero.infoPanels?.bgm?.items || [],
+    "등록된 BGM 툴이 없습니다.",
+  );
+}
+
+function findHeroResourceIndexByName(items, name) {
+  const normalizedName = String(name || "").trim().toLowerCase();
+  if (!normalizedName) return -1;
+  return (Array.isArray(items) ? items : []).findIndex((item) => String(item?.name || "").trim().toLowerCase() === normalizedName);
+}
+
+function findHeroToolIndexByName(name) {
+  return findHeroResourceIndexByName(state.data.hero.infoPanels?.tools?.items || [], name);
+}
+
+function findHeroBgmIndexByName(name) {
+  return findHeroResourceIndexByName(state.data.hero.infoPanels?.bgm?.items || [], name);
+}
+
+function addHeroToolPreset(presetKey) {
+  const preset = HERO_TOOL_PRESETS[presetKey];
+  if (!preset) {
+    setStatus("알 수 없는 기본 툴 프리셋입니다.", "error");
+    return;
+  }
+
+  if (findHeroToolIndexByName(preset.name) !== -1) {
+    setStatus(`${preset.name}는 이미 등록되어 있습니다.`, "info");
+    return;
+  }
+
+  state.data.hero.infoPanels.tools.items.push({
+    name: preset.name,
+    logoUrl: preset.logoUrl,
+    logoAlt: preset.logoAlt,
+  });
+  applyDataChange(`${preset.name} 기본 툴을 추가했습니다.`);
+}
+
+function addHeroBgmPreset(presetKey) {
+  const preset = HERO_BGM_PRESETS[presetKey];
+  if (!preset) {
+    setStatus("알 수 없는 BGM 툴 프리셋입니다.", "error");
+    return;
+  }
+
+  if (findHeroBgmIndexByName(preset.name) !== -1) {
+    setStatus(`${preset.name}는 이미 등록되어 있습니다.`, "info");
+    return;
+  }
+
+  state.data.hero.infoPanels.bgm.items.push({
+    name: preset.name,
+    logoUrl: preset.logoUrl,
+    logoAlt: preset.logoAlt,
+  });
+  applyDataChange(`${preset.name} BGM 툴을 추가했습니다.`);
+}
+
+function renderProjectCardList() {
+  const list = $("#project-card-list");
+  if (!list) return;
+  if (!state.data.projects.cards.length) {
+    list.innerHTML = '<div class="empty-state">등록된 프로젝트 카드가 없습니다.</div>';
+    return;
+  }
+  list.innerHTML = state.data.projects.cards.map((card, index) => {
+    const cardKey = getProjectCardEditorKey(card, index);
+    const expanded = isEditorCardExpanded(cardKey, false);
+    const summaryParts = [
+      card.layout ? `배치 ${card.layout}` : "",
+      card.title || card.tag || card.duration || "프로젝트 제목 미입력",
+    ].filter(Boolean);
+
+    return `
+      <article class="editor-row collapsible-editor ${expanded ? "" : "is-collapsed"}" data-project-index="${index}" data-editor-card-key="${escapeHTML(cardKey)}">
+        ${renderCollapsibleEditorHead({
+          title: `카드 ${index + 1}`,
+          summary: summaryParts.join(" · "),
+          key: cardKey,
+          expanded,
+          actions: rowActions("projects", index),
+        })}
+        <div class="collapsible-editor-body" ${expanded ? "" : "hidden"}>
+          <div class="form-grid">
+            <label class="field">
+              <span>배치 형식</span>
+              <select data-project-field="layout">
+                <option value="featured" ${card.layout === "featured" ? "selected" : ""}>featured</option>
+                <option value="secondary" ${card.layout === "secondary" ? "selected" : ""}>secondary</option>
+                <option value="small" ${card.layout === "small" ? "selected" : ""}>small</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>태그</span>
+              <input type="text" value="${escapeHTML(card.tag)}" data-project-field="tag">
+            </label>
+            <label class="field">
+              <span>길이</span>
+              <input type="text" value="${escapeHTML(card.duration)}" data-project-field="duration">
+            </label>
+            <label class="field">
+              <span>제목</span>
+              <input type="text" value="${escapeHTML(card.title)}" data-project-field="title">
+            </label>
+            <label class="field span-2">
+              <span>설명</span>
+              <textarea rows="4" data-project-field="description">${escapeHTML(card.description)}</textarea>
+            </label>
+            <label class="field">
+              <span>버튼 문구</span>
+              <input type="text" value="${escapeHTML(card.ctaLabel)}" data-project-field="ctaLabel">
+            </label>
+            <label class="field">
+              <span>버튼 링크</span>
+              <input type="text" value="${escapeHTML(card.href)}" data-project-field="href">
+            </label>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderWorksVideoList() {
+  const list = $("#works-video-list");
+  if (!list) return;
+  const searchInput = $("#works-video-search");
+  const filterInput = $("#works-video-filter");
+  if (searchInput && searchInput.value !== state.search) searchInput.value = state.search;
+  if (filterInput) filterInput.value = state.typeFilter;
+
+  const categories = getOrderedWorksCategories();
+  const keyword = state.search.trim().toLowerCase();
+  const filtered = state.data.works.videos
+    .map((video, index) => ({ video, index }))
+    .filter(({ video }) => state.typeFilter === "all" || video.type === state.typeFilter)
+    .filter(({ video }) => {
+      if (!keyword) return true;
+      return [video.title, video.category, video.id].some((value) => String(value || "").toLowerCase().includes(keyword));
+    });
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state">표시할 영상이 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(({ video, index }) => {
+    const selectedCategory = video.category && categories.includes(video.category) ? video.category : "__new__";
+    const customCategory = selectedCategory === "__new__" ? video.category : "";
+    const summaryParts = [
+      video.type === "short" ? "쇼츠" : "동영상",
+      video.category || "카테고리 미입력",
+      formatDisplayDate(video.date) || "날짜 미입력",
+    ].filter(Boolean);
+    return `
+      <article class="video-card" data-works-video-index="${index}">
+        <div class="video-card-head">
+          <div>
+            <strong>${escapeHTML(video.title || `영상 ${index + 1}`)}</strong>
+            <span>${escapeHTML(summaryParts.join(" · "))}</span>
+          </div>
+          ${rowActions("works-videos", index)}
+        </div>
+        <a class="video-thumb" href="${escapeHTML(videoHref(video))}" target="_blank" rel="noopener">
+          <img src="${videoThumb(video.id)}" alt="" loading="lazy" referrerpolicy="no-referrer">
+          <span class="type-badge type-${escapeHTML(video.type)}">${escapeHTML(video.type === "short" ? "쇼츠" : "동영상")}</span>
+        </a>
+        <div class="video-body">
+          <label class="field">
+            <span>제목</span>
+            <input type="text" value="${escapeHTML(video.title)}" data-works-video-field="title">
+          </label>
+          <div class="card-grid">
+            <label class="field">
+              <span>날짜</span>
+              <input type="date" value="${escapeHTML(video.date)}" data-works-video-field="date">
+            </label>
+            <label class="field">
+              <span>타입</span>
+              <select data-works-video-field="type">
+                <option value="long" ${video.type === "long" ? "selected" : ""}>동영상</option>
+                <option value="short" ${video.type === "short" ? "selected" : ""}>쇼츠</option>
+              </select>
+            </label>
+          </div>
+          <label class="field">
+            <span>카테고리</span>
+            <select data-works-video-category-select>
+              <option value="__new__">새 카테고리 작성</option>
+              ${categories.map((category) => `
+                <option value="${escapeHTML(category)}" ${category === selectedCategory ? "selected" : ""}>
+                  ${escapeHTML(category)}
+                </option>
+              `).join("")}
+            </select>
+          </label>
+          <label class="field" ${selectedCategory !== "__new__" ? "hidden" : ""}>
+            <span>새 카테고리 이름</span>
+            <input type="text" value="${escapeHTML(customCategory)}" data-works-video-custom-category placeholder="처음 등록할 채널명">
+          </label>
+          <div class="video-card-footer">
+            <span class="category-chip">${escapeHTML(video.category || "카테고리 미입력")}</span>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderWorksVideoForm() {
+  renderWorksCategoryOptions();
+  toggleWorksNewCategoryField();
+  syncWorksVideoUrlFeedback({ skipMetadata: true });
+}
+
+function syncWorksCategoryOrderState() {
+  const works = state.data.works || {};
+  works.videos = normalizeWorksVideos(works.videos);
+  works.visualPreset = normalizeWorksVisualPreset(works.visualPreset);
+  works.displayMode = normalizeWorksDisplayMode(works.displayMode);
+  works.gridColumns = normalizeWorksColumnCount(works.gridColumns, DEFAULT_DATA.works.gridColumns);
+  works.categoryStackColumns = normalizeWorksColumnCount(works.categoryStackColumns, DEFAULT_DATA.works.categoryStackColumns);
+  works.categoryStackTypeFilterEnabled = Boolean(works.categoryStackTypeFilterEnabled);
+  works.categoryStackSingleColumnSize = normalizeWorksSingleColumnSize(works.categoryStackSingleColumnSize);
+  works.categoryOrder = normalizeWorksCategoryOrder(works.categoryOrder, works.videos);
+  works.categoryEntries = normalizeWorksCategoryEntries(works.categoryEntries, works.videos, works.categoryOrder);
+  state.data.works = works;
+}
+
+function renderHomeSettings() {
+  const home = normalizeHomeSettings(state.data.home);
+  state.data.home = home;
+
+  const latestCount = $("#home-latest-count");
+  const categoryCount = $("#home-category-count");
+  const orderList = $("#home-section-order-list");
+
+  if (latestCount) latestCount.value = String(home.latestVideos.count);
+  if (categoryCount) categoryCount.value = String(home.categoryVideos.perCategoryCount);
+
+  if (!orderList) return;
+
+  orderList.innerHTML = home.sectionOrder.map((sectionKey, index) => `
+    <article class="editor-row four-col home-section-order-row" draggable="true" data-home-section-order-index="${index}" aria-label="${escapeHTML(HOME_SECTION_LABELS[sectionKey] || sectionKey)} 섹션 순서 변경">
+      <label class="toggle-field home-section-visible-field">
+        <input type="checkbox" data-home-section-visible="${escapeHTML(sectionKey)}" ${isHomeSectionVisible(home, sectionKey) ? "checked" : ""}>
+        <span>표시</span>
+      </label>
+      <label class="field">
+        <span class="home-section-order-label"><span class="material-symbols-outlined home-section-drag-handle" aria-hidden="true">drag_indicator</span>섹션</span>
+        <input type="text" value="${escapeHTML(HOME_SECTION_LABELS[sectionKey] || sectionKey)}" readonly>
+      </label>
+      <label class="field">
+        <span>설명</span>
+        <input type="text" value="${escapeHTML(sectionKey)}" readonly>
+      </label>
+      ${moveOnlyActions("home-section-order", index)}
+    </article>
+  `).join("");
+}
+
+function renderWorksDisplaySettings() {
+  const works = state.data.works || DEFAULT_DATA.works;
+  const visualPreset = normalizeWorksVisualPreset(works.visualPreset);
+  const displayMode = normalizeWorksDisplayMode(works.displayMode);
+  const gridGroup = $("#works-grid-settings-group");
+  const stackGroup = $("#works-category-stack-settings-group");
+  const categoryOrderSection = $("#works-category-order-section");
+  const singleSizeField = $("#works-category-stack-single-column-size-field");
+  const visualPresetInput = $("#works-visual-preset");
+  const displayModeInput = $("#works-display-mode");
+  const gridColumnsInput = $("#works-grid-columns");
+  const stackColumnsInput = $("#works-category-stack-columns");
+  const stackFilterInput = $("#works-category-stack-type-filter-enabled");
+  const stackFilterField = $("#works-category-stack-filter-field");
+  const stackFilterNote = $("#works-category-stack-filter-note");
+  const singleSizeInput = $("#works-category-stack-single-column-size");
+  const isSingleColumn = normalizeWorksColumnCount(works.categoryStackColumns, DEFAULT_DATA.works.categoryStackColumns) === 1;
+
+  if (visualPresetInput) visualPresetInput.value = visualPreset;
+  if (displayModeInput) displayModeInput.value = displayMode;
+  if (gridColumnsInput) gridColumnsInput.value = String(normalizeWorksColumnCount(works.gridColumns, DEFAULT_DATA.works.gridColumns));
+  if (stackColumnsInput) stackColumnsInput.value = String(normalizeWorksColumnCount(works.categoryStackColumns, DEFAULT_DATA.works.categoryStackColumns));
+  if (stackFilterInput) stackFilterInput.checked = works.categoryStackTypeFilterEnabled !== false;
+  if (singleSizeInput) singleSizeInput.value = normalizeWorksSingleColumnSize(works.categoryStackSingleColumnSize);
+
+  if (gridGroup) {
+    gridGroup.hidden = displayMode === "category-stack";
+    gridGroup.classList.toggle("is-active", displayMode === "grid" || displayMode === "hybrid");
+  }
+  if (stackGroup) {
+    stackGroup.hidden = displayMode === "grid";
+    stackGroup.classList.toggle("is-active", displayMode === "category-stack" || displayMode === "hybrid");
+  }
+  if (categoryOrderSection) {
+    categoryOrderSection.hidden = displayMode === "grid";
+    categoryOrderSection.classList.toggle("is-active", displayMode === "category-stack" || displayMode === "hybrid");
+  }
+  if (singleSizeField) {
+    singleSizeField.hidden = displayMode === "grid" || !isSingleColumn;
+  }
+  if (stackFilterField) {
+    stackFilterField.hidden = displayMode !== "category-stack";
+  }
+  if (stackFilterNote) {
+    stackFilterNote.hidden = displayMode !== "category-stack";
+  }
+}
+
+function renderWorksCategoryOrderList() {
+  const list = $("#works-category-order-list");
+  if (!list) return;
+  const displayMode = normalizeWorksDisplayMode(state.data.works.displayMode);
+
+  const entries = normalizeWorksCategoryEntries(
+    state.data.works.categoryEntries,
+    state.data.works.videos,
+    state.data.works.categoryOrder,
+  );
+
+  if (!entries.length) {
+    list.innerHTML = '<div class="empty-state slim">등록된 카테고리가 없습니다. 영상을 추가하면 자동으로 목록이 생성됩니다.</div>';
+    return;
+  }
+
+  const counts = entries.reduce((accumulator, entry) => {
+    accumulator[entry.category] = state.data.works.videos.filter((video) => video.category === entry.category).length;
+    return accumulator;
+  }, {});
+
+  list.innerHTML = entries.map((entry, index) => `
+    <article class="editor-row" data-works-category-entry-index="${index}">
+      <div class="section-row-head">
+        <div>
+          <h3>${escapeHTML(entry.category)}</h3>
+          <p class="field-note">현재 이 카테고리의 영상 ${escapeHTML(String(counts[entry.category] || 0))}개</p>
+        </div>
+        ${moveOnlyActions("works-category-order", index)}
+      </div>
+      <div class="form-grid">
+        <label class="field">
+          <span>기준 카테고리</span>
+          <input type="text" value="${escapeHTML(entry.category)}" readonly>
+        </label>
+        <label class="field">
+          <span>표시 제목</span>
+          <input type="text" value="${escapeHTML(entry.title)}" data-works-category-entry-field="title" placeholder="비워두면 카테고리명을 그대로 사용합니다.">
+        </label>
+        <label class="field span-2">
+          <span>보조 정보</span>
+          <textarea rows="3" data-works-category-entry-field="meta" placeholder="예: 2024. 08. 30. ~ 2024. 10. 04.&#10;메인 편집자 / 외주 편집자">${escapeHTML(entry.meta)}</textarea>
+        </label>
+        <label class="field" ${displayMode !== "hybrid" ? "hidden" : ""}>
+          <span>하이브리드 표시 방식</span>
+          <select data-works-category-entry-field="displayMode">
+            <option value="grid" ${entry.displayMode !== "category-stack" ? "selected" : ""}>기본 그리드</option>
+            <option value="category-stack" ${entry.displayMode === "category-stack" ? "selected" : ""}>카테고리별 세로 스택</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>카테고리별 한 줄 개수</span>
+          <select data-works-category-entry-field="columns">
+            <option value="" ${entry.columns == null ? "selected" : ""}>공통 설정 사용</option>
+            <option value="1" ${entry.columns === 1 ? "selected" : ""}>1개</option>
+            <option value="2" ${entry.columns === 2 ? "selected" : ""}>2개</option>
+            <option value="3" ${entry.columns === 3 ? "selected" : ""}>3개</option>
+            <option value="4" ${entry.columns === 4 ? "selected" : ""}>4개</option>
+            <option value="5" ${entry.columns === 5 ? "selected" : ""}>5개</option>
+            <option value="6" ${entry.columns === 6 ? "selected" : ""}>6개</option>
+            <option value="7" ${entry.columns === 7 ? "selected" : ""}>7개</option>
+            <option value="8" ${entry.columns === 8 ? "selected" : ""}>8개</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>카테고리별 1열 크기</span>
+          <select data-works-category-entry-field="singleColumnSize">
+            <option value="" ${!entry.singleColumnSize ? "selected" : ""}>공통 설정 사용</option>
+            <option value="large" ${entry.singleColumnSize === "large" ? "selected" : ""}>large</option>
+            <option value="medium" ${entry.singleColumnSize === "medium" ? "selected" : ""}>medium</option>
+            <option value="small" ${entry.singleColumnSize === "small" ? "selected" : ""}>small</option>
+          </select>
+        </label>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderStatsItemList() {
+  const list = $("#stats-item-list");
+  if (!list) return;
+  if (!state.data.stats.items.length) {
+    list.innerHTML = '<div class="empty-state slim">등록된 통계가 없습니다.</div>';
+    return;
+  }
+  list.innerHTML = state.data.stats.items.map((item, index) => `
+    <article class="editor-row three-col" data-stat-index="${index}">
+      <label class="field">
+        <span>값</span>
+        <input type="text" value="${escapeHTML(item.value)}" data-stat-field="value">
+      </label>
+      <label class="field">
+        <span>라벨</span>
+        <input type="text" value="${escapeHTML(item.label)}" data-stat-field="label">
+      </label>
+      ${rowActions("stats", index)}
+    </article>
+  `).join("");
+}
+
+function renderProcessStepList() {
+  const list = $("#process-step-list");
+  if (!list) return;
+  if (!state.data.pricing.processSteps.length) {
+    list.innerHTML = '<div class="empty-state slim">등록된 프로세스 단계가 없습니다.</div>';
+    return;
+  }
+  list.innerHTML = state.data.pricing.processSteps.map((step, index) => `
+    <article class="editor-row" data-process-index="${index}">
+      <div class="section-row-head">
+        <h3>단계 ${index + 1}</h3>
+        ${rowActions("process", index)}
+      </div>
+      <div class="form-grid">
+        <label class="field">
+          <span>번호</span>
+          <input type="text" value="${escapeHTML(step.number)}" data-process-field="number">
+        </label>
+        <label class="field">
+          <span>제목</span>
+          <input type="text" value="${escapeHTML(step.title)}" data-process-field="title">
+        </label>
+        <label class="field span-2">
+          <span>설명</span>
+          <textarea rows="4" data-process-field="description">${escapeHTML(step.description)}</textarea>
+        </label>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderPricingPlanList() {
+  const list = $("#pricing-plan-list");
+  if (!list) return;
+  if (!state.data.pricing.plans.length) {
+    list.innerHTML = '<div class="empty-state">등록된 가격 플랜이 없습니다.</div>';
+    return;
+  }
+  list.innerHTML = state.data.pricing.plans.map((plan, index) => {
+    const cardKey = getPricingPlanEditorKey(plan, index);
+    const expanded = isEditorCardExpanded(cardKey, false);
+    const summaryParts = [
+      plan.price || "가격 미입력",
+      normalizePricingPlanDesign(plan.design, "shortform") === "longform" ? "강조 카드" : "기본 카드",
+      plan.title || `플랜 ${index + 1}`,
+    ].filter(Boolean);
+
+    return `
+      <article class="plan-card collapsible-editor ${expanded ? "" : "is-collapsed"}" data-plan-index="${index}" data-editor-card-key="${escapeHTML(cardKey)}">
+        ${renderCollapsibleEditorHead({
+          title: plan.title || `플랜 ${index + 1}`,
+          summary: summaryParts.join(" · "),
+          key: cardKey,
+          expanded,
+          actions: rowActions("plans", index),
+        })}
+
+        <div class="collapsible-editor-body" ${expanded ? "" : "hidden"}>
+          <div class="form-grid">
+            <label class="field">
+              <span>Slug</span>
+              <input type="text" value="${escapeHTML(plan.slug)}" data-plan-field="slug">
+            </label>
+            <label class="field">
+              <span>배지</span>
+              <input type="text" value="${escapeHTML(plan.badge)}" data-plan-field="badge">
+            </label>
+            <label class="field">
+              <span>가격</span>
+              <input type="text" value="${escapeHTML(plan.price)}" data-plan-field="price">
+            </label>
+            <label class="field">
+              <span>디자인 형식</span>
+              <select data-plan-field="design">
+                <option value="shortform" ${normalizePricingPlanDesign(plan.design, "shortform") === "shortform" ? "selected" : ""}>기본</option>
+                <option value="longform" ${normalizePricingPlanDesign(plan.design, "shortform") === "longform" ? "selected" : ""}>강조</option>
+              </select>
+            </label>
+            <div class="field span-2">
+              <span>아이콘 선택</span>
+              ${renderIconPickerMarkup(plan.icon, {
+                scope: "plan",
+                planIndex: index,
+                emptyLabel: "아이콘 없음",
+                helperText: "플랜 카드 상단에 노출할 아이콘을 직접 선택할 수 있습니다.",
+              })}
+            </div>
+            <label class="field span-2">
+              <span>제목</span>
+              <textarea rows="2" data-plan-field="title">${escapeHTML(plan.title)}</textarea>
+            </label>
+            <label class="field span-2">
+              <span>설명</span>
+              <textarea rows="3" data-plan-field="description">${escapeHTML(plan.description)}</textarea>
+            </label>
+            <label class="field">
+              <span>가격 단위</span>
+              <input type="text" value="${escapeHTML(plan.priceUnit)}" data-plan-field="priceUnit">
+            </label>
+            <label class="field">
+              <span>버튼 문구</span>
+              <input type="text" value="${escapeHTML(plan.cta.label)}" data-plan-cta-field="label">
+            </label>
+            <label class="field span-2">
+              <span>버튼 링크</span>
+              <input type="text" value="${escapeHTML(plan.cta.href)}" data-plan-cta-field="href">
+            </label>
+          </div>
+
+          <div class="section-row-head">
+            <h3>포함 항목</h3>
+            <button type="button" data-add-feature="${index}">항목 추가</button>
+          </div>
+          <div class="feature-list">
+            ${(plan.features || []).length
+              ? plan.features.map((feature, featureIndex) => `
+                  <div class="feature-row" data-feature-index="${featureIndex}">
+                    <label class="field">
+                      <span>항목</span>
+                      <input type="text" value="${escapeHTML(feature)}" data-plan-feature-field="value">
+                    </label>
+                    <div class="inline-row-actions">
+                      <button type="button" data-move-feature="${featureIndex}" data-direction="-1">위로</button>
+                      <button type="button" data-move-feature="${featureIndex}" data-direction="1">아래로</button>
+                      <button class="danger-action" type="button" data-delete-feature="${featureIndex}">삭제</button>
+                    </div>
+                  </div>
+                `).join("")
+              : '<div class="empty-state slim">등록된 포함 항목이 없습니다.</div>'}
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderCustomWorkList() {
+  const list = $("#custom-work-list");
+  if (!list) return;
+  const items = state.data.pricing.customWorks || [];
+
+  if (!items.length) {
+    list.innerHTML = '<div class="empty-state">등록된 커스텀 작업 블록이 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML = items.map((block, index) => `
+    <article class="editor-row" data-custom-work-index="${index}">
+      <div class="section-row-head">
+        <div>
+          <h3>블록 ${index + 1}</h3>
+          <p class="field-note">${index % 2 === 0 ? "공개 페이지에서 이미지가 오른쪽에 배치됩니다." : "공개 페이지에서 이미지가 왼쪽에 배치됩니다."}</p>
+        </div>
+        ${rowActions("custom-works", index)}
+      </div>
+      <div class="form-grid">
+        <label class="field">
+          <span>이미지 Eyebrow</span>
+          <input type="text" value="${escapeHTML(block.eyebrow)}" data-custom-work-field="eyebrow">
+        </label>
+        <label class="field">
+          <span>강조 문구</span>
+          <input type="text" value="${escapeHTML(block.highlight)}" data-custom-work-field="highlight">
+        </label>
+        <label class="field span-2">
+          <span>제목</span>
+          <input type="text" value="${escapeHTML(block.title)}" data-custom-work-field="title">
+        </label>
+        <label class="field span-2">
+          <span>설명</span>
+          <textarea rows="4" data-custom-work-field="description">${escapeHTML(block.description)}</textarea>
+        </label>
+        <label class="field span-2">
+          <span>이미지 캡션</span>
+          <input type="text" value="${escapeHTML(block.caption)}" data-custom-work-field="caption">
+        </label>
+        <label class="field span-2">
+          <span>이미지 URL</span>
+          <input type="text" value="${escapeHTML(block.imageUrl)}" data-custom-work-field="imageUrl">
+        </label>
+        <label class="field span-2">
+          <span>이미지 대체 텍스트</span>
+          <input type="text" value="${escapeHTML(block.imageAlt)}" data-custom-work-field="imageAlt">
+        </label>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderContactDetailList() {
+  const list = $("#contact-detail-list");
+  if (!list) return;
+  if (!state.data.contact.details.length) {
+    list.innerHTML = '<div class="empty-state slim">등록된 문의 상세 정보가 없습니다.</div>';
+    return;
+  }
+  list.innerHTML = state.data.contact.details.map((detail, index) => `
+    <article class="editor-row three-col" data-contact-detail-index="${index}">
+      <label class="field">
+        <span>라벨</span>
+        <input type="text" value="${escapeHTML(detail.label)}" data-contact-detail-field="label">
+      </label>
+      <label class="field">
+        <span>값</span>
+        <input type="text" value="${escapeHTML(detail.value)}" data-contact-detail-field="value">
+      </label>
+      ${rowActions("contact-details", index)}
+    </article>
+  `).join("");
+}
+
+function renderFooterLinkList() {
+  const list = $("#footer-link-list");
+  if (!list) return;
+  const manualLinks = normalizeFooterLinks(state.data.site.footer.links);
+  const autoRepoLink = getAutoFooterRepoLink(manualLinks);
+
+  if (!manualLinks.length && !autoRepoLink) {
+    list.innerHTML = '<div class="empty-state slim">등록된 푸터 링크가 없습니다.</div>';
+    return;
+  }
+  const manualMarkup = manualLinks.map((link, index) => `
+    <article class="editor-row three-col" data-footer-link-index="${index}">
+      <label class="field">
+        <span>라벨</span>
+        <input type="text" value="${escapeHTML(link.label)}" data-footer-link-field="label">
+      </label>
+      <label class="field">
+        <span>URL</span>
+        <input type="text" value="${escapeHTML(link.url)}" data-footer-link-field="url">
+      </label>
+      ${rowActions("footer-links", index)}
+    </article>
+  `).join("");
+
+  const autoMarkup = autoRepoLink ? `
+    <article class="editor-row three-col">
+      <label class="field">
+        <span>라벨</span>
+        <input type="text" value="${escapeHTML(autoRepoLink.label)}" readonly>
+      </label>
+      <label class="field">
+        <span>URL</span>
+        <input type="text" value="${escapeHTML(autoRepoLink.url)}" readonly>
+      </label>
+      <div class="auto-generated-indicator">
+        <span class="auto-generated-badge">자동 등록</span>
+        <p>GitHub Pages repo 기준</p>
+      </div>
+    </article>
+  ` : "";
+
+  list.innerHTML = `${manualMarkup}${autoMarkup}`;
+}
+
+function renderPricingSettings() {
+  const gridColumnsInput = $("#pricing-grid-columns");
+  const processStyleInput = $("#pricing-process-style");
+  if (gridColumnsInput) {
+    gridColumnsInput.value = String(normalizePricingGridColumns(state.data.pricing?.gridColumns, DEFAULT_DATA.pricing.gridColumns));
+  }
+  if (processStyleInput) {
+    processStyleInput.value = normalizePricingProcessStyle(state.data.pricing?.processStyle);
+  }
+}
+
+function getQuickstartStepIndex(stepId) {
+  const index = QUICKSTART_STEPS.findIndex((step) => step.id === stepId);
+  return index === -1 ? 0 : index;
+}
+
+function getQuickstartStep(index = state.quickstartStepIndex) {
+  const normalizedIndex = Math.min(Math.max(Number(index) || 0, 0), QUICKSTART_STEPS.length - 1);
+  return QUICKSTART_STEPS[normalizedIndex] || QUICKSTART_STEPS[0];
+}
+
+function getQuickstartPreviewTarget() {
+  return getQuickstartStep().preview || "json";
+}
+
+function setQuickstartStep(indexOrId) {
+  const nextIndex = typeof indexOrId === "string"
+    ? getQuickstartStepIndex(indexOrId)
+    : Math.min(Math.max(Number(indexOrId) || 0, 0), QUICKSTART_STEPS.length - 1);
+  state.quickstartStepIndex = nextIndex;
+  const step = getQuickstartStep();
+  if (["embed-card", "embed-index"].includes(step.id) && !state.embedLoaded) {
+    void loadEmbedHTMLFromIndex();
+  }
+  renderQuickstartWizard();
+  renderLivePreview();
+}
+
+function goQuickstartStep(direction) {
+  const nextIndex = state.quickstartStepIndex + Number(direction || 0);
+  setQuickstartStep(nextIndex);
+}
+
+function renderQuickstartStepDots() {
+  const container = $("#quickstart-step-dots");
+  if (!container) return;
+  container.innerHTML = QUICKSTART_STEPS.map((step, index) => `
+    <button
+      type="button"
+      class="quickstart-step-dot ${index === state.quickstartStepIndex ? "is-active" : ""}"
+      data-quickstart-step-target="${escapeHTML(step.id)}"
+      aria-label="${index + 1}단계 ${escapeHTML(step.title)}로 이동"
+      aria-current="${index === state.quickstartStepIndex ? "step" : "false"}"
+    >${String(index + 1).padStart(2, "0")}</button>
+  `).join("");
+}
+
+function renderQuickstartWizard() {
+  const step = getQuickstartStep();
+  $$("[data-quickstart-step]").forEach((panel) => {
+    const isActive = panel.dataset.quickstartStep === step.id;
+    panel.classList.toggle("is-active", isActive);
+    panel.hidden = !isActive;
+  });
+
+  const counter = $("#quickstart-current-step");
+  const title = $("#quickstart-current-title");
+  const description = $("#quickstart-current-description");
+  if (counter) counter.textContent = `${String(state.quickstartStepIndex + 1).padStart(2, "0")} / ${QUICKSTART_STEPS.length}`;
+  if (title) title.textContent = step.title;
+  if (description) description.textContent = step.description;
+
+  const prev = $("#quickstart-prev");
+  const next = $("#quickstart-next");
+  const uploadDone = $("#quickstart-embed-upload-done");
+  const indexDone = $("#quickstart-embed-index-done");
+  if (prev) prev.disabled = state.quickstartStepIndex === 0;
+  if (next) next.textContent = state.quickstartStepIndex === QUICKSTART_STEPS.length - 1 ? "완료" : "다음";
+  if (uploadDone) uploadDone.checked = Boolean(state.quickstartEmbedUploadDone);
+  if (indexDone) indexDone.checked = Boolean(state.quickstartEmbedIndexDone);
+  syncQuickstartProcessSettingsVisibility();
+  renderQuickstartStepDots();
+}
+
+function renderQuickstartFinishSummary() {
+  const container = $("#quickstart-finish-summary");
+  if (!container) return;
+  const repo = getEffectiveGitHubRepo(state.data.site.githubRepo) || "Repo 미설정";
+  container.innerHTML = `
+    <article><span>GitHub Repo</span><strong>${escapeHTML(repo)}</strong></article>
+    <article><span>가격 플랜</span><strong>${state.data.pricing.plans.length}개</strong></article>
+    <article><span>임베드 업로드</span><strong>${state.quickstartEmbedUploadDone ? "완료" : "확인 필요"}</strong></article>
+  `;
+}
+
+async function openQuickstartGitHubIndexEditor() {
+  await openGitHubRepoPath("index.html", "edit");
+}
+
+function getTabLabel(tab = state.activeTab) {
+  const button = document.querySelector(`.tab-button[data-tab="${tab}"]`);
+  return String(button?.textContent || "편집 메뉴").trim();
+}
+
+function syncQuickstartMobileMenu() {
+  const sidebar = $(".admin-sidebar");
+  const toggle = $("#mobile-tab-toggle");
+  const current = $("#mobile-tab-current");
+  if (current) current.textContent = getTabLabel();
+  if (sidebar) sidebar.classList.toggle("is-menu-open", state.mobileMenuOpen);
+  if (toggle) toggle.setAttribute("aria-expanded", state.mobileMenuOpen ? "true" : "false");
+}
+
+function setMobileTabMenuOpen(isOpen) {
+  state.mobileMenuOpen = Boolean(isOpen);
+  syncQuickstartMobileMenu();
+}
+
+function renderQuickstartResourceSummary() {
+  const container = $("#quickstart-resource-summary");
+  if (!container) return;
+  const tools = state.data.hero.infoPanels.tools.items.length;
+  const bgm = state.data.hero.infoPanels.bgm.items.length;
+  const mode = state.data.hero.infoPanels.career.mode || "freeform";
+  container.innerHTML = `
+    <article><span>경력 공개 형식</span><strong>${escapeHTML(mode)}</strong></article>
+    <article><span>툴 목록</span><strong>${tools}개</strong></article>
+    <article><span>BGM 목록</span><strong>${bgm}개</strong></article>
+  `;
+}
+
+function renderQuickstartCareerStructuredList() {
+  const list = $("#quickstart-career-structured-list");
+  if (!list) return;
+  const items = state.data.hero.infoPanels?.career?.structuredItems || [];
+  if (!items.length) {
+    list.innerHTML = '<div class="empty-state slim">등록된 구조형 경력이 없습니다. 경력 추가 버튼으로 시작하세요.</div>';
+    return;
+  }
+
+  list.innerHTML = items.map((item, index) => `
+    <article class="quickstart-compact-row" data-quickstart-career-structured-index="${index}">
+      <div class="quickstart-compact-title">
+        <strong>${escapeHTML(item.title || `경력 ${index + 1}`)}</strong>
+        ${rowActions("quickstart-career-structured", index)}
+      </div>
+      <div class="form-grid">
+        <label class="field">
+          <span>제목</span>
+          <input type="text" value="${escapeHTML(item.title)}" data-quickstart-career-structured-field="title">
+        </label>
+        <label class="field">
+          <span>기간</span>
+          <input type="text" value="${escapeHTML(item.period)}" data-quickstart-career-structured-field="period" placeholder="2024.01 - 2025.03">
+        </label>
+        <label class="field span-2">
+          <span>설명</span>
+          <textarea rows="3" data-quickstart-career-structured-field="description">${escapeHTML(item.description)}</textarea>
+        </label>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderQuickstartHeroResourceList(listSelector, listKey, items, emptyMessage) {
+  const list = $(listSelector);
+  if (!list) return;
+  if (!items.length) {
+    list.innerHTML = `<div class="empty-state slim">${escapeHTML(emptyMessage)}</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map((item, index) => `
+    <article class="quickstart-compact-row hero-logo-row" data-${listKey}-index="${index}">
+      <div class="quickstart-compact-title">
+        <strong>${escapeHTML(item.name || `항목 ${index + 1}`)}</strong>
+        ${rowActions(listKey, index)}
+      </div>
+      <div class="form-grid">
+        <label class="field">
+          <span>이름</span>
+          <input type="text" value="${escapeHTML(item.name)}" data-${listKey}-field="name">
+        </label>
+        <label class="field">
+          <span>로고 URL</span>
+          <input type="text" value="${escapeHTML(item.logoUrl)}" data-${listKey}-field="logoUrl" placeholder="assets/tool-presets/premiere-pro.svg">
+        </label>
+        <label class="field span-2">
+          <span>이미지 설명</span>
+          <input type="text" value="${escapeHTML(item.logoAlt)}" data-${listKey}-field="logoAlt" placeholder="logo alt text">
+        </label>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderQuickstartHeroContentEditors() {
+  const careerMode = $("#quickstart-career-mode");
+  if (careerMode) careerMode.value = normalizeHeroCareerMode(state.data.hero.infoPanels?.career?.mode);
+  const careerFreeform = $("#quickstart-career-freeform");
+  if (careerFreeform && careerFreeform !== document.activeElement) {
+    careerFreeform.value = state.data.hero.infoPanels?.career?.freeformText || "";
+  }
+  renderQuickstartCareerStructuredList();
+  renderQuickstartHeroResourceList(
+    "#quickstart-tools-list",
+    "quickstart-tools",
+    state.data.hero.infoPanels?.tools?.items || [],
+    "등록된 사용 가능한 툴이 없습니다. 툴 추가 버튼으로 시작하세요.",
+  );
+  renderQuickstartHeroResourceList(
+    "#quickstart-bgm-list",
+    "quickstart-bgm",
+    state.data.hero.infoPanels?.bgm?.items || [],
+    "등록된 BGM 사용 툴이 없습니다. BGM 툴 추가 버튼으로 시작하세요.",
+  );
+}
+
+function syncQuickstartProcessSettingsVisibility() {
+  const block = $("#quickstart-process-settings");
+  if (!block) return;
+  const enabled = state.data.pricing.processEnabled !== false;
+  block.hidden = !enabled;
+  block.classList.toggle("is-active", enabled);
+}
+
+function renderQuickstartProcessStepList() {
+  const list = $("#quickstart-process-step-list");
+  if (!list) return;
+  const steps = state.data.pricing.processSteps;
+  if (!steps.length) {
+    list.innerHTML = '<div class="empty-state slim">등록된 프로세스 단계가 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML = steps.map((step, index) => `
+    <article class="quickstart-compact-row" data-quickstart-process-index="${index}">
+      <div class="quickstart-compact-title">
+        <strong>단계 ${index + 1}</strong>
+        ${rowActions("process", index)}
+      </div>
+      <div class="form-grid">
+        <label class="field">
+          <span>번호</span>
+          <input type="text" value="${escapeHTML(step.number)}" data-quickstart-process-field="number">
+        </label>
+        <label class="field">
+          <span>제목</span>
+          <input type="text" value="${escapeHTML(step.title)}" data-quickstart-process-field="title">
+        </label>
+        <label class="field span-2">
+          <span>설명</span>
+          <textarea rows="3" data-quickstart-process-field="description">${escapeHTML(step.description)}</textarea>
+        </label>
+      </div>
+    </article>
+  `).join("");
+}
+
+function getQuickstartPlanEditorKey(plan, index) {
+  return `quickstart:${getPricingPlanEditorKey(plan, index)}`;
+}
+
+function isQuickstartPlanExpanded(plan, index) {
+  return isEditorCardExpanded(getQuickstartPlanEditorKey(plan, index), index === 0);
+}
+
+function toggleQuickstartPlan(index) {
+  const plan = state.data.pricing.plans[index];
+  if (!plan) return;
+  const key = getQuickstartPlanEditorKey(plan, index);
+  setEditorCardExpanded(key, !isQuickstartPlanExpanded(plan, index));
+  renderQuickstartPricingPlanList();
+}
+
+function renderQuickstartPricingPlanList() {
+  const list = $("#quickstart-pricing-plan-list");
+  if (!list) return;
+  const plans = state.data.pricing.plans;
+  if (!plans.length) {
+    list.innerHTML = '<div class="empty-state slim">등록된 가격 플랜이 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML = plans.map((plan, index) => {
+    const cardKey = getQuickstartPlanEditorKey(plan, index);
+    const expanded = isQuickstartPlanExpanded(plan, index);
+    const summary = [
+      [plan.price, plan.priceUnit].filter(Boolean).join(" "),
+      plan.description || "설명 미입력",
+    ].filter(Boolean).join(" · ") || "가격 미입력";
+
+    return `
+      <article class="plan-card collapsible-editor quickstart-plan-card ${expanded ? "" : "is-collapsed"}" data-quickstart-plan-index="${index}" data-editor-card-key="${escapeHTML(cardKey)}">
+        ${renderCollapsibleEditorHead({
+          title: plan.title || `플랜 ${index + 1}`,
+          summary,
+          key: cardKey,
+          expanded,
+          actions: rowActions("plans", index),
+        })}
+
+        <div class="collapsible-editor-body quickstart-plan-body" ${expanded ? "" : "hidden"}>
+          <div class="form-grid">
+            <label class="field span-2">
+              <span>제목</span>
+              <input type="text" value="${escapeHTML(plan.title)}" data-quickstart-plan-field="title">
+            </label>
+            <label class="field">
+              <span>가격</span>
+              <input type="text" value="${escapeHTML(plan.price)}" data-quickstart-plan-field="price">
+            </label>
+            <label class="field">
+              <span>가격 단위</span>
+              <input type="text" value="${escapeHTML(plan.priceUnit)}" data-quickstart-plan-field="priceUnit">
+            </label>
+            <label class="field span-2">
+              <span>설명</span>
+              <textarea rows="3" data-quickstart-plan-field="description">${escapeHTML(plan.description)}</textarea>
+            </label>
+            <label class="field">
+              <span>버튼 문구</span>
+              <input type="text" value="${escapeHTML(plan.cta?.label || "")}" data-quickstart-plan-cta-field="label">
+            </label>
+            <label class="field">
+              <span>버튼 링크</span>
+              <input type="text" value="${escapeHTML(plan.cta?.href || "")}" data-quickstart-plan-cta-field="href">
+            </label>
+          </div>
+
+          <div class="section-row-head quickstart-feature-head">
+            <h3>포함 항목</h3>
+            <button type="button" data-quickstart-add-feature="${index}">항목 추가</button>
+          </div>
+          <div class="feature-list quickstart-feature-list">
+            ${(plan.features || []).length
+              ? plan.features.map((feature, featureIndex) => `
+                  <div class="feature-row" data-quickstart-feature-index="${featureIndex}">
+                    <label class="field">
+                      <span>항목</span>
+                      <input type="text" value="${escapeHTML(feature)}" data-quickstart-plan-feature-field="value">
+                    </label>
+                    <div class="inline-row-actions">
+                      <button type="button" data-quickstart-move-feature="${featureIndex}" data-direction="-1">위로</button>
+                      <button type="button" data-quickstart-move-feature="${featureIndex}" data-direction="1">아래로</button>
+                      <button class="danger-action" type="button" data-quickstart-delete-feature="${featureIndex}">삭제</button>
+                    </div>
+                  </div>
+                `).join("")
+              : '<div class="empty-state slim">등록된 포함 항목이 없습니다. 항목 추가 버튼으로 공개 가격 카드의 체크리스트를 입력하세요.</div>'}
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function jumpToAdminSection(button) {
+  const tab = String(button?.dataset?.jumpTab || "").trim();
+  const targetId = String(button?.dataset?.jumpTarget || "").trim();
+  if (!tab) return;
+  switchTab(tab);
+  window.requestAnimationFrame(() => {
+    const target = targetId ? document.getElementById(targetId) : null;
+    const fallback = document.querySelector(`.tab-panel[data-panel="${tab}"]`);
+    (target || fallback)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (target && typeof target.focus === "function") {
+      target.focus({ preventScroll: true });
+    }
+  });
+}
+
+function renderAll() {
+  syncWorksCategoryOrderState();
+  renderDirectInputs();
+  renderPricingSettings();
+  renderGitHubRepoField();
+  renderContactCardIconPicker();
+  renderCheckboxInputs();
+  renderSummary();
+  renderNavLinkList();
+  renderNavLinkPresetButtons();
+  renderNavTestSession();
+  renderHeroActionList();
+  renderHeroInfoEditors();
+  renderQuickstartHeroContentEditors();
+  renderProjectCardList();
+  renderProjectInlinePreviews();
+  renderHomeSettings();
+  renderWorksDisplaySettings();
+  renderWorksCategoryOrderList();
+  renderWorksVideoForm();
+  renderWorksVideoList();
+  renderStatsItemList();
+  renderProcessStepList();
+  renderPricingPlanList();
+  renderQuickstartResourceSummary();
+  renderQuickstartProcessStepList();
+  renderQuickstartPricingPlanList();
+  renderQuickstartFinishSummary();
+  renderQuickstartWizard();
+  renderCustomWorkList();
+  renderContactDetailList();
+  renderFooterLinkList();
+  updateAllDetailSectionBulkToggles();
+  syncQuickstartMobileMenu();
+  refreshJsonOutput();
+  renderLivePreview();
+  if (state.activeTab === "embed-card") {
+    void loadEmbedHTMLFromIndex();
+  }
+}
+
+function switchTab(tab) {
+  state.activeTab = tab;
+  $$(".tab-button").forEach((button) => {
+    const isActive = button.dataset.tab === tab;
+    button.classList.toggle("on", isActive);
+    if (isActive) {
+      button.setAttribute("aria-current", "page");
+    } else {
+      button.removeAttribute("aria-current");
+    }
+  });
+  $$(".tab-panel").forEach((panel) => panel.classList.toggle("on", panel.dataset.panel === tab));
+  mountLivePreview();
+  renderLivePreview();
+  setMobileTabMenuOpen(false);
+  if (tab === "json") refreshJsonOutput();
+  if (tab === "embed-card") void loadEmbedHTMLFromIndex();
+  if (tab === "embed-image") renderCropCanvases();
+  updateDetailSectionBulkToggle($(`.tab-panel[data-panel="${tab}"]`));
+}
+
+function setFloatingActionsOpen(isOpen) {
+  const actions = $(".floating-actions");
+  const toggle = $("#floating-actions-toggle");
+  const extraActions = $("#floating-extra-actions");
+  if (!actions || !toggle || !extraActions) return;
+
+  actions.classList.toggle("is-open", isOpen);
+  toggle.setAttribute("aria-expanded", String(isOpen));
+  toggle.setAttribute("aria-label", isOpen ? "JSON 작업 접기" : "JSON 작업 더 보기");
+  extraActions.setAttribute("aria-hidden", String(!isOpen));
+  extraActions.querySelectorAll("button").forEach((button) => {
+    button.tabIndex = isOpen ? 0 : -1;
+  });
+}
+
+function applyMinorChange(message = "변경 사항이 반영되었습니다.") {
+  syncWorksCategoryOrderState();
+  renderSummary();
+  renderHomeSettings();
+  renderWorksDisplaySettings();
+  renderWorksCategoryOrderList();
+  renderProjectInlinePreviews();
+  renderQuickstartResourceSummary();
+  renderQuickstartFinishSummary();
+  renderQuickstartWizard();
+  renderNavLinkPresetButtons();
+  renderNavTestSession();
+  updateAllDetailSectionBulkToggles();
+  refreshJsonOutput();
+  renderLivePreview();
+  setStatus(message, "success");
+}
+
+function applyDataChange(message = "변경 사항이 반영되었습니다.") {
+  syncWorksCategoryOrderState();
+  renderAll();
+  setStatus(message, "success");
+}
+
+function moveArrayItem(items, fromIndex, direction) {
+  const toIndex = fromIndex + direction;
+  if (
+    !Array.isArray(items) ||
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= items.length ||
+    toIndex >= items.length
+  ) {
+    return false;
+  }
+  const [item] = items.splice(fromIndex, 1);
+  items.splice(toIndex, 0, item);
+  return true;
+}
+
+function moveHomeSectionOrderByDrag(fromIndex, toIndex) {
+  const items = state.data.home.sectionOrder;
+  if (
+    !Array.isArray(items) ||
+    fromIndex === toIndex ||
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= items.length ||
+    toIndex >= items.length
+  ) {
+    return false;
+  }
+
+  const [item] = items.splice(fromIndex, 1);
+  items.splice(toIndex, 0, item);
+  return true;
+}
+
+function clearHomeSectionDragState() {
+  $$(".home-section-order-row.is-dragging, .home-section-order-row.is-drag-over").forEach((row) => {
+    row.classList.remove("is-dragging", "is-drag-over");
+  });
+}
+
+function getHomeSectionOrderIndexFromRow(row) {
+  const index = Number(row?.dataset.homeSectionOrderIndex);
+  return Number.isInteger(index) ? index : -1;
+}
+
+function bindHomeSectionDragAndDrop() {
+  const list = $("#home-section-order-list");
+  if (!list || list.dataset.dragBound === "true") return;
+  list.dataset.dragBound = "true";
+
+  list.addEventListener("dragstart", (event) => {
+    const row = event.target.closest("[data-home-section-order-index]");
+    if (!row) return;
+    const index = getHomeSectionOrderIndexFromRow(row);
+    if (index < 0) return;
+    state.homeSectionDragIndex = index;
+    row.classList.add("is-dragging");
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", String(index));
+  });
+
+  list.addEventListener("dragend", () => {
+    state.homeSectionDragIndex = null;
+    clearHomeSectionDragState();
+  });
+
+  list.addEventListener("dragover", (event) => {
+    const row = event.target.closest("[data-home-section-order-index]");
+    if (!row) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    $$(".home-section-order-row.is-drag-over").forEach((candidate) => {
+      if (candidate !== row) candidate.classList.remove("is-drag-over");
+    });
+    row.classList.add("is-drag-over");
+  });
+
+  list.addEventListener("dragleave", (event) => {
+    const row = event.target.closest("[data-home-section-order-index]");
+    if (!row || row.contains(event.relatedTarget)) return;
+    row.classList.remove("is-drag-over");
+  });
+
+  list.addEventListener("drop", (event) => {
+    const row = event.target.closest("[data-home-section-order-index]");
+    if (!row) return;
+    event.preventDefault();
+    const fromIndex = Number(event.dataTransfer.getData("text/plain") || state.homeSectionDragIndex);
+    const toIndex = getHomeSectionOrderIndexFromRow(row);
+    state.homeSectionDragIndex = null;
+    clearHomeSectionDragState();
+    if (moveHomeSectionOrderByDrag(fromIndex, toIndex)) {
+      applyDataChange("홈 섹션 순서를 변경했습니다.");
+    }
+  });
+}
+
+function duplicateArrayItem(items, index) {
+  if (!Array.isArray(items) || index < 0 || index >= items.length) return false;
+  items.splice(index + 1, 0, clone(items[index]));
+  return true;
+}
+
+function findWorksVideoInsertIndex(items, nextVideo) {
+  const nextDate = String(nextVideo?.date || "").trim();
+  const list = Array.isArray(items) ? items : [];
+
+  if (!nextDate) {
+    const firstUndatedIndex = list.findIndex((video) => !String(video?.date || "").trim());
+    return firstUndatedIndex === -1 ? list.length : firstUndatedIndex;
+  }
+
+  for (let index = 0; index < list.length; index += 1) {
+    const currentDate = String(list[index]?.date || "").trim();
+    if (!currentDate || nextDate > currentDate) return index;
+  }
+
+  return list.length;
+}
+
+function insertWorksVideo(items, nextVideo) {
+  if (!Array.isArray(items)) return false;
+  const insertIndex = findWorksVideoInsertIndex(items, nextVideo);
+  items.splice(insertIndex, 0, nextVideo);
+  return true;
+}
+
+function listByKey(listKey) {
+  switch (listKey) {
+    case "nav":
+      return state.data.site.nav.links;
+    case "hero-actions":
+      return state.data.hero.actions;
+    case "career-structured":
+    case "quickstart-career-structured":
+      return state.data.hero.infoPanels.career.structuredItems;
+    case "career-simple":
+      return state.data.hero.infoPanels.career.simpleItems;
+    case "hero-tools":
+    case "quickstart-tools":
+      return state.data.hero.infoPanels.tools.items;
+    case "hero-bgm":
+    case "quickstart-bgm":
+      return state.data.hero.infoPanels.bgm.items;
+    case "projects":
+      return state.data.projects.cards;
+    case "home-section-order":
+      return state.data.home.sectionOrder;
+    case "works-videos":
+      return state.data.works.videos;
+    case "works-category-order":
+      return state.data.works.categoryOrder;
+    case "stats":
+      return state.data.stats.items;
+    case "process":
+      return state.data.pricing.processSteps;
+    case "plans":
+      return state.data.pricing.plans;
+    case "custom-works":
+      return state.data.pricing.customWorks;
+    case "contact-details":
+      return state.data.contact.details;
+    case "footer-links":
+      return state.data.site.footer.links;
+    default:
+      return null;
+  }
+}
+
+async function fetchJsonData(path, options = {}) {
+  const response = await fetch(path, options);
+  if (!response.ok) throw new Error(`${path} 로드 실패: ${response.status}`);
+  const text = await response.text();
+  return text.trim() ? JSON.parse(text) : {};
+}
+
+async function loadJson(confirmReload = false) {
+  if (confirmReload && !window.confirm("현재 편집 중인 내용을 버리고 초기 JSON을 다시 불러올까요?")) {
+    return;
+  }
+
+  try {
+    setStatus("데이터를 불러오는 중입니다...", "info");
+    const parsed = await fetchJsonData(jsonPath, { cache: "no-store" });
+    state.data = normalizeData(parsed);
+    renderAll();
+    void ensureGitHubDefaultBranch(state.data.site?.githubRepo);
+    setStatus("site.json을 불러왔습니다.", "success");
+  } catch (error) {
+    try {
+      const parsed = await fetchJsonData(exampleJsonPath, { cache: "no-store" });
+      state.data = normalizeData(parsed);
+      renderAll();
+      void ensureGitHubDefaultBranch(state.data.site?.githubRepo);
+      setStatus(`site.json을 불러오지 못해 example.site.json으로 시작합니다: ${error.message}`, "info");
+    } catch (fallbackError) {
+      state.data = normalizeData({});
+      renderAll();
+      void ensureGitHubDefaultBranch(state.data.site?.githubRepo);
+      setStatus(`불러오기 실패: ${error.message}. example.site.json도 사용할 수 없어 기본 구조로 시작합니다.`, "error");
+    }
+  }
+}
+
+async function openGitHubJson() {
+  const effectiveRepo = getEffectiveGitHubRepo(state.data.site.githubRepo, window.location);
+  if (!effectiveRepo) {
+    setStatus("GitHub Repo를 입력하거나 GitHub Pages 배포 주소에서 열어주세요.", "error");
+    return;
+  }
+
+  const githubTab = window.open("", "_blank");
+  await ensureGitHubDefaultBranch(state.data.site.githubRepo, window.location);
+  const githubUrl = resolveGitHubSiteJsonUrl(window.location, state.data.site.githubRepo, "edit");
+  if (!githubUrl) {
+    githubTab?.close();
+    setStatus("GitHub Repo를 입력하거나 GitHub Pages 배포 주소에서 열어주세요.", "error");
+    return;
+  }
+
+  if (githubTab) {
+    githubTab.opener = null;
+    githubTab.location.href = githubUrl;
+  }
+
+  const opened = githubTab || window.open(githubUrl, "_blank", "noopener");
+  setStatus(
+    opened
+      ? "GitHub의 data/site.json 편집 화면을 새 탭으로 열었습니다."
+      : "팝업 차단으로 GitHub 편집 화면을 열지 못했습니다.",
+    opened ? "success" : "error"
+  );
+}
+
+async function copyAllJson() {
+  const json = buildJson();
+  const effectiveRepo = getEffectiveGitHubRepo(state.data.site.githubRepo, window.location);
+  const githubTab = effectiveRepo ? window.open("", "_blank") : null;
+
+  try {
+    await navigator.clipboard.writeText(json);
+    if (effectiveRepo) {
+      await ensureGitHubDefaultBranch(state.data.site.githubRepo, window.location);
+    }
+
+    const githubUrl = effectiveRepo
+      ? resolveGitHubSiteJsonUrl(window.location, state.data.site.githubRepo, "edit")
+      : "";
+
+    if (githubUrl) {
+      if (githubTab) {
+        githubTab.opener = null;
+        githubTab.location.href = githubUrl;
+        setStatus("JSON을 복사하고 GitHub data/site.json 편집 화면을 열었습니다.", "success");
+      } else {
+        const opened = window.open(githubUrl, "_blank", "noopener");
+        setStatus(
+          opened
+            ? "JSON을 복사하고 GitHub data/site.json 편집 화면을 열었습니다."
+            : "JSON은 복사했지만 팝업 차단으로 GitHub 편집 화면을 열지 못했습니다.",
+          opened ? "success" : "error"
+        );
+      }
+    } else {
+      setStatus("JSON을 복사했습니다. GitHub 이동은 GitHub Repo가 있거나 GitHub Pages 주소에서만 동작합니다.", "success");
+    }
+  } catch (error) {
+    const githubUrl = effectiveRepo
+      ? resolveGitHubSiteJsonUrl(window.location, state.data.site.githubRepo, "edit")
+      : "";
+
+    if (githubUrl && githubTab && !githubTab.closed) {
+      githubTab.opener = null;
+      githubTab.location.href = githubUrl;
+      const output = $("#json-output");
+      output?.focus();
+      output?.select();
+      setStatus("클립보드 복사는 막혔지만 GitHub data/site.json 편집 화면은 열었습니다. JSON 탭에서 직접 선택해 복사하세요.", "error");
+      return;
+    }
+
+    if (githubTab && !githubTab.closed) githubTab.close();
+    const output = $("#json-output");
+    output?.focus();
+    output?.select();
+    setStatus("클립보드 복사가 막혔습니다. JSON 탭에서 직접 선택해 복사하세요.", "error");
+  }
+}
+
+function downloadJsonFile() {
+  try {
+    const blob = new Blob([buildJson()], { type: "application/json;charset=utf-8" });
+    const downloadUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = downloadUrl;
+    anchor.download = "site.json";
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+    setStatus("site.json 파일을 다운로드했습니다.", "success");
+  } catch (error) {
+    setStatus(`다운로드 실패: ${error.message}`, "error");
+  }
+}
+
+function validateJson() {
+  try {
+    JSON.parse(buildJson());
+    setStatus("JSON 형식이 올바릅니다.", "success");
+  } catch (error) {
+    setStatus(`JSON 오류: ${error.message}`, "error");
+  }
+}
+
+function handleGitHubRepoInput(event) {
+  state.data.site.githubRepo = event.target.value;
+  renderGitHubRepoField({ preserveInputValue: true, sourceId: event.target.id });
+  scheduleGitHubDefaultBranchLookup(event.target.value, window.location);
+  renderSummary();
+  renderFooterLinkList();
+  refreshJsonOutput();
+  renderLivePreview();
+  setStatus("GitHub Repo 설정이 반영되었습니다.", "success");
+}
+
+function bindDirectInputs() {
+  directBindingEntries().forEach(([id, path]) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    const handleInput = (event) => {
+      if (id === "quickstart-site-github-repo") {
+        handleGitHubRepoInput(event);
+        return;
+      }
+
+      setByPath(path, event.target.value);
+      syncDirectInputPeers(id, path);
+      if (id === "projects-youtube-channel-url") {
+        scheduleYouTubeChannelLookup(event.target.value);
+      }
+      applyMinorChange("변경 사항이 반영되었습니다.");
+    };
+    input.addEventListener(input.tagName === "SELECT" ? "change" : "input", handleInput);
+  });
+}
+
+function bindCheckboxInputs() {
+  checkboxBindingEntries().forEach(([id, path]) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    input.addEventListener("change", (event) => {
+      setByPath(path, event.target.checked);
+      syncCheckboxInputPeers(id, path);
+      applyMinorChange("섹션 표시 설정이 반영되었습니다.");
+    });
+  });
+}
+
+function bindEvents() {
+  setupDetailSectionCollapsibles();
+  setupDetailSectionBulkToggles();
+  bindDirectInputs();
+  bindCheckboxInputs();
+
+  $$(".tab-button").forEach((button) => {
+    button.addEventListener("click", () => switchTab(button.dataset.tab));
+  });
+
+  $("#mobile-tab-toggle")?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    setMobileTabMenuOpen(!state.mobileMenuOpen);
+  });
+
+  $("#quickstart-prev")?.addEventListener("click", () => goQuickstartStep(-1));
+  $("#quickstart-next")?.addEventListener("click", () => goQuickstartStep(1));
+  $("#quickstart-step-dots")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-quickstart-step-target]");
+    if (!button) return;
+    setQuickstartStep(button.dataset.quickstartStepTarget);
+  });
+
+  $("#quickstart-download-social-preview")?.addEventListener("click", downloadSocialPreviewPNG);
+  $("#quickstart-open-assets-upload")?.addEventListener("click", openAssetsUploadPage);
+  $("#quickstart-open-channel-assets-upload")?.addEventListener("click", openAssetsUploadPage);
+  $("#quickstart-open-embed-card")?.addEventListener("click", () => switchTab("embed-card"));
+  $("#quickstart-copy-embed-html")?.addEventListener("click", copyEmbedHTML);
+  $("#quickstart-copy-embed-html-index")?.addEventListener("click", copyEmbedHTML);
+  $("#quickstart-open-index-editor")?.addEventListener("click", openQuickstartGitHubIndexEditor);
+  $("#quickstart-embed-upload-done")?.addEventListener("change", (event) => {
+    state.quickstartEmbedUploadDone = event.target.checked;
+    renderQuickstartFinishSummary();
+    renderLivePreview();
+  });
+  $("#quickstart-embed-index-done")?.addEventListener("change", (event) => {
+    state.quickstartEmbedIndexDone = event.target.checked;
+    renderQuickstartFinishSummary();
+    renderLivePreview();
+  });
+
+  $("#quickstart-copy-json")?.addEventListener("click", copyAllJson);
+
+  $("#quickstart-add-process-step")?.addEventListener("click", () => {
+    state.data.pricing.processSteps.push({ number: "", title: "", description: "" });
+    applyDataChange("프로세스 단계를 추가했습니다.");
+  });
+
+  $("#quickstart-process-step-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-quickstart-process-index]");
+    const field = event.target.dataset.quickstartProcessField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.quickstartProcessIndex);
+    const step = state.data.pricing.processSteps[index];
+    if (!step) return;
+    step[field] = event.target.value;
+    renderProcessStepList();
+    applyMinorChange("프로세스 단계가 반영되었습니다.");
+  });
+
+  $("#quickstart-add-pricing-plan")?.addEventListener("click", () => {
+    state.data.pricing.plans.push({
+      slug: "",
+      design: "shortform",
+      badge: "",
+      icon: "",
+      title: "",
+      description: "",
+      price: "",
+      priceUnit: "",
+      features: [],
+      cta: {
+        label: "",
+        href: "",
+      },
+    });
+    applyDataChange("가격 플랜을 추가했습니다.");
+  });
+
+  $("#quickstart-pricing-plan-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-quickstart-plan-index]");
+    if (!row) return;
+    const index = Number(row.dataset.quickstartPlanIndex);
+    const plan = state.data.pricing.plans[index];
+    if (!plan) return;
+
+    const field = event.target.dataset.quickstartPlanField;
+    if (field) {
+      plan[field] = event.target.value;
+      renderPricingPlanList();
+      applyMinorChange("가격 플랜이 반영되었습니다.");
+      return;
+    }
+
+    const featureField = event.target.dataset.quickstartPlanFeatureField;
+    const featureRow = event.target.closest("[data-quickstart-feature-index]");
+    if (featureField && featureRow) {
+      const featureIndex = Number(featureRow.dataset.quickstartFeatureIndex);
+      if (!Array.isArray(plan.features)) plan.features = [];
+      plan.features[featureIndex] = event.target.value;
+      renderPricingPlanList();
+      applyMinorChange("플랜 포함 항목이 반영되었습니다.");
+      return;
+    }
+
+    const ctaField = event.target.dataset.quickstartPlanCtaField;
+    if (!ctaField) return;
+    if (!plan.cta || typeof plan.cta !== "object") plan.cta = { label: "", href: "" };
+    plan.cta[ctaField] = event.target.value;
+    renderPricingPlanList();
+    applyMinorChange("플랜 버튼이 반영되었습니다.");
+  });
+
+  $("#quickstart-pricing-plan-list")?.addEventListener("click", (event) => {
+    const toggle = event.target.closest("[data-quickstart-plan-toggle]");
+    if (toggle) {
+      toggleQuickstartPlan(Number(toggle.dataset.quickstartPlanToggle));
+      return;
+    }
+
+    const row = event.target.closest("[data-quickstart-plan-index]");
+    if (!row) return;
+    const planIndex = Number(row.dataset.quickstartPlanIndex);
+    const plan = state.data.pricing.plans[planIndex];
+    if (!plan) return;
+    if (!Array.isArray(plan.features)) plan.features = [];
+
+    const addButton = event.target.closest("[data-quickstart-add-feature]");
+    const quickstartAddFeature = addButton?.dataset.quickstartAddFeature;
+    if (quickstartAddFeature !== undefined) {
+      plan.features.push("");
+      applyDataChange("플랜 포함 항목을 추가했습니다.");
+      return;
+    }
+
+    const featureDelete = event.target.closest("[data-quickstart-delete-feature]");
+    const quickstartDeleteFeature = featureDelete?.dataset.quickstartDeleteFeature;
+    if (quickstartDeleteFeature !== undefined) {
+      const featureIndex = Number(quickstartDeleteFeature);
+      plan.features.splice(featureIndex, 1);
+      applyDataChange("플랜 포함 항목을 삭제했습니다.");
+      return;
+    }
+
+    const moveFeatureButton = event.target.closest("[data-quickstart-move-feature]");
+    const quickstartMoveFeature = moveFeatureButton?.dataset.quickstartMoveFeature;
+    if (quickstartMoveFeature !== undefined) {
+      const featureIndex = Number(quickstartMoveFeature);
+      const direction = Number(moveFeatureButton.dataset.direction);
+      if (moveArrayItem(plan.features, featureIndex, direction)) {
+        applyDataChange("플랜 포함 항목 순서를 변경했습니다.");
+      }
+    }
+  });
+
+  $("#reload-json")?.addEventListener("click", () => loadJson(true));
+  $("#validate-json")?.addEventListener("click", validateJson);
+  $("#copy-all-json")?.addEventListener("click", copyAllJson);
+  $("#copy-json-panel")?.addEventListener("click", copyAllJson);
+  $("#download-json-file")?.addEventListener("click", downloadJsonFile);
+  $("#open-github-json")?.addEventListener("click", openGitHubJson);
+  $("#reload-embed-html")?.addEventListener("click", () => loadEmbedHTMLFromIndex({ force: true }));
+  $("#copy-embed-html")?.addEventListener("click", copyEmbedHTML);
+  $("#toggle-embed-image-meta")?.addEventListener("click", toggleEmbedImageMeta);
+  $("#open-assets-upload")?.addEventListener("click", openAssetsUploadPage);
+  $("#open-channel-assets-upload")?.addEventListener("click", openAssetsUploadPage);
+  $("#download-social-preview")?.addEventListener("click", downloadSocialPreviewPNG);
+
+  ["embed-meta-title", "embed-meta-description", "embed-meta-image", "embed-meta-url", "embed-meta-image-alt"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("input", syncEmbedEditorFromFields);
+  });
+  ["quickstart-embed-meta-title", "quickstart-embed-meta-description", "quickstart-embed-meta-image", "quickstart-embed-meta-url", "quickstart-embed-meta-image-alt"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("input", syncEmbedEditorFromQuickstartFields);
+  });
+
+  $("#embed-html-output")?.addEventListener("input", (event) => {
+    syncEmbedEditorFromHTML(event.target.value);
+  });
+
+  $("#embed-preview-image")?.addEventListener("error", () => {
+    const imageElement = $("#embed-preview-image");
+    const imageEmpty = $("#embed-preview-image-empty");
+    if (imageElement) imageElement.hidden = true;
+    if (imageEmpty) {
+      imageEmpty.hidden = false;
+      imageEmpty.textContent = "이미지를 불러오지 못했습니다. 배포된 절대 URL을 확인하세요.";
+    }
+  });
+
+  ["embed-image-file", "quickstart-embed-image-file"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("change", (event) => {
+      loadCropImageFile(event.target.files?.[0]);
+    });
+  });
+
+  $("#load-embed-image-url")?.addEventListener("click", () => loadCropImageFromUrlInput("#embed-image-url"));
+  $("#quickstart-load-embed-image-url")?.addEventListener("click", () => loadCropImageFromUrlInput("#quickstart-embed-image-url"));
+
+  $("#center-embed-crop")?.addEventListener("click", centerCropSelection);
+  $("#reset-embed-crop")?.addEventListener("click", resetCropSelection);
+  $("#embed-image-ratio")?.addEventListener("change", (event) => {
+    changeSocialPreviewPreset(event.target.value);
+  });
+  syncSocialPreviewPresetUI();
+  updateCropPreviewCanvasSize();
+
+  const cropSelection = $("#embed-crop-selection");
+  cropSelection?.addEventListener("pointerdown", startCropSelectionInteraction);
+  cropSelection?.addEventListener("pointermove", updateCropSelectionFromPointer);
+  cropSelection?.addEventListener("pointerup", finishCropSelectionInteraction);
+  cropSelection?.addEventListener("pointercancel", finishCropSelectionInteraction);
+  cropSelection?.addEventListener("lostpointercapture", finishCropSelectionInteraction);
+
+  $("#floating-actions-toggle")?.addEventListener("click", () => {
+    setFloatingActionsOpen(!$(".floating-actions")?.classList.contains("is-open"));
+  });
+  setFloatingActionsOpen(false);
+
+  $("#site-github-repo")?.addEventListener("input", handleGitHubRepoInput);
+
+  $("#pricing-grid-columns")?.addEventListener("change", (event) => {
+    state.data.pricing.gridColumns = normalizePricingGridColumns(event.target.value, DEFAULT_DATA.pricing.gridColumns);
+    applyMinorChange("가격 카드 열 수가 반영되었습니다.");
+  });
+
+  $("#pricing-process-style")?.addEventListener("change", (event) => {
+    state.data.pricing.processStyle = normalizePricingProcessStyle(event.target.value);
+    syncDirectInputPeers("pricing-process-style", ["pricing", "processStyle"]);
+    applyMinorChange("프로세스 디자인 형식이 반영되었습니다.");
+  });
+
+  $("#add-nav-link")?.addEventListener("click", () => {
+    state.data.site.nav.links.push({ label: "", href: "" });
+    applyDataChange("내비 링크를 추가했습니다.");
+  });
+
+  $("#nav-link-presets")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-nav-preset]");
+    if (!button) return;
+    addNavLinkPreset(button.dataset.navPreset);
+  });
+
+  $("#nav-link-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-nav-index]");
+    const field = event.target.dataset.navField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.navIndex);
+    state.data.site.nav.links[index][field] = event.target.value;
+    renderNavLinkPresetButtons();
+    applyMinorChange("내비 링크가 반영되었습니다.");
+  });
+
+  $("#add-hero-action")?.addEventListener("click", () => {
+    state.data.hero.actions.push({ label: "", href: "", variant: "primary" });
+    applyDataChange("히어로 액션을 추가했습니다.");
+  });
+
+  const heroActionList = $("#hero-action-list");
+  const handleHeroActionFieldChange = (event) => {
+    const row = event.target.closest("[data-hero-action-index]");
+    const field = event.target.dataset.heroActionField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.heroActionIndex);
+    if (!state.data.hero.actions[index]) return;
+    state.data.hero.actions[index][field] = event.target.value;
+    applyMinorChange("히어로 액션이 반영되었습니다.");
+  };
+  if (heroActionList) {
+    heroActionList.addEventListener("input", handleHeroActionFieldChange);
+    heroActionList.addEventListener("change", handleHeroActionFieldChange);
+  }
+
+  $("#hero-career-mode")?.addEventListener("change", (event) => {
+    state.data.hero.infoPanels.career.mode = normalizeHeroCareerMode(event.target.value);
+    applyDataChange("경력사항 공개 형식이 반영되었습니다.");
+  });
+
+  $("#hero-info-layout-preset")?.addEventListener("change", (event) => {
+    state.data.hero.infoPanels.layoutPreset = normalizeHeroInfoLayoutPreset(event.target.value);
+    applyDataChange("히어로 3분할 배치 비율이 반영되었습니다.");
+  });
+
+  $("#add-career-structured")?.addEventListener("click", () => {
+    state.data.hero.infoPanels.career.structuredItems.push({ title: "", period: "", description: "" });
+    applyDataChange("구조형 경력 항목을 추가했습니다.");
+  });
+
+  $("#hero-career-structured-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-career-structured-index]");
+    const field = event.target.dataset.careerStructuredField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.careerStructuredIndex);
+    state.data.hero.infoPanels.career.structuredItems[index][field] = event.target.value;
+    renderQuickstartCareerStructuredList();
+    applyMinorChange("구조형 경력 항목이 반영되었습니다.");
+  });
+
+  $("#add-career-simple")?.addEventListener("click", () => {
+    state.data.hero.infoPanels.career.simpleItems.push({ text: "", period: "" });
+    applyDataChange("간단형 경력 항목을 추가했습니다.");
+  });
+
+  $("#hero-career-simple-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-career-simple-index]");
+    const field = event.target.dataset.careerSimpleField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.careerSimpleIndex);
+    state.data.hero.infoPanels.career.simpleItems[index][field] = event.target.value;
+    applyMinorChange("간단형 경력 항목이 반영되었습니다.");
+  });
+
+  $("#add-hero-tool")?.addEventListener("click", () => {
+    state.data.hero.infoPanels.tools.items.push({ name: "", logoUrl: "", logoAlt: "" });
+    applyDataChange("사용 가능한 툴 항목을 추가했습니다.");
+  });
+
+  $("#hero-tool-presets")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-hero-tool-preset]");
+    if (!button) return;
+    addHeroToolPreset(button.dataset.heroToolPreset);
+  });
+
+  $("#hero-bgm-presets")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-hero-bgm-preset]");
+    if (!button) return;
+    addHeroBgmPreset(button.dataset.heroBgmPreset);
+  });
+
+  $("#hero-tools-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-hero-tools-index]");
+    const field = event.target.dataset.heroToolsField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.heroToolsIndex);
+    state.data.hero.infoPanels.tools.items[index][field] = event.target.value;
+    renderQuickstartHeroContentEditors();
+    applyMinorChange("사용 가능한 툴 항목이 반영되었습니다.");
+  });
+
+  $("#add-hero-bgm")?.addEventListener("click", () => {
+    state.data.hero.infoPanels.bgm.items.push({ name: "", logoUrl: "", logoAlt: "" });
+    applyDataChange("BGM 사용 툴 항목을 추가했습니다.");
+  });
+
+  $("#hero-bgm-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-hero-bgm-index]");
+    const field = event.target.dataset.heroBgmField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.heroBgmIndex);
+    state.data.hero.infoPanels.bgm.items[index][field] = event.target.value;
+    renderQuickstartHeroContentEditors();
+    applyMinorChange("BGM 사용 툴 항목이 반영되었습니다.");
+  });
+
+  $("#quickstart-career-mode")?.addEventListener("change", (event) => {
+    state.data.hero.infoPanels.career.mode = normalizeHeroCareerMode(event.target.value);
+    const detailSelect = $("#hero-career-mode");
+    if (detailSelect) detailSelect.value = state.data.hero.infoPanels.career.mode;
+    applyDataChange("경력사항 공개 형식이 반영되었습니다.");
+  });
+
+  $("#quickstart-add-career-structured")?.addEventListener("click", () => {
+    state.data.hero.infoPanels.career.structuredItems.push({ title: "", period: "", description: "" });
+    applyDataChange("구조형 경력 항목을 추가했습니다.");
+  });
+
+  $("#quickstart-career-structured-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-quickstart-career-structured-index]");
+    const field = event.target.dataset.quickstartCareerStructuredField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.quickstartCareerStructuredIndex);
+    state.data.hero.infoPanels.career.structuredItems[index][field] = event.target.value;
+    renderHeroCareerStructuredList();
+    applyMinorChange("구조형 경력 항목이 반영되었습니다.");
+  });
+
+  $("#quickstart-add-hero-tool")?.addEventListener("click", () => {
+    state.data.hero.infoPanels.tools.items.push({ name: "", logoUrl: "", logoAlt: "" });
+    applyDataChange("사용 가능한 툴 항목을 추가했습니다.");
+  });
+
+  $("#quickstart-tool-presets")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-hero-tool-preset]");
+    if (!button) return;
+    addHeroToolPreset(button.dataset.heroToolPreset);
+  });
+
+  $("#quickstart-tools-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-quickstart-tools-index]");
+    const field = event.target.dataset.quickstartToolsField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.quickstartToolsIndex);
+    state.data.hero.infoPanels.tools.items[index][field] = event.target.value;
+    renderHeroInfoEditors();
+    applyMinorChange("사용 가능한 툴 항목이 반영되었습니다.");
+  });
+
+  $("#quickstart-add-hero-bgm")?.addEventListener("click", () => {
+    state.data.hero.infoPanels.bgm.items.push({ name: "", logoUrl: "", logoAlt: "" });
+    applyDataChange("BGM 사용 툴 항목을 추가했습니다.");
+  });
+
+  $("#quickstart-bgm-presets")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-hero-bgm-preset]");
+    if (!button) return;
+    addHeroBgmPreset(button.dataset.heroBgmPreset);
+  });
+
+  $("#quickstart-bgm-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-quickstart-bgm-index]");
+    const field = event.target.dataset.quickstartBgmField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.quickstartBgmIndex);
+    state.data.hero.infoPanels.bgm.items[index][field] = event.target.value;
+    renderHeroInfoEditors();
+    applyMinorChange("BGM 사용 툴 항목이 반영되었습니다.");
+  });
+
+  $("#add-project-card")?.addEventListener("click", () => {
+    state.data.projects.cards.push({
+      layout: "small",
+      tag: "",
+      duration: "",
+      title: "",
+      description: "",
+      ctaLabel: "",
+      href: "",
+    });
+    applyDataChange("프로젝트 카드를 추가했습니다.");
+  });
+
+  $("#project-card-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-project-index]");
+    const field = event.target.dataset.projectField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.projectIndex);
+    state.data.projects.cards[index][field] = event.target.value;
+    applyMinorChange("프로젝트 카드가 반영되었습니다.");
+  });
+
+  bindHomeSectionDragAndDrop();
+
+  $("#home-section-order-list")?.addEventListener("change", (event) => {
+    const checkbox = event.target.closest("[data-home-section-visible]");
+    if (!checkbox) return;
+    setHomeSectionVisibility(checkbox.dataset.homeSectionVisible, checkbox.checked);
+    applyMinorChange("홈 섹션 표시 설정이 반영되었습니다.");
+  });
+
+  $("#home-latest-count")?.addEventListener("change", (event) => {
+    state.data.home.latestVideos.count = normalizeHomeVideoCount(event.target.value, DEFAULT_DATA.home.latestVideos.count);
+    renderHomeSettings();
+    applyMinorChange("홈 탭 최신 영상 개수가 반영되었습니다.");
+  });
+
+  $("#home-category-count")?.addEventListener("change", (event) => {
+    state.data.home.categoryVideos.perCategoryCount = normalizeHomeVideoCount(event.target.value, DEFAULT_DATA.home.categoryVideos.perCategoryCount);
+    renderHomeSettings();
+    applyMinorChange("카테고리별 표시 영상 개수가 반영되었습니다.");
+  });
+
+  $("#works-video-url")?.addEventListener("input", () => {
+    syncWorksVideoUrlFeedback();
+  });
+
+  $("#works-video-title")?.addEventListener("input", () => {
+    renderWorksNewVideoPreview();
+  });
+
+  $("#works-video-date")?.addEventListener("input", () => {
+    renderWorksNewVideoPreview();
+  });
+
+  $("#works-video-type")?.addEventListener("change", () => {
+    renderWorksNewVideoPreview();
+  });
+
+  $("#works-video-category")?.addEventListener("change", () => {
+    toggleWorksNewCategoryField();
+    renderWorksNewVideoPreview();
+  });
+
+  $("#works-new-category-name")?.addEventListener("input", () => {
+    renderWorksNewVideoPreview();
+  });
+
+  $("#works-display-mode")?.addEventListener("change", (event) => {
+    state.data.works.displayMode = normalizeWorksDisplayMode(event.target.value);
+    applyMinorChange("영상 포트폴리오 표시 방식이 반영되었습니다.");
+  });
+
+  $("#works-visual-preset")?.addEventListener("change", (event) => {
+    state.data.works.visualPreset = normalizeWorksVisualPreset(event.target.value);
+    applyMinorChange("영상 포트폴리오 디자인 형식이 반영되었습니다.");
+  });
+
+  $("#works-grid-columns")?.addEventListener("change", (event) => {
+    state.data.works.gridColumns = normalizeWorksColumnCount(event.target.value, DEFAULT_DATA.works.gridColumns);
+    applyMinorChange("그리드형 한 줄 영상 개수가 반영되었습니다.");
+  });
+
+  $("#works-category-stack-columns")?.addEventListener("change", (event) => {
+    state.data.works.categoryStackColumns = normalizeWorksColumnCount(event.target.value, DEFAULT_DATA.works.categoryStackColumns);
+    applyMinorChange("카테고리 스택 열 개수가 반영되었습니다.");
+  });
+
+  $("#works-category-stack-type-filter-enabled")?.addEventListener("change", (event) => {
+    state.data.works.categoryStackTypeFilterEnabled = event.target.checked;
+    applyMinorChange("카테고리 스택 타입 필터 표시 설정이 반영되었습니다.");
+  });
+
+  $("#works-category-stack-single-column-size")?.addEventListener("change", (event) => {
+    state.data.works.categoryStackSingleColumnSize = normalizeWorksSingleColumnSize(event.target.value);
+    applyMinorChange("1열 높이 크기 설정이 반영되었습니다.");
+  });
+
+  const handleWorksCategoryEntryField = (event) => {
+    const row = event.target.closest("[data-works-category-entry-index]");
+    const field = event.target.dataset.worksCategoryEntryField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.worksCategoryEntryIndex);
+    const entry = state.data.works.categoryEntries?.[index];
+    if (!entry) return;
+    entry[field] = event.target.value;
+    applyMinorChange("카테고리 표시 정보가 반영되었습니다.");
+  };
+
+  $("#works-category-order-list")?.addEventListener("input", handleWorksCategoryEntryField);
+  $("#works-category-order-list")?.addEventListener("change", handleWorksCategoryEntryField);
+
+  $("#works-video-form")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const parsed = syncWorksVideoUrlFeedback({ skipMetadata: true });
+    const title = String($("#works-video-title")?.value || "").trim();
+    const date = String($("#works-video-date")?.value || "").trim();
+    const category = getWorksFormCategoryValue();
+    const type = $("#works-video-type")?.value === "short" ? "short" : "long";
+
+    if (!parsed) {
+      setStatus("YouTube 링크를 확인해주세요. 영상 포트폴리오를 추가하지 못했습니다.", "error");
+      return;
+    }
+
+    if (state.data.works.videos.some((video) => video.id === parsed.id)) {
+      setStatus("이미 등록된 YouTube 영상입니다. 기존 카드에서 수정해주세요.", "error");
+      return;
+    }
+
+    if (!title) {
+      setStatus("영상 제목을 입력해주세요.", "error");
+      return;
+    }
+
+    if (!category) {
+      setStatus("카테고리를 선택하거나 새 카테고리 이름을 입력해주세요.", "error");
+      return;
+    }
+
+    insertWorksVideo(state.data.works.videos, {
+      id: parsed.id,
+      title,
+      date,
+      type,
+      category,
+    });
+
+    resetWorksVideoForm();
+    applyDataChange("영상 포트폴리오를 추가했습니다.");
+  });
+
+  $("#works-video-search")?.addEventListener("input", (event) => {
+    state.search = event.target.value;
+    renderWorksVideoList();
+  });
+
+  $("#works-video-filter")?.addEventListener("change", (event) => {
+    state.typeFilter = event.target.value;
+    renderWorksVideoList();
+  });
+
+  $("#works-video-list")?.addEventListener("input", (event) => {
+    const card = event.target.closest("[data-works-video-index]");
+    if (!card) return;
+    const index = Number(card.dataset.worksVideoIndex);
+    const video = state.data.works.videos[index];
+    if (!video) return;
+
+    const field = event.target.dataset.worksVideoField;
+    if (field) {
+      video[field] = field === "type"
+        ? (event.target.value === "short" ? "short" : "long")
+        : event.target.value;
+      applyMinorChange("영상 포트폴리오 항목이 반영되었습니다.");
+      return;
+    }
+
+    if (event.target.dataset.worksVideoCustomCategory !== undefined) {
+      video.category = event.target.value;
+      const chip = card.querySelector(".category-chip");
+      if (chip) chip.textContent = event.target.value.trim() || "카테고리 미입력";
+      applyMinorChange("영상 포트폴리오 카테고리가 반영되었습니다.");
+    }
+  });
+
+  $("#works-video-list")?.addEventListener("change", (event) => {
+    const card = event.target.closest("[data-works-video-index]");
+    if (!card) return;
+    const index = Number(card.dataset.worksVideoIndex);
+    const video = state.data.works.videos[index];
+    if (!video) return;
+
+    if (event.target.dataset.worksVideoField === "date" || event.target.dataset.worksVideoField === "type") {
+      video[event.target.dataset.worksVideoField] = event.target.dataset.worksVideoField === "type"
+        ? (event.target.value === "short" ? "short" : "long")
+        : event.target.value;
+      applyDataChange("영상 포트폴리오 항목이 반영되었습니다.");
+      return;
+    }
+
+    if (event.target.dataset.worksVideoCategorySelect !== undefined) {
+      if (event.target.value === "__new__") {
+        const input = card.querySelector("[data-works-video-custom-category]");
+        video.category = String(input?.value || "").trim();
+      } else {
+        video.category = event.target.value;
+      }
+      applyDataChange("영상 포트폴리오 카테고리가 반영되었습니다.");
+      return;
+    }
+
+    if (event.target.dataset.worksVideoCustomCategory !== undefined) {
+      video.category = String(event.target.value || "").trim();
+      applyDataChange("영상 포트폴리오 카테고리가 반영되었습니다.");
+    }
+  });
+
+  $("#works-video-list")?.addEventListener("click", (event) => {
+    const deleteButton = event.target.closest("[data-delete-works-video]");
+    if (!deleteButton) return;
+    const index = Number(deleteButton.dataset.deleteWorksVideo);
+    const title = state.data.works.videos[index]?.title || "이 영상";
+    if (!window.confirm(`"${title}"을 삭제할까요?`)) return;
+    state.data.works.videos.splice(index, 1);
+    applyDataChange("영상이 삭제되었습니다.");
+  });
+
+  $("#add-stat-item")?.addEventListener("click", () => {
+    state.data.stats.items.push({ value: "", label: "" });
+    applyDataChange("통계 아이템을 추가했습니다.");
+  });
+
+  $("#stats-item-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-stat-index]");
+    const field = event.target.dataset.statField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.statIndex);
+    state.data.stats.items[index][field] = event.target.value;
+    applyMinorChange("통계 아이템이 반영되었습니다.");
+  });
+
+  $("#add-process-step")?.addEventListener("click", () => {
+    state.data.pricing.processSteps.push({ number: "", title: "", description: "" });
+    applyDataChange("프로세스 단계를 추가했습니다.");
+  });
+
+  $("#process-step-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-process-index]");
+    const field = event.target.dataset.processField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.processIndex);
+    state.data.pricing.processSteps[index][field] = event.target.value;
+    renderQuickstartProcessStepList();
+    applyMinorChange("프로세스 단계가 반영되었습니다.");
+  });
+
+  $("#add-pricing-plan")?.addEventListener("click", () => {
+    state.data.pricing.plans.push({
+      slug: "",
+      design: "shortform",
+      badge: "",
+      icon: "",
+      title: "",
+      description: "",
+      price: "",
+      priceUnit: "",
+      features: [],
+      cta: {
+        label: "",
+        href: "",
+      },
+    });
+    applyDataChange("가격 플랜을 추가했습니다.");
+  });
+
+  $("#add-custom-work")?.addEventListener("click", () => {
+    state.data.pricing.customWorks.push({
+      eyebrow: "",
+      title: "",
+      description: "",
+      highlight: "",
+      caption: "",
+      imageUrl: "",
+      imageAlt: "",
+    });
+    applyDataChange("커스텀 작업 블록을 추가했습니다.");
+  });
+
+  const handlePricingPlanFieldChange = (event) => {
+    const planCard = event.target.closest("[data-plan-index]");
+    if (!planCard) return;
+    const planIndex = Number(planCard.dataset.planIndex);
+    const plan = state.data.pricing.plans[planIndex];
+    if (!plan) return;
+
+    const planField = event.target.dataset.planField;
+    if (planField) {
+      plan[planField] = planField === "design"
+        ? normalizePricingPlanDesign(event.target.value, "shortform")
+        : event.target.value;
+      renderQuickstartPricingPlanList();
+      applyMinorChange("가격 플랜이 반영되었습니다.");
+      return;
+    }
+
+    const ctaField = event.target.dataset.planCtaField;
+    if (ctaField) {
+      plan.cta[ctaField] = event.target.value;
+      renderQuickstartPricingPlanList();
+      applyMinorChange("플랜 버튼이 반영되었습니다.");
+      return;
+    }
+
+    const featureField = event.target.dataset.planFeatureField;
+    const featureRow = event.target.closest("[data-feature-index]");
+    if (!featureField || !featureRow) return;
+    const featureIndex = Number(featureRow.dataset.featureIndex);
+    plan.features[featureIndex] = event.target.value;
+    renderQuickstartPricingPlanList();
+    applyMinorChange("플랜 포함 항목이 반영되었습니다.");
+  };
+
+  $("#pricing-plan-list")?.addEventListener("input", handlePricingPlanFieldChange);
+  $("#pricing-plan-list")?.addEventListener("change", (event) => {
+    if (!event.target.matches('select[data-plan-field="design"]')) return;
+    handlePricingPlanFieldChange(event);
+  });
+
+  document.addEventListener("input", (event) => {
+    const searchInput = event.target.closest("[data-icon-picker-search]");
+    if (!searchInput) return;
+    const picker = searchInput.closest("[data-icon-picker]");
+    filterIconPickerOptions(picker, searchInput.value);
+  });
+
+  $("#custom-work-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-custom-work-index]");
+    const field = event.target.dataset.customWorkField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.customWorkIndex);
+    const block = state.data.pricing.customWorks[index];
+    if (!block) return;
+    block[field] = event.target.value;
+    applyMinorChange("커스텀 작업 블록이 반영되었습니다.");
+  });
+
+  $("#pricing-plan-list")?.addEventListener("click", (event) => {
+    const planCard = event.target.closest("[data-plan-index]");
+    if (!planCard) return;
+    const planIndex = Number(planCard.dataset.planIndex);
+    const plan = state.data.pricing.plans[planIndex];
+    if (!plan) return;
+
+    const addButton = event.target.closest("[data-add-feature]");
+    if (addButton) {
+      plan.features.push("");
+      applyDataChange("플랜 포함 항목을 추가했습니다.");
+      return;
+    }
+
+    const featureDelete = event.target.closest("[data-delete-feature]");
+    if (featureDelete) {
+      const featureIndex = Number(featureDelete.dataset.deleteFeature);
+      plan.features.splice(featureIndex, 1);
+      applyDataChange("플랜 포함 항목을 삭제했습니다.");
+      return;
+    }
+
+    const moveFeatureButton = event.target.closest("[data-move-feature]");
+    if (moveFeatureButton) {
+      const featureIndex = Number(moveFeatureButton.dataset.moveFeature);
+      const direction = Number(moveFeatureButton.dataset.direction);
+      if (moveArrayItem(plan.features, featureIndex, direction)) {
+        applyDataChange("플랜 포함 항목 순서를 변경했습니다.");
+      }
+    }
+  });
+
+  $("#add-contact-detail")?.addEventListener("click", () => {
+    state.data.contact.details.push({ label: "", value: "" });
+    applyDataChange("문의 상세 정보를 추가했습니다.");
+  });
+
+  $("#contact-detail-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-contact-detail-index]");
+    const field = event.target.dataset.contactDetailField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.contactDetailIndex);
+    state.data.contact.details[index][field] = event.target.value;
+    applyMinorChange("문의 상세 정보가 반영되었습니다.");
+  });
+
+  $("#add-footer-link")?.addEventListener("click", () => {
+    state.data.site.footer.links.push({ label: "", url: "" });
+    applyDataChange("푸터 링크를 추가했습니다.");
+  });
+
+  $("#footer-link-list")?.addEventListener("input", (event) => {
+    const row = event.target.closest("[data-footer-link-index]");
+    const field = event.target.dataset.footerLinkField;
+    if (!row || !field) return;
+    const index = Number(row.dataset.footerLinkIndex);
+    state.data.site.footer.links[index][field] = event.target.value;
+    applyMinorChange("푸터 링크가 반영되었습니다.");
+  });
+
+  $("#footer-link-list")?.addEventListener("change", () => {
+    renderFooterLinkList();
+  });
+
+  document.addEventListener("click", (event) => {
+    const jumpButton = event.target.closest("[data-jump-tab]");
+    if (jumpButton) {
+      jumpToAdminSection(jumpButton);
+      return;
+    }
+
+    const sidebar = $(".admin-sidebar");
+    if (state.mobileMenuOpen && sidebar && !sidebar.contains(event.target)) {
+      setMobileTabMenuOpen(false);
+    }
+
+    const bulkToggle = event.target.closest("[data-detail-section-bulk-toggle]");
+    if (bulkToggle) {
+      const panel = bulkToggle.closest(".tab-panel");
+      if (!panel) return;
+      const shouldOpen = getVisibleDetailSections(panel).some((section) => section.classList.contains("is-collapsed"));
+      setPanelDetailSectionsExpanded(panel, shouldOpen);
+      return;
+    }
+
+    const detailToggle = event.target.closest("[data-toggle-detail-section]");
+    if (detailToggle) {
+      const section = detailToggle.closest(".detail-section");
+      const detailKey = String(detailToggle.dataset.toggleDetailSection || section?.dataset.detailSectionKey || "").trim();
+      if (!section || !detailKey) return;
+      const nextExpanded = section.classList.contains("is-collapsed");
+      setDetailSectionExpanded(detailKey, nextExpanded);
+      applyDetailSectionExpanded(section, nextExpanded);
+      updateDetailSectionBulkToggle(section.closest(".tab-panel"));
+      return;
+    }
+
+    const editorCardToggle = event.target.closest("[data-toggle-editor-card]");
+    if (editorCardToggle) {
+      const container = editorCardToggle.closest("[data-editor-card-key]");
+      const cardKey = String(editorCardToggle.dataset.toggleEditorCard || container?.dataset.editorCardKey || "").trim();
+      if (!container || !cardKey) return;
+      const nextExpanded = container.classList.contains("is-collapsed");
+      setEditorCardExpanded(cardKey, nextExpanded);
+      applyEditorCardExpanded(container, nextExpanded);
+      return;
+    }
+
+    const iconOption = event.target.closest("[data-icon-picker-value]");
+    if (iconOption) {
+      const picker = iconOption.closest("[data-icon-picker]");
+      const scope = picker?.dataset.iconPickerScope;
+      const selectedIcon = String(iconOption.dataset.iconPickerValue || "").trim();
+
+      if (scope === "contact-card") {
+        state.data.contact.primaryCard.icon = selectedIcon;
+        applyDataChange("문의 카드 아이콘이 반영되었습니다.");
+        return;
+      }
+
+      if (scope === "plan") {
+        const planIndex = Number(picker?.dataset.planIndex);
+        const plan = state.data.pricing.plans[planIndex];
+        if (!plan) return;
+        plan.icon = selectedIcon;
+        applyDataChange("가격 플랜 아이콘이 반영되었습니다.");
+        return;
+      }
+    }
+
+    const moveButton = event.target.closest("[data-move-list]");
+    if (moveButton) {
+      const listKey = moveButton.dataset.moveList;
+      const index = Number(moveButton.dataset.index);
+      const direction = Number(moveButton.dataset.direction);
+      const list = listByKey(listKey);
+      if (moveArrayItem(list, index, direction)) {
+        applyDataChange("항목 순서를 변경했습니다.");
+      }
+      return;
+    }
+
+    const copyButton = event.target.closest("[data-copy-list]");
+    if (copyButton) {
+      const listKey = copyButton.dataset.copyList;
+      const index = Number(copyButton.dataset.index);
+      const list = listByKey(listKey);
+      if (duplicateArrayItem(list, index)) {
+        applyDataChange("항목을 복사했습니다.");
+      }
+      return;
+    }
+
+    const deleteButton = event.target.closest("[data-delete-list]");
+    if (!deleteButton) return;
+    const listKey = deleteButton.dataset.deleteList;
+    const index = Number(deleteButton.dataset.index);
+    const list = listByKey(listKey);
+    if (!Array.isArray(list) || index < 0 || index >= list.length) return;
+
+    if (!window.confirm("이 항목을 삭제할까요?")) return;
+    list.splice(index, 1);
+    applyDataChange("항목을 삭제했습니다.");
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && state.mobileMenuOpen) {
+      setMobileTabMenuOpen(false);
+    }
+  });
+
+  $("#json-output")?.addEventListener("input", (event) => {
+    try {
+      state.data = normalizeData(JSON.parse(event.target.value));
+      renderAll();
+      setStatus("JSON 원문 변경 사항이 적용되었습니다.", "success");
+    } catch (error) {
+      setStatus(`JSON 원문 오류: ${error.message}`, "error");
+    }
+  });
+
+  mountLivePreview();
+  renderLivePreview();
+}
+
+bindEvents();
+loadJson();

@@ -1,0 +1,24 @@
+# macOS/editor noise
+.DS_Store
+
+# Local Hermes planning/session notes
+.hermes/
+
+# Secrets / local environment
+.env
+.env.*
+*.local
+
+# Dependency/build caches, if added later
+node_modules/
+dist/
+.cache/
+*.log
+
+# Non-deploy legacy/reference files
+base.html
+Portfolio.app.js
+assets/favicon-source.png
+
+# Local validation/audit scripts and generated reports
+scripts/

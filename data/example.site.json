@@ -1,0 +1,402 @@
+{
+  "site": {
+    "title": "영상 포트폴리오 템플릿",
+    "description": "영상 편집자와 크리에이터를 위한 정적 포트폴리오 템플릿입니다. site.json만 수정해 브랜드, 작업물, 가격, 문의 정보를 구성할 수 있습니다.",
+    "githubRepo": "",
+    "brand": {
+      "prefix": "studio",
+      "name": "your-name",
+      "displayName": "",
+      "avatarUrl": "assets/프로필이미지.png",
+      "bannerImageUrl": "assets/배너이미지.png"
+    },
+    "profile": {
+      "discordId": "",
+      "email": ""
+    },
+    "nav": {
+      "links": [
+        {
+          "label": "홈",
+          "href": "index.html#home"
+        },
+        {
+          "label": "영상 포트폴리오",
+          "href": "index.html#works"
+        },
+        {
+          "label": "서비스 및 가격",
+          "href": "index.html#pricing"
+        },
+        {
+          "label": "문의하기",
+          "href": "index.html#contact"
+        }
+      ],
+      "ctaLabel": "문의하기",
+      "ctaHref": "index.html#contact"
+    },
+    "footer": {
+      "enabled": true,
+      "linksEnabled": true,
+      "title": "STUDIO YOUR-NAME",
+      "copy": "© 2026 STUDIO YOUR-NAME. 모든 권리 보유.",
+      "links": [
+        {
+          "label": "동영상",
+          "href": "index.html#works"
+        },
+        {
+          "label": "가격",
+          "href": "index.html#pricing"
+        },
+        {
+          "label": "문의하기",
+          "href": "index.html#contact"
+        }
+      ]
+    }
+  },
+  "hero": {
+    "eyebrow": "VIDEO PORTFOLIO TEMPLATE",
+    "title": "브랜드에 맞는\n영상 포트폴리오를 시작하세요.",
+    "titleAccent": "영상 포트폴리오",
+    "description": "JSON 데이터만 교체하면 소개 문구, 작업물, 가격, 문의 섹션을 프로젝트에 맞게 빠르게 구성할 수 있습니다.",
+    "statusLabel": "Status",
+    "statusText": "READY FOR CUSTOMIZATION",
+    "actions": [
+      {
+        "label": "가격 보기",
+        "href": "index.html#pricing",
+        "variant": "primary"
+      },
+      {
+        "label": "문의하기",
+        "href": "index.html#contact",
+        "variant": "ghost"
+      }
+    ],
+    "infoPanels": {
+      "layoutPreset": "1:1",
+      "career": {
+        "title": "경력사항",
+        "mode": "structured",
+        "structuredItems": [
+          {
+            "title": "YouTube 채널 편집",
+            "period": "2024 - Present",
+            "description": "동영상 컷편집, 쇼츠 리패키징, 자막 스타일링을 함께 진행합니다."
+          },
+          {
+            "title": "브랜드 콘텐츠 제작",
+            "period": "2022 - 2024",
+            "description": "캠페인 영상, 인터뷰, 제품 소개 영상의 후반 편집을 담당했습니다."
+          }
+        ],
+        "simpleItems": [
+          {
+            "text": "쇼츠과 동영상 채널 운영용 편집 경험",
+            "period": "3년+"
+          }
+        ],
+        "freeformText": ""
+      },
+      "tools": {
+        "title": "사용 가능한 툴",
+        "items": [
+          {
+            "name": "Premiere Pro",
+            "logoUrl": "assets/tool-presets/premiere-pro.svg",
+            "logoAlt": "Premiere Pro logo"
+          },
+          {
+            "name": "After Effects",
+            "logoUrl": "assets/tool-presets/after-effects.svg",
+            "logoAlt": "After Effects logo"
+          },
+          {
+            "name": "Photoshop",
+            "logoUrl": "assets/tool-presets/photoshop.svg",
+            "logoAlt": "Photoshop logo"
+          }
+        ]
+      },
+      "bgm": {
+        "title": "BGM 사용 툴",
+        "items": [
+          {
+            "name": "Artlist",
+            "logoUrl": "",
+            "logoAlt": "Artlist"
+          },
+          {
+            "name": "Epidemic Sound",
+            "logoUrl": "",
+            "logoAlt": "Epidemic Sound"
+          }
+        ]
+      }
+    }
+  },
+  "home": {
+    "sectionOrder": [
+      "featured",
+      "infoPanels",
+      "latestVideos",
+      "categoryVideos",
+      "projects",
+      "stats"
+    ],
+    "playAllButtonEnabled": true,
+    "latestVideos": {
+      "enabled": true,
+      "count": 4,
+      "title": "최신 영상"
+    },
+    "categoryVideos": {
+      "enabled": true,
+      "perCategoryCount": 4
+    },
+    "sectionVisibility": {
+      "featured": true,
+      "infoPanels": true,
+      "latestVideos": true,
+      "categoryVideos": true,
+      "projects": true,
+      "stats": true
+    }
+  },
+  "projects": {
+    "enabled": true,
+    "sectionEyebrow": "Home Tab Project Section",
+    "sectionTitle": "홈 탭에 추가되는 프로젝트 섹션",
+    "sectionMeta": "#projects · 홈 탭 하단",
+    "youtubeChannel": {
+      "enabled": true,
+      "url": "https://www.youtube.com/@kojjilmung",
+      "avatarUrl": "",
+      "name": "your-name channel",
+      "handle": "@kojjilmung",
+      "subscriberText": "구독자 1.4만명",
+      "videoCountText": "동영상 61개",
+      "description": "유튜브 채널 카드가 켜지면 홈 탭의 프로젝트 섹션 상단에 표시됩니다."
+    },
+    "cards": [
+      {
+        "layout": "featured",
+        "tag": "MAIN",
+        "duration": "2026",
+        "title": "브랜드 소개 영상 편집",
+        "description": "채널 톤에 맞춰 컷 편집, 자막, 그래픽, 사운드 밸런스를 정리한 대표 프로젝트입니다.",
+        "ctaLabel": "프로젝트 보기",
+        "href": "index.html#works"
+      },
+      {
+        "layout": "secondary",
+        "tag": "SHORTS",
+        "duration": "15s - 60s",
+        "title": "쇼츠 리패키징",
+        "description": "동영상 원본에서 핵심 장면을 골라 쇼츠, 릴스, 틱톡용으로 재구성합니다.",
+        "ctaLabel": "카테고리 보기",
+        "href": "index.html#works"
+      },
+      {
+        "layout": "small",
+        "tag": "SUBTITLE",
+        "duration": "STYLE",
+        "title": "자막 스타일링",
+        "description": "가독성과 브랜드 톤을 함께 고려해 자막 템플릿을 구성합니다.",
+        "ctaLabel": "문의하기",
+        "href": "index.html#contact"
+      }
+    ]
+  },
+  "stats": {
+    "enabled": true,
+    "items": [
+      {
+        "value": "61+",
+        "label": "Edited Videos"
+      },
+      {
+        "value": "3yr+",
+        "label": "Editing Experience"
+      },
+      {
+        "value": "24h",
+        "label": "Average First Reply"
+      }
+    ]
+  },
+  "works": {
+    "enabled": true,
+    "sectionTitle": "영상 포트폴리오",
+    "sectionDescription": "카테고리를 추가하면 공개 페이지 사이드바의 영상 카테고리도 함께 늘어납니다.",
+    "emptyText": "영상 항목을 추가하면 이 영역이 자동으로 채워집니다.",
+    "visualPreset": "reference",
+    "displayMode": "grid",
+    "gridColumns": 4,
+    "categoryStackColumns": 2,
+    "categoryStackTypeFilterEnabled": true,
+    "categoryStackSingleColumnSize": "medium",
+    "categoryOrder": [
+      "Short-form",
+      "Long-form",
+      "Subtitle"
+    ],
+    "categoryEntries": [
+      {
+        "category": "Short-form",
+        "title": "쇼츠 편집",
+        "meta": "Shorts · Reels · TikTok",
+        "displayMode": "grid",
+        "columns": 4,
+        "singleColumnSize": "medium"
+      },
+      {
+        "category": "Long-form",
+        "title": "동영상 편집",
+        "meta": "YouTube · Interview · Vlog",
+        "displayMode": "grid",
+        "columns": 3,
+        "singleColumnSize": "medium"
+      },
+      {
+        "category": "Subtitle",
+        "title": "그래픽과 자막 스타일",
+        "meta": "Motion · Caption · Template",
+        "displayMode": "grid",
+        "columns": 3,
+        "singleColumnSize": "medium"
+      }
+    ],
+    "videos": [
+      {
+        "id": "dQw4w9WgXcQ",
+        "title": "쇼츠 편집 포트폴리오",
+        "category": "Short-form",
+        "type": "short",
+        "date": "2026-04-01"
+      },
+      {
+        "id": "M7lc1UVf-VE",
+        "title": "브랜드 소개 동영상 편집",
+        "category": "Long-form",
+        "type": "long",
+        "date": "2026-03-18"
+      },
+      {
+        "id": "aqz-KE-bpKQ",
+        "title": "자막 스타일 템플릿 예시",
+        "category": "Subtitle",
+        "type": "long",
+        "date": "2026-02-22"
+      }
+    ]
+  },
+  "pricing": {
+    "sectionEyebrow": "가격 템플릿",
+    "title": "서비스 구조를 바로 안내할 수 있게 준비해두세요.",
+    "description": "패키지, 포함 항목, 문의 CTA를 예시로 남겨두었습니다. 프로젝트에 맞게 값만 교체하면 됩니다.",
+    "plans": [
+      {
+        "slug": "short",
+        "design": "shortform",
+        "badge": "Shorts",
+        "icon": "smartphone",
+        "title": "쇼츠 (Short-form)",
+        "description": "YouTube Shorts, TikTok, Reels 등 트렌디하고 압축적인 영상미가 필요한 콘텐츠",
+        "price": "₩20,000",
+        "priceUnit": "/ 편",
+        "features": [
+          "최대 60초 분량",
+          "클립, 간단한 쇼츠"
+        ],
+        "cta": {
+          "label": "쇼츠 문의",
+          "href": "index.html#contact"
+        }
+      },
+      {
+        "slug": "long",
+        "design": "longform",
+        "badge": "YouTube",
+        "icon": "movie_edit",
+        "title": "동영상 (Long-form)",
+        "description": "유튜브 브이로그, 인터뷰, 홍보 영상 등 서사와 정보 전달 중심의 영상 콘텐츠",
+        "price": "₩15,000",
+        "priceUnit": "/ 분당",
+        "features": [
+          "최대 15분 분량",
+          "맞춤형 그래픽 디자인",
+          "전문 컷편집 및 자막 작업"
+        ],
+        "cta": {
+          "label": "동영상 문의",
+          "href": "index.html#contact"
+        }
+      }
+    ],
+    "customWorksEnabled": true,
+    "customWorks": [
+      {
+        "eyebrow": "Custom Work",
+        "title": "브랜드 톤에 맞춘 편집 패키지",
+        "description": "작업 범위가 정해져 있지 않은 프로젝트는 레퍼런스, 분량, 납기 기준으로 별도 견적을 구성합니다.",
+        "highlight": "Custom Estimate",
+        "caption": "원본을 보내주시면 필요한 편집 범위를 함께 정리합니다.",
+        "imageUrl": "assets/social-preview.png",
+        "imageAlt": "영상 포트폴리오 대표 이미지"
+      }
+    ],
+    "processEnabled": true,
+    "processTitle": "작업 진행 프로세스",
+    "processSteps": [
+      {
+        "number": "01",
+        "title": "자료 확인",
+        "description": "원본, 레퍼런스, 원하는 톤과 납기 일정을 확인합니다."
+      },
+      {
+        "number": "02",
+        "title": "편집 진행",
+        "description": "컷 편집, 자막, 그래픽, 사운드 정리를 순서대로 진행합니다."
+      },
+      {
+        "number": "03",
+        "title": "피드백 반영",
+        "description": "수정 의견을 반영하고 플랫폼 업로드에 맞는 형식으로 납품합니다."
+      }
+    ]
+  },
+  "contact": {
+    "eyebrow": "CONTACT",
+    "title": "프로젝트 문의는\n이메일로 남겨주세요.",
+    "titleAccent": "이메일",
+    "description": "메일 주소와 응답 정책을 템플릿으로 남겨두었습니다. 실제 운영 정보로 교체해서 사용하세요.",
+    "detailsEnabled": true,
+    "primaryCard": {
+      "label": "Email",
+      "value": "your@email.com",
+      "note": "문의 내용을 간단히 적어 보내주세요.",
+      "icon": "mail",
+      "href": "mailto:your@email.com"
+    },
+    "details": [
+      {
+        "label": "Response",
+        "value": "Within 2 Business Days"
+      },
+      {
+        "label": "Location",
+        "value": "Remote / South Korea"
+      },
+      {
+        "label": "Availability",
+        "value": "Open for Projects"
+      }
+    ]
+  },
+  "freeContent": "프로젝트 성격에 맞춰 샘플 JSON 값을 교체하면 현재 채널형 포트폴리오 페이지에 바로 반영됩니다.",
+  "freeContentEnabled": true
+}
