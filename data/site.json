@@ -1,11 +1,14 @@
 {
   "site": {
-    "githubRepo": "",
+    "title": "만월 포트폴리오",
+    "description": "재미있는 영상을 만들겠습니다.",
+    "githubRepo": "manwol-ryu/youtube-st-portfolio",
     "brand": {
-      "name": "꼬질꼬질한 캔따개",
-      "displayName": "꼬질꼬질한 캔따개",
-      "avatarUrl": "assets/avatar.png",
-      "bannerImageUrl": "assets/banner.png"
+      "prefix": "fan channel",
+      "name": "Manwol",
+      "displayName": "만월",
+      "avatarUrl": "assets/프로필이미지.png",
+      "bannerImageUrl": "assets/배너이미지.png"
     },
     "profile": {
       "discordId": "rurimiru.",
@@ -30,14 +33,14 @@
           "href": "index.html#contact"
         }
       ],
-      "ctaLabel": "채널 보기",
-      "ctaHref": "https://www.youtube.com/@kojjilmung"
+      "ctaLabel": "문의하기",
+      "ctaHref": "https://manwol-ryu.github.io/youtube-st-portfolio/index.html#contact"
     },
     "footer": {
       "enabled": true,
       "linksEnabled": true,
-      "title": "만월",
-      "copy": "안녕하세요",
+      "title": "STUDIO MANWOL",
+      "copy": "\n© 2026 STUDIO MANWOL. 모든 권리 보유.",
       "links": [
         {
           "label": "홈",
@@ -50,6 +53,10 @@
         {
           "label": "YouTube",
           "url": "https://www.youtube.com/@kojjilmung"
+        },
+        {
+          "label": "GitHub Repo",
+          "url": "https://github.com/manwol-ryu/youtube-st-portfolio"
         }
       ]
     }
@@ -58,7 +65,7 @@
     "eyebrow": "KIM KKOMEONG FAN CHANNEL",
     "title": "만월의 포트폴리오",
     "titleAccent": "만월",
-    "description": "치지직 스트리머 김꼬멍 팬 채널 「꼬질꼬질한 캔따개」의 공개 업로드와 쇼츠를 한 곳에서 확인할 수 있도록 정리했습니다.",
+    "description": "편집자 만월의 포트폴리오입니다.",
     "statusLabel": "편집의뢰",
     "statusText": "가능",
     "actions": [
@@ -85,7 +92,7 @@
             "description": "치지직 스트리머 김꼬멍의 키리누키 채널을 운영하고 있습니다."
           },
           {
-            "title": "요시요 아카데미 ",
+            "title": "요시요 아카데미",
             "period": "2025-07 ~ 2025-09",
             "description": "요시요 아카데미 2기 수료"
           }
@@ -107,9 +114,9 @@
             "logoAlt": "Premiere Pro logo"
           },
           {
-            "name": "After Effects",
-            "logoUrl": "assets/tool-presets/after-effects.svg",
-            "logoAlt": "After Effects logo"
+            "name": "Photoshop",
+            "logoUrl": "assets/tool-presets/photoshop.svg",
+            "logoAlt": "Photoshop logo"
           }
         ]
       },
@@ -126,7 +133,7 @@
     }
   },
   "projects": {
-    "enabled": true,
+    "enabled": false,
     "sectionEyebrow": "YouTube Channel",
     "sectionTitle": "꼬질꼬질한 캔따개 채널",
     "sectionMeta": "@kojjilmung · 김꼬멍 팬 채널",
@@ -190,10 +197,10 @@
   "home": {
     "sectionOrder": [
       "featured",
+      "latestVideos",
       "projects",
       "infoPanels",
       "categoryVideos",
-      "latestVideos",
       "stats"
     ],
     "sectionVisibility": {
@@ -202,7 +209,7 @@
       "latestVideos": true,
       "categoryVideos": true,
       "projects": true,
-      "stats": true
+      "stats": false
     },
     "playAllButtonEnabled": true,
     "latestVideos": {
@@ -213,8 +220,7 @@
     "categoryVideos": {
       "enabled": true,
       "perCategoryCount": 6
-    },
-    "featuredVideoId": "MFYdrR2dej0"
+    }
   },
   "works": {
     "enabled": true,
@@ -536,13 +542,13 @@
         "badge": "Videos",
         "icon": "smart_display",
         "title": "동영상",
-        "description": "편집점 없습니다.",
+        "description": "가격 문의 가능",
         "price": "15,000",
         "priceUnit": "/ 분당",
         "features": [
           "토크/게임영상",
-          "팬 채널 편집본",
-          "유튜브 원본 연결"
+          "",
+          "15분이내"
         ],
         "cta": {
           "label": "동영상 보기",
@@ -567,27 +573,32 @@
     "processSteps": [
       {
         "number": "01",
-        "title": "의뢰 확인",
-        "description": "상담을 통해 의뢰 내용을 확인합니다."
+        "title": "상담 및 결제",
+        "description": "프로젝트의 성격과 마감 기한을 확인한 뒤 결제를 진행합니다."
       },
       {
         "number": "02",
-        "title": "편집 진행",
-        "description": "편집을 진행합니다."
+        "title": "초안 전달",
+        "description": "작업 착수 후 평균 3-5일 이내에 1차 가편집본을 전달합니다."
       },
       {
         "number": "03",
-        "title": "영상 전달",
-        "description": "영상을 전달합니다. "
+        "title": "피드백 수렴",
+        "description": "기본 2회의 무상 수정을 통해 디테일을 정리합니다."
+      },
+      {
+        "number": "4",
+        "title": "최종 납품",
+        "description": "최종 승인된 영상은 원본 화질로 렌더링하여 전달하며 마무리됩니다."
       }
     ]
   },
   "contact": {
     "eyebrow": "CHANNEL",
-    "title": "YouTube 채널에서\n최신 업로드를 확인하세요.",
+    "title": "디스코드에 친구추가하여\n문의를 해보세요.",
     "titleAccent": "YouTube 채널",
-    "description": "꼬질꼬질한 캔따개는 치지직 스트리머 김꼬멍 팬 채널입니다. 최신 영상과 쇼츠는 유튜브 채널에서 확인할 수 있습니다.",
-    "detailsEnabled": true,
+    "description": "문의는 디스코드에서 부탁드립니다.",
+    "detailsEnabled": false,
     "primaryCard": {
       "label": "디스코드",
       "value": "rurimiru.",
@@ -611,5 +622,5 @@
     ]
   },
   "freeContent": "치지직 스트리머 김꼬멍 팬 채널 「꼬질꼬질한 캔따개」의 공개 업로드를 기반으로 구성한 채널형 페이지입니다.",
-  "freeContentEnabled": true
+  "freeContentEnabled": false
 }
