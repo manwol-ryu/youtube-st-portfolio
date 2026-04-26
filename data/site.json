@@ -1,18 +1,15 @@
 {
   "site": {
-    "title": "만월 포트폴리오",
-    "description": "재미있는 영상을 만들겠습니다.",
     "githubRepo": "manwol-ryu/youtube-st-portfolio",
     "brand": {
-      "prefix": "fan channel",
       "name": "Manwol",
       "displayName": "만월",
-      "avatarUrl": "assets/프로필이미지.png",
-      "bannerImageUrl": "assets/배너이미지.png"
+      "avatarUrl": "assets/avatar.png",
+      "bannerImageUrl": "assets/banner.png"
     },
     "profile": {
       "discordId": "rurimiru.",
-      "email": ""
+      "email": "manwol1578@gmail.com"
     },
     "nav": {
       "links": [
@@ -63,9 +60,9 @@
   },
   "hero": {
     "eyebrow": "KIM KKOMEONG FAN CHANNEL",
-    "title": "만월의 포트폴리오",
-    "titleAccent": "만월",
-    "description": "편집자 만월의 포트폴리오입니다.",
+    "title": "김꼬멍 키리누키 채널 영상",
+    "titleAccent": "키리누키",
+    "description": "talk 테마 핫클립 쇼츠영상입니다.",
     "statusLabel": "편집의뢰",
     "statusText": "가능",
     "actions": [
@@ -195,6 +192,7 @@
     ]
   },
   "home": {
+    "featuredVideoId": "",
     "sectionOrder": [
       "featured",
       "latestVideos",
@@ -547,7 +545,6 @@
         "priceUnit": "/ 분당",
         "features": [
           "토크/게임영상",
-          "",
           "15분이내"
         ],
         "cta": {
