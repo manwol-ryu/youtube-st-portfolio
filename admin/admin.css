@@ -233,6 +233,47 @@ h3 {
   border-left: 1px solid var(--line);
 }
 
+.sub-tabs {
+  display: grid;
+  gap: 2px;
+  margin: -2px 0 6px;
+}
+
+.sub-tabs .tab-button.sub-tab {
+  color: #5b6670;
+}
+
+.sub-tabs .tab-button.sub-tab.on {
+  color: var(--ink);
+}
+
+.quickstart-field-guide {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(53, 90, 108, 0.14);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+}
+
+.quickstart-field-guide strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.quickstart-field-guide ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
 .mobile-tab-toggle {
   display: none;
 }
@@ -959,10 +1000,20 @@ h3 {
 .live-preview-surface .public-preview-frame {
   display: block;
   width: 100%;
-  height: min(72vh, 720px);
-  min-height: 560px;
+  height: min(54vh, 540px);
+  min-height: 320px;
   border: 0;
   background: #fff;
+}
+
+.live-preview-surface .public-preview-frame-shell[data-preview-target="hero-editor"] .public-preview-frame {
+  height: min(58vh, 620px);
+  min-height: 420px;
+}
+
+.live-preview-surface .public-preview-frame-shell[data-preview-target="hero-panels"] .public-preview-frame {
+  height: 360px;
+  min-height: 260px;
 }
 
 .live-preview-surface .preview-render-root {
@@ -1117,6 +1168,29 @@ h3 {
   gap: 14px;
 }
 
+.form-grid-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.quickstart-balanced-grid,
+.quickstart-hero-grid,
+.quickstart-channel-loader-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.channel-image-grid {
+  margin-top: 14px;
+}
+
+.quickstart-balanced-grid > .span-2,
+.quickstart-balanced-grid > .span-3,
+.quickstart-hero-grid > .span-2,
+.quickstart-hero-grid > .span-3,
+.quickstart-channel-loader-grid > .span-2,
+.quickstart-channel-loader-grid > .span-3 {
+  grid-column: 1 / -1;
+}
+
 .video-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1127,6 +1201,10 @@ h3 {
 
 .span-2 {
   grid-column: span 2;
+}
+
+.span-3 {
+  grid-column: 1 / -1;
 }
 
 .field {
@@ -1289,6 +1367,12 @@ h3 {
   padding: 18px;
 }
 
+.inline-preview-surface.is-project-preview {
+  border-color: #e5e7eb;
+  background: #fff;
+  color: #0f0f0f;
+}
+
 .inline-preview-empty {
   display: grid;
   min-height: 96px;
@@ -1304,6 +1388,67 @@ h3 {
 .preview-project-card-grid {
   display: grid;
   gap: 24px;
+}
+
+.inline-preview-surface.is-project-preview .preview-project-card-grid {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.inline-preview-surface.is-project-preview .project-card {
+  grid-column: span 4 / span 4;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  padding: 22px;
+  color: #0f0f0f;
+}
+
+.inline-preview-surface.is-project-preview .project-card[data-layout="featured"] {
+  grid-column: span 8 / span 8;
+  border-color: rgba(255, 0, 51, 0.3);
+}
+
+.inline-preview-surface.is-project-preview .project-card[data-layout="secondary"] {
+  grid-column: span 4 / span 4;
+}
+
+.inline-preview-surface.is-project-preview .project-card .rounded-full {
+  border-radius: 999px;
+}
+
+.inline-preview-surface.is-project-preview .project-card .bg-surface-container {
+  background: #f2f3f5;
+}
+
+.inline-preview-surface.is-project-preview .project-card .text-on-surface,
+.inline-preview-surface.is-project-preview .project-title {
+  color: #0f0f0f;
+}
+
+.inline-preview-surface.is-project-preview .project-card .text-primary-container,
+.inline-preview-surface.is-project-preview .project-card a {
+  color: #ff0033;
+}
+
+.inline-preview-surface.is-project-preview .project-card p {
+  color: #606060;
+}
+
+.inline-preview-surface.is-project-preview .preview-hidden-block,
+.inline-preview-surface.is-project-preview .works-empty {
+  display: grid;
+  min-height: 96px;
+  place-items: center;
+  grid-column: 1 / -1;
+  border: 1px dashed #d9dce2;
+  border-radius: 8px;
+  background: #fafafa;
+  color: #606060;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+  padding: 24px;
 }
 
 .new-category-field[hidden] {
@@ -2467,6 +2612,11 @@ h3 {
     width: 100%;
     border-left: 0;
   }
+
+  .sub-tabs {
+    gap: 4px;
+    margin: 0;
+  }
 }
 
 @media (max-width: 900px) {
@@ -2489,7 +2639,8 @@ h3 {
   }
 
   .summary-card.wide,
-  .span-2 {
+  .span-2,
+  .span-3 {
     grid-column: auto;
   }
 

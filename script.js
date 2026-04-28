@@ -1,6 +1,7 @@
 const DEFAULT_DATA = {
   site: {
     githubRepo: "",
+    url: "",
     brand: {
       name: "your-name",
       displayName: "",
@@ -46,8 +47,6 @@ const DEFAULT_DATA = {
     title: "브랜드에 맞는\n영상 포트폴리오를 시작하세요.",
     titleAccent: "영상 포트폴리오",
     description: "JSON 데이터만 교체하면 소개 문구, 작업물, 가격, 문의 섹션을 프로젝트에 맞게 빠르게 구성할 수 있습니다.",
-    statusLabel: "",
-    statusText: "",
     actions: [
       {
         label: "가격 보기",
@@ -80,7 +79,7 @@ const DEFAULT_DATA = {
     },
   },
   projects: {
-    enabled: false,
+    enabled: true,
     sectionEyebrow: "",
     sectionTitle: "",
     sectionMeta: "",
@@ -102,6 +101,7 @@ const DEFAULT_DATA = {
   },
   home: {
     featuredVideoId: "",
+    featuredDescription: "홈 탭 상단 대표 영상에 표시할 소개 문구를 입력하세요.",
     sectionOrder: ["featured", "infoPanels", "latestVideos", "categoryVideos", "projects", "stats"],
     sectionVisibility: {
       featured: true,
@@ -278,6 +278,31 @@ function normalizeAccentKeywords(value) {
     });
 }
 
+function getAccentMatchEnd(raw, startIndex, marker) {
+  let rawIndex = startIndex;
+  let markerIndex = 0;
+  const source = String(raw || "");
+  const target = String(marker || "");
+
+  while (rawIndex < source.length && markerIndex < target.length) {
+    const rawChar = source[rawIndex];
+    const markerChar = target[markerIndex];
+
+    if (/\s/.test(markerChar)) {
+      if (!/\s/.test(rawChar)) return -1;
+      while (markerIndex < target.length && /\s/.test(target[markerIndex])) markerIndex += 1;
+      while (rawIndex < source.length && /\s/.test(source[rawIndex])) rawIndex += 1;
+      continue;
+    }
+
+    if (rawChar !== markerChar) return -1;
+    rawIndex += 1;
+    markerIndex += 1;
+  }
+
+  return markerIndex === target.length ? rawIndex : -1;
+}
+
 function videoThumb(id) {
   return `https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`;
 }
@@ -448,11 +473,20 @@ function normalizeHomeSectionVisibility(sourceHome) {
   const visibility = sourceHome?.sectionVisibility || {};
   return HOME_SECTION_KEYS.reduce((result, sectionKey) => {
     let fallback = true;
+    if (sectionKey === "projects") fallback = normalizeEnabled(sourceHome?.projects?.enabled, true);
     if (sectionKey === "latestVideos") fallback = normalizeEnabled(sourceHome?.latestVideos?.enabled, true);
     if (sectionKey === "categoryVideos") fallback = normalizeEnabled(sourceHome?.categoryVideos?.enabled, true);
     result[sectionKey] = normalizeEnabled(visibility?.[sectionKey], fallback);
     return result;
   }, {});
+}
+
+function getExplicitHomeSectionVisibility(sourceHome, sectionKey, fallback) {
+  const visibility = sourceHome?.sectionVisibility;
+  if (visibility && Object.prototype.hasOwnProperty.call(visibility, sectionKey)) {
+    return normalizeEnabled(visibility[sectionKey], fallback);
+  }
+  return fallback;
 }
 
 function isHomeSectionVisible(homeSettings, sectionKey) {
@@ -472,6 +506,7 @@ function normalizeHomeSettings(sourceHome) {
     sectionOrder: normalizeHomeSectionOrder(sourceHome?.sectionOrder),
     sectionVisibility,
     featuredVideoId: String(sourceHome?.featuredVideoId || "").trim(),
+    featuredDescription: String(sourceHome?.featuredDescription ?? base.featuredDescription).trim() || base.featuredDescription,
     playAllButtonEnabled: normalizeEnabled(sourceHome?.playAllButtonEnabled, base.playAllButtonEnabled),
     latestVideos: {
       ...base.latestVideos,
@@ -606,13 +641,32 @@ function resolveGitHubRepoFromPagesLocation(locationRef = window.location) {
   return `${owner}/${repoName}`;
 }
 
+function getGitHubRepoFromSiteUrl(siteUrl = DATA.site?.url, locationRef = window.location) {
+  const value = String(siteUrl || "").trim();
+  if (!value) return "";
+
+  try {
+    const baseHref = locationRef?.href || window.location.href;
+    const url = new URL(value, baseHref);
+    const hostname = String(url.hostname || "").toLowerCase();
+
+    if (hostname === "github.com" || hostname === "www.github.com") {
+      return normalizeGitHubRepo(url.pathname);
+    }
+
+    return resolveGitHubRepoFromPagesLocation(url) || normalizeGitHubRepo(value);
+  } catch (error) {
+    return normalizeGitHubRepo(value);
+  }
+}
+
 function buildGitHubRepoUrl(repo) {
   const normalizedRepo = normalizeGitHubRepo(repo);
   return normalizedRepo ? `https://github.com/${normalizedRepo}` : "";
 }
 
 function getEffectiveGitHubRepo(repoValue = DATA.site?.githubRepo, locationRef = window.location) {
-  return normalizeGitHubRepo(repoValue) || resolveGitHubRepoFromPagesLocation(locationRef);
+  return getGitHubRepoFromSiteUrl(DATA.site?.url, locationRef) || normalizeGitHubRepo(repoValue) || resolveGitHubRepoFromPagesLocation(locationRef);
 }
 
 function getEffectiveFooterLinks(links = DATA.site?.footer?.links, repoValue = DATA.site?.githubRepo, locationRef = window.location) {
@@ -741,6 +795,12 @@ function normalizeCustomWorks(items, legacyItem) {
 
 function normalizeData(input) {
   const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
+  const normalizedHome = normalizeHomeSettings(source.home);
+  const projectsEnabled = getExplicitHomeSectionVisibility(source.home, "projects", normalizeEnabled(source.projects?.enabled, DEFAULT_DATA.projects.enabled));
+  const worksEnabled = true;
+  const statsEnabled = getExplicitHomeSectionVisibility(source.home, "stats", normalizeEnabled(source.stats?.enabled, DEFAULT_DATA.stats.enabled));
+  normalizedHome.sectionVisibility.projects = projectsEnabled;
+  normalizedHome.sectionVisibility.stats = statsEnabled;
 
   return {
     ...clone(DEFAULT_DATA),
@@ -748,6 +808,7 @@ function normalizeData(input) {
     site: {
       ...clone(DEFAULT_DATA.site),
       ...withoutKeys(source.site, ["title", "description"]),
+      url: String(source.site?.url || DEFAULT_DATA.site.url || "").trim(),
       brand: {
         ...clone(DEFAULT_DATA.site.brand),
         ...withoutKeys(source.site?.brand, ["prefix"]),
@@ -777,7 +838,7 @@ function normalizeData(input) {
     },
     hero: {
       ...clone(DEFAULT_DATA.hero),
-      ...(source.hero || {}),
+      ...withoutKeys(source.hero, ["statusLabel", "statusText"]),
       actions: Array.isArray(source.hero?.actions)
         ? source.hero.actions.map((action) => ({
             label: String(action?.label || "").trim(),
@@ -790,7 +851,7 @@ function normalizeData(input) {
     projects: {
       ...clone(DEFAULT_DATA.projects),
       ...(source.projects || {}),
-      enabled: normalizeEnabled(source.projects?.enabled, DEFAULT_DATA.projects.enabled),
+      enabled: projectsEnabled,
       youtubeChannel: normalizeProjectYouTubeChannel(source.projects?.youtubeChannel),
       cards: Array.isArray(source.projects?.cards)
         ? source.projects.cards.map((card) => ({
@@ -805,7 +866,7 @@ function normalizeData(input) {
         : [],
     },
     stats: {
-      enabled: normalizeEnabled(source.stats?.enabled, DEFAULT_DATA.stats.enabled),
+      enabled: statsEnabled,
       items: Array.isArray(source.stats?.items)
         ? source.stats.items.map((item) => ({
             value: String(item?.value || "").trim(),
@@ -813,11 +874,18 @@ function normalizeData(input) {
           })).filter((item) => item.value || item.label)
         : [],
     },
-    home: normalizeHomeSettings(source.home),
+    home: {
+      ...normalizedHome,
+      sectionVisibility: {
+        ...normalizedHome.sectionVisibility,
+        projects: projectsEnabled,
+        stats: statsEnabled,
+      },
+    },
     works: {
       ...clone(DEFAULT_DATA.works),
       ...(source.works || {}),
-      enabled: normalizeEnabled(source.works?.enabled, DEFAULT_DATA.works.enabled),
+      enabled: worksEnabled,
       visualPreset: normalizeWorksVisualPreset(source.works?.visualPreset),
       displayMode: normalizeWorksDisplayMode(source.works?.displayMode),
       gridColumns: normalizeWorksColumnCount(source.works?.gridColumns, DEFAULT_DATA.works.gridColumns),
@@ -903,13 +971,14 @@ const ADMIN_PREVIEW_TARGET_SELECTORS = Object.freeze({
   brand: [".channel-info"],
   "channel-images": [".channel-banner", ".channel-info"],
   hero: [".channel-info"],
+  "hero-editor": [".channel-banner", ".channel-info", "#home-feature-section"],
   "hero-panels": ["#hero-info-panels"],
   home: ["#channel-home"],
   projects: ["#projects"],
   works: ["#works"],
   "stats-process": ["#stats", "#process-section"],
   process: ["#process-section"],
-  pricing: ["#pricing"],
+  pricing: ["#pricing > .section-head", "#pricing-plans", "#custom-works-section"],
   contact: ["#contact", "#free-content"],
   footer: ["#free-content", ".site-footer"],
   "contact-footer": ["#contact", "#free-content", ".site-footer"],
@@ -936,6 +1005,10 @@ const ADMIN_PREVIEW_NODE_SELECTORS = Object.freeze([
 ]);
 
 const ADMIN_PREVIEW_FREE_CONTENT_TARGETS = Object.freeze(new Set(["contact", "footer", "contact-footer"]));
+const ADMIN_PREVIEW_TARGET_HIDE_SELECTORS = Object.freeze({
+  process: ["#pricing > .section-head", "#pricing-plans", "#custom-works-section"],
+  pricing: ["#process-section"],
+});
 
 function getAdminPreviewTargetSelectors(target = getAdminPreviewTarget()) {
   return ADMIN_PREVIEW_TARGET_SELECTORS[target] || ADMIN_PREVIEW_TARGET_SELECTORS.home;
@@ -986,6 +1059,16 @@ function enforceAdminFreeContentPreviewVisibility(target) {
   freeContent.dataset.adminPreviewHidden = "true";
 }
 
+function hideAdminPreviewTargetExtras(target) {
+  (ADMIN_PREVIEW_TARGET_HIDE_SELECTORS[target] || []).forEach((selector) => {
+    document.querySelectorAll(selector).forEach((node) => {
+      node.classList.remove("is-admin-preview-focus", "is-admin-preview-ancestor");
+      node.hidden = true;
+      node.dataset.adminPreviewHidden = "true";
+    });
+  });
+}
+
 function applyAdminPreviewTarget() {
   resetAdminPreviewIsolation();
   const target = isAdminPreview() ? getAdminPreviewTarget() : "";
@@ -1008,6 +1091,7 @@ function applyAdminPreviewTarget() {
     node.hidden = true;
     node.dataset.adminPreviewHidden = "true";
   });
+  hideAdminPreviewTargetExtras(target);
   enforceAdminFreeContentPreviewVisibility(target);
 }
 
@@ -1190,10 +1274,13 @@ function renderAccentText(text, accent, accentClass) {
   let index = 0;
 
   while (index < raw.length) {
-    const match = markers.find((marker) => raw.startsWith(marker, index));
-    if (match) {
-      output += `<span class="${accentClass}">${escapeHTML(match)}</span>`;
-      index += match.length;
+    const matchEnd = markers.reduce((bestEnd, marker) => {
+      const end = getAccentMatchEnd(raw, index, marker);
+      return end > bestEnd ? end : bestEnd;
+    }, -1);
+    if (matchEnd > index) {
+      output += `<span class="${accentClass}">${escapeWithBreaks(raw.slice(index, matchEnd))}</span>`;
+      index = matchEnd;
       continue;
     }
 
@@ -1629,7 +1716,7 @@ function renderHero() {
       : '<span class="material-symbols-outlined">play_arrow</span>';
   }
 
-  setText("hero-eyebrow", DATA.hero.eyebrow);
+  setHidden($("#hero-eyebrow"), true);
   const title = $("#hero-title");
   if (title) {
     title.innerHTML = renderAccentText(DATA.hero.title, DATA.hero.titleAccent, "text-[#FDE047]");
@@ -1638,10 +1725,6 @@ function renderHero() {
   if (description) {
     description.innerHTML = escapeWithBreaks(DATA.hero.description);
   }
-  setText("hero-status-label", DATA.hero.statusLabel);
-  setText("hero-status-text", DATA.hero.statusText);
-  setHidden($("#hero-status"), !(String(DATA.hero.statusLabel || "").trim() || String(DATA.hero.statusText || "").trim()));
-
   const actions = $("#hero-actions");
   if (actions) {
     actions.innerHTML = DATA.hero.actions.map((action) => {
@@ -1798,7 +1881,7 @@ function renderHomeFeaturedVideo() {
     kicker.textContent = "대표 영상";
     title.textContent = fallbackTitle;
     meta.textContent = "동영상 포트폴리오";
-    description.innerHTML = escapeWithBreaks(DATA.hero?.description || DEFAULT_DATA.hero.description);
+    description.innerHTML = escapeWithBreaks(home.featuredDescription || DEFAULT_DATA.home.featuredDescription);
     play.hidden = true;
     return;
   }
@@ -1822,7 +1905,7 @@ function renderHomeFeaturedVideo() {
   kicker.textContent = "대표 영상";
   title.textContent = featuredVideo.title || "대표 영상";
   meta.textContent = metaParts.join(" · ");
-  description.innerHTML = escapeWithBreaks(categoryEntry.meta || DATA.hero?.description || "홈 탭 상단에 강조할 대표 작업입니다.");
+  description.innerHTML = escapeWithBreaks(home.featuredDescription || categoryEntry.meta || DEFAULT_DATA.home.featuredDescription);
   play.hidden = false;
 }
 
@@ -1909,18 +1992,22 @@ function orderHomeSections(homeSettings) {
     Array.from(homePanel.querySelectorAll("[data-home-section]"))
       .map((element) => [element.dataset.homeSection, element]),
   );
+  const fragment = document.createDocumentFragment();
 
   orderedKeys.forEach((key) => {
     const element = sectionMap.get(key);
     if (!element) return;
-    if (!isHomeSectionVisible(homeSettings, key)) setHidden(element, true);
-    homePanel.appendChild(element);
+    setHidden(element, !isHomeSectionVisible(homeSettings, key));
+    fragment.appendChild(element);
   });
 
   sectionMap.forEach((element, key) => {
-    if (!isHomeSectionVisible(homeSettings, key)) setHidden(element, true);
-    if (!orderedKeys.includes(key)) homePanel.appendChild(element);
+    if (orderedKeys.includes(key)) return;
+    setHidden(element, !isHomeSectionVisible(homeSettings, key));
+    fragment.appendChild(element);
   });
+
+  homePanel.appendChild(fragment);
 }
 
 function renderHomeFeed() {

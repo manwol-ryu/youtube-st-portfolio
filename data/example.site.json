@@ -52,15 +52,14 @@
           "href": "index.html#contact"
         }
       ]
-    }
+    },
+    "url": ""
   },
   "hero": {
     "eyebrow": "VIDEO PORTFOLIO TEMPLATE",
     "title": "브랜드에 맞는\n영상 포트폴리오를 시작하세요.",
     "titleAccent": "영상 포트폴리오",
     "description": "JSON 데이터만 교체하면 소개 문구, 작업물, 가격, 문의 섹션을 프로젝트에 맞게 빠르게 구성할 수 있습니다.",
-    "statusLabel": "Status",
-    "statusText": "READY FOR CUSTOMIZATION",
     "actions": [
       {
         "label": "가격 보기",
@@ -162,7 +161,8 @@
       "projects": true,
       "stats": true
     },
-    "featuredVideoId": "dQw4w9WgXcQ"
+    "featuredVideoId": "dQw4w9WgXcQ",
+    "featuredDescription": "JSON 데이터만 교체하면 소개 문구, 작업물, 가격, 문의 섹션을 프로젝트에 맞게 빠르게 구성할 수 있습니다."
   },
   "projects": {
     "enabled": true,

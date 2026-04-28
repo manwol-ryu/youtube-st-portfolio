@@ -50,7 +50,7 @@
     };
   </script>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link rel="stylesheet" href="admin.css?v=20260426-3">
+  <link rel="stylesheet" href="admin.css?v=20260428-3">
 </head>
 <body>
   <div class="admin-layout">
@@ -69,21 +69,28 @@
 
       <nav class="admin-tabs" id="admin-tab-list" aria-label="편집 메뉴">
         <button class="tab-button on" type="button" data-tab="quickstart" aria-current="page">퀵스타트</button>
-        <button class="tab-button" type="button" data-tab="home">홈 탭 콘텐츠</button>
+        <button class="tab-button" type="button" data-tab="home-layout">홈 탭 콘텐츠</button>
+        <div class="sub-tabs" aria-label="홈 탭 콘텐츠 하위 메뉴">
+          <button class="tab-button sub-tab" type="button" data-tab="home-layout">섹션 순서</button>
+          <button class="tab-button sub-tab" type="button" data-tab="home-hero">히어로/대표 영상</button>
+          <button class="tab-button sub-tab" type="button" data-tab="home-info-panels">정보 패널</button>
+          <button class="tab-button sub-tab" type="button" data-tab="home-project-cards">프로젝트 카드</button>
+          <button class="tab-button sub-tab" type="button" data-tab="home-youtube-card">유튜브 카드</button>
+          <button class="tab-button sub-tab" type="button" data-tab="home-stats">통계</button>
+        </div>
         <button class="tab-button" type="button" data-tab="works">동영상/카테고리</button>
         <button class="tab-button" type="button" data-tab="brand">채널/브랜드</button>
         <button class="tab-button" type="button" data-tab="pricing">가격</button>
         <button class="tab-button" type="button" data-tab="contact-footer">문의/푸터</button>
-        <span class="tab-divider" aria-hidden="true"></span>
-        <span class="tab-category-label">고급 설정</span>
-        <button class="tab-button sub-tab" type="button" data-tab="projects">프로젝트</button>
-        <button class="tab-button sub-tab" type="button" data-tab="hero">히어로/홈</button>
-        <button class="tab-button sub-tab" type="button" data-tab="hero-panels">경력/툴/BGM</button>
-        <button class="tab-button sub-tab" type="button" data-tab="stats-process">통계/프로세스</button>
-        <button class="tab-button sub-tab" type="button" data-tab="embed-card">임베드 카드</button>
-        <button class="tab-button sub-tab" type="button" data-tab="embed-image">이미지 수정</button>
-        <span class="tab-divider" aria-hidden="true"></span>
         <button class="tab-button" type="button" data-tab="json">JSON 확인</button>
+        <span class="tab-divider" aria-hidden="true"></span>
+        <span class="tab-category-label">임베드 카드 설정</span>
+        <div class="sub-tabs" aria-label="임베드 카드 설정 하위 메뉴">
+          <button class="tab-button sub-tab" type="button" data-tab="embed-image">01 대표 이미지</button>
+          <button class="tab-button sub-tab" type="button" data-tab="embed-upload">02 assets 업로드</button>
+          <button class="tab-button sub-tab" type="button" data-tab="embed-card">03 카드/HTML</button>
+          <button class="tab-button sub-tab" type="button" data-tab="embed-index">04 index.html 적용</button>
+        </div>
       </nav>
     </aside>
 
@@ -178,8 +185,8 @@
                   </div>
                 </div>
                 <div class="form-grid">
-                  <label class="field span-2" for="quickstart-site-github-repo"><span>GitHub Repo</span><input id="quickstart-site-github-repo" type="text" placeholder="owner/repo"></label>
-                  <p class="field-note span-2" id="quickstart-site-github-repo-note">GitHub Pages에서 열면 현재 repo를 자동으로 감지합니다.</p>
+                  <label class="field span-2" for="quickstart-site-url"><span>사이트 URL</span><input id="quickstart-site-url" type="url" placeholder="https://owner.github.io/repo/"></label>
+                  <p class="field-note span-2" id="quickstart-site-url-note">GitHub Pages 또는 GitHub 저장소 URL을 입력하면 owner/repo를 자동으로 저장합니다.</p>
                   <label class="field" for="quickstart-brand-name"><span>English Name</span><input id="quickstart-brand-name" type="text" placeholder="your-name"></label>
                   <label class="field" for="quickstart-brand-display-name"><span>채널 표시 이름</span><input id="quickstart-brand-display-name" type="text" placeholder="공개 페이지에 크게 보일 이름"></label>
                   <p class="field-note span-2">채널 표시 이름은 공개 페이지 채널 헤더의 <code>brand-name-display</code> 위치에 표시됩니다. English Name은 상단 로고와 채널 메타 이름용으로 분리됩니다.</p>
@@ -271,8 +278,7 @@
                   <label class="field span-2" for="quickstart-hero-title"><span>대표 문구 제목</span><textarea id="quickstart-hero-title" rows="3" placeholder="줄바꿈이 필요한 경우 Enter로 나눠 입력하세요."></textarea></label>
                   <label class="field" for="quickstart-hero-title-accent"><span>강조 단어</span><input id="quickstart-hero-title-accent" type="text" placeholder="#영상, 포트폴리오"></label>
                   <label class="field span-2" for="quickstart-hero-description"><span>대표 설명</span><textarea id="quickstart-hero-description" rows="4"></textarea></label>
-                  <label class="field" for="quickstart-hero-status-label"><span>상태 라벨</span><input id="quickstart-hero-status-label" type="text"></label>
-                  <label class="field" for="quickstart-hero-status-text"><span>상태 문구</span><input id="quickstart-hero-status-text" type="text"></label>
+                  <label class="field span-2" for="quickstart-home-feature-description"><span>대표 영상 설명</span><textarea id="quickstart-home-feature-description" rows="3"></textarea></label>
                 </div>
               </section>
 
@@ -366,7 +372,7 @@
                   </div>
                   <div class="quickstart-compact-list" id="quickstart-process-step-list"></div>
                   <div class="quickstart-actions">
-                    <button type="button" data-jump-tab="stats-process" data-jump-target="process-step-list">프로세스 상세 탭 열기</button>
+                    <button type="button" data-jump-tab="pricing" data-jump-target="process-step-list">프로세스 상세 탭 열기</button>
                   </div>
                 </div>
               </section>
@@ -571,6 +577,7 @@
           </div>
         </section>
 
+
         <section class="tab-panel" id="panel-brand" data-panel="brand">
           <div class="panel-head">
             <div>
@@ -582,8 +589,8 @@
           <section class="editor-card detail-section">
             <h3>사이트 정보</h3>
             <div class="form-grid">
-              <label class="field span-2" for="site-github-repo"><span>GitHub Repo</span><input id="site-github-repo" type="text" placeholder="owner/repo"></label>
-              <p class="field-note span-2" id="site-github-repo-note">GitHub Pages에서 열면 현재 repo를 자동으로 감지합니다.</p>
+              <label class="field span-2" for="site-url"><span>사이트 URL</span><input id="site-url" type="url" placeholder="https://owner.github.io/repo/"></label>
+              <p class="field-note span-2" id="site-url-note">GitHub Pages 또는 GitHub 저장소 URL을 입력하면 owner/repo를 자동으로 저장합니다.</p>
             </div>
           </section>
 
@@ -634,18 +641,47 @@
           </section>
         </section>
 
-        <section class="tab-panel" id="panel-hero" data-panel="hero">
+
+        <section class="tab-panel" id="panel-home-layout" data-panel="home-layout">
           <div class="panel-head">
             <div>
-              <h2>히어로</h2>
-              <p>헤드라인, 소개 문구, 상태 배지와 버튼 등 히어로 상단 내용을 설정합니다.</p>
+              <h2>섹션 순서</h2>
+              <p>홈 탭에 표시되는 섹션의 표시 여부와 순서를 관리합니다.</p>
+            </div>
+          </div>
+
+          <section class="editor-card detail-section">
+            <div class="section-row-head">
+              <div>
+                <h3>홈 탭 콘텐츠 설정</h3>
+                <p class="field-note">대표 영상, 정보 패널, 최신 영상, 프로젝트, 카테고리별 영상, 통계 섹션을 개별적으로 켜고 끄거나 드래그로 순서를 바꿀 수 있습니다.</p>
+              </div>
+            </div>
+            <div class="managed-list" id="home-section-order-list"></div>
+            <div class="form-grid">
+              <label class="field" for="home-latest-count">
+                <span>최신 영상 개수</span>
+                <input id="home-latest-count" type="number" min="1" max="12" step="1">
+              </label>
+              <label class="field" for="home-category-count">
+                <span>카테고리별 표시 개수</span>
+                <input id="home-category-count" type="number" min="1" max="12" step="1">
+              </label>
+            </div>
+          </section>
+        </section>
+
+        <section class="tab-panel" id="panel-home-hero" data-panel="home-hero">
+          <div class="panel-head">
+            <div>
+              <h2>히어로 / 대표 영상</h2>
+              <p>홈 첫 화면의 히어로 문구, 강조 단어, 대표 영상 설명과 액션 버튼을 설정합니다.</p>
             </div>
           </div>
 
           <section class="editor-card detail-section">
             <h3>히어로 기본 정보</h3>
             <div class="form-grid">
-              <label class="field" for="hero-eyebrow"><span>Eyebrow</span><input id="hero-eyebrow" type="text"></label>
               <label class="field span-2" for="hero-title">
                 <span>제목</span>
                 <textarea id="hero-title" rows="3" placeholder="줄바꿈이 필요한 경우 Enter로 나눠 입력하세요."></textarea>
@@ -654,15 +690,28 @@
               <label class="field" for="hero-title-accent">
                 <span>강조 단어</span>
                 <input id="hero-title-accent" type="text" placeholder="#영상, 포트폴리오">
-                <span class="field-note">`#` 또는 `,`로 여러 단어를 나눠 입력할 수 있습니다.</span>
+                <span class="field-note"># 또는 ,로 여러 단어를 나눠 입력할 수 있습니다. 줄바꿈이 있어도 같은 단어로 인식합니다.</span>
               </label>
               <label class="field span-2" for="hero-description">
                 <span>설명</span>
                 <textarea id="hero-description" rows="4"></textarea>
                 <span class="field-note">설명도 줄바꿈이 공개 페이지에 그대로 반영됩니다.</span>
               </label>
-              <label class="field" for="hero-status-label"><span>상태 라벨</span><input id="hero-status-label" type="text"></label>
-              <label class="field" for="hero-status-text"><span>상태 문구</span><input id="hero-status-text" type="text"></label>
+            </div>
+          </section>
+
+          <section class="editor-card detail-section">
+            <h3>대표 영상</h3>
+            <div class="form-grid">
+              <label class="field span-2" for="home-featured-video-id">
+                <span>대표 영상</span>
+                <select id="home-featured-video-id"></select>
+                <span class="field-note">동영상/카테고리에 등록된 영상 중 홈 상단에 크게 보여줄 영상을 선택합니다.</span>
+              </label>
+              <label class="field span-2" for="home-feature-description">
+                <span>대표 영상 설명</span>
+                <textarea id="home-feature-description" rows="3"></textarea>
+              </label>
             </div>
           </section>
 
@@ -675,11 +724,11 @@
           </section>
         </section>
 
-        <section class="tab-panel" id="panel-hero-panels" data-panel="hero-panels">
+        <section class="tab-panel" id="panel-home-info-panels" data-panel="home-info-panels">
           <div class="panel-head">
             <div>
-              <h2>히어로 아래 3분할</h2>
-              <p>히어로 아래에 배치되는 경력사항, 사용 가능한 툴, BGM 사용 툴 카드를 따로 관리합니다.</p>
+              <h2>정보 패널</h2>
+              <p>경력, 사용 가능한 툴, BGM 툴 카드를 따로 관리합니다.</p>
             </div>
           </div>
 
@@ -806,27 +855,29 @@
           </section>
         </section>
 
-        <section class="tab-panel" id="panel-projects" data-panel="projects">
+
+        <section class="tab-panel" id="panel-home-project-cards" data-panel="home-project-cards">
           <div class="panel-head">
             <div>
-              <h2>유튜브 채널/프로젝트 카드 추가</h2>
-              <p>프로젝트 섹션 헤더, 유튜브 채널 카드, 카드형 작업물을 순서대로 관리합니다.</p>
+              <h2>프로젝트 카드</h2>
+              <p>홈 프로젝트 섹션의 표시 여부, 섹션 헤더, 프로젝트 카드 목록을 관리합니다.</p>
             </div>
           </div>
 
           <section class="editor-card detail-section">
-            <h3>섹션 표시</h3>
+            <h3>프로젝트 카드 섹션 표시</h3>
             <div class="toggle-grid">
               <label class="toggle-field" for="projects-enabled">
                 <input id="projects-enabled" type="checkbox">
-                <span>프로젝트 섹션 표시</span>
-              </label>
-              <label class="toggle-field" for="projects-youtube-channel-enabled">
-                <input id="projects-youtube-channel-enabled" type="checkbox">
-                <span>유튜브 채널 카드 표시</span>
+                <span>프로젝트 카드 섹션 표시</span>
               </label>
             </div>
-            <p class="field-note">이 섹션은 공개 페이지의 <code>홈</code> 탭 안, 대표 콘텐츠와 동영상 선반 아래의 <code>#projects</code> 위치에 추가됩니다. 끄면 내부 <code>#projects</code> 링크는 영상 포트폴리오 또는 홈으로 자동 연결됩니다.</p>
+            <p class="field-note">끄면 공개 페이지의 홈 탭에서 프로젝트 카드 섹션이 숨겨지고, 내부 #projects 링크는 표시 가능한 섹션으로 자동 연결됩니다.</p>
+          </section>
+
+          <section class="editor-card detail-section" data-no-detail-toggle="true">
+            <h3>프로젝트 카드 미리보기</h3>
+            <div class="detail-section-preheader" id="projects-card-only-preview"></div>
           </section>
 
           <section class="editor-card detail-section">
@@ -840,12 +891,43 @@
 
           <section class="editor-card detail-section">
             <div class="section-row-head">
+              <h3>프로젝트 카드</h3>
+              <button id="add-project-card" type="button">카드 추가</button>
+            </div>
+            <div class="managed-list" id="project-card-list"></div>
+          </section>
+        </section>
+
+        <section class="tab-panel" id="panel-home-youtube-card" data-panel="home-youtube-card">
+          <div class="panel-head">
+            <div>
+              <h2>유튜브 카드</h2>
+              <p>홈 프로젝트 영역에 함께 표시할 유튜브 채널 카드 정보와 표시 여부를 설정합니다.</p>
+            </div>
+          </div>
+
+          <section class="editor-card detail-section">
+            <h3>유튜브 카드 표시</h3>
+            <div class="toggle-grid">
+              <label class="toggle-field" for="projects-youtube-channel-enabled">
+                <input id="projects-youtube-channel-enabled" type="checkbox">
+                <span>유튜브 채널 카드 표시</span>
+              </label>
+            </div>
+          </section>
+
+          <section class="editor-card detail-section" data-no-detail-toggle="true">
+            <h3>유튜브 카드 미리보기</h3>
+            <div class="inline-preview-card span-2" id="projects-youtube-channel-preview"></div>
+          </section>
+
+          <section class="editor-card detail-section">
+            <div class="section-row-head">
               <div>
                 <h3>유튜브 채널 카드</h3>
                 <p class="field-note">채널 URL을 입력하면 가능한 채널명과 프로필 이미지를 자동으로 채웁니다. 보이는 문구는 직접 보정할 수 있습니다.</p>
               </div>
             </div>
-            <div class="inline-preview-card span-2" id="projects-youtube-channel-preview"></div>
             <div class="form-grid">
               <label class="field span-2" for="projects-youtube-channel-url"><span>채널 URL</span><input id="projects-youtube-channel-url" type="text" placeholder="https://www.youtube.com/@channel-name"></label>
               <p id="projects-youtube-channel-feedback" class="field-note span-2 youtube-channel-feedback">채널 URL을 입력하면 자동으로 정보를 확인합니다.</p>
@@ -857,43 +939,32 @@
               <label class="field span-2" for="projects-youtube-channel-description"><span>소개 문구</span><textarea id="projects-youtube-channel-description" rows="3" placeholder="잘 부탁드립니다. ...더보기"></textarea></label>
             </div>
           </section>
-
-          <section class="editor-card detail-section">
-            <div class="detail-section-preheader" id="projects-card-only-preview"></div>
-            <div class="section-row-head">
-              <h3>프로젝트 카드</h3>
-              <button id="add-project-card" type="button">카드 추가</button>
-            </div>
-            <div class="managed-list" id="project-card-list"></div>
-          </section>
         </section>
 
-        <section class="tab-panel" id="panel-home" data-panel="home">
+        <section class="tab-panel" id="panel-home-stats" data-panel="home-stats">
           <div class="panel-head">
             <div>
-              <h2>홈 탭 콘텐츠</h2>
-              <p>홈 탭에 표시되는 모든 섹션의 표시 여부와 순서를 한 곳에서 관리합니다.</p>
+              <h2>통계</h2>
+              <p>홈 탭 통계 섹션의 표시 여부와 통계 아이템을 관리합니다.</p>
             </div>
           </div>
 
           <section class="editor-card detail-section">
+            <h3>통계 섹션 표시</h3>
+            <div class="toggle-grid">
+              <label class="toggle-field" for="stats-enabled">
+                <input id="stats-enabled" type="checkbox">
+                <span>통계 섹션 표시</span>
+              </label>
+            </div>
+          </section>
+
+          <section class="editor-card detail-section">
             <div class="section-row-head">
-              <div>
-                <h3>홈 탭 콘텐츠 설정</h3>
-                <p class="field-note">대표 영상, 경력/툴 카드, 최신 영상, 카테고리별 영상, 프로젝트, 통계 섹션을 개별적으로 켜고 끄거나 드래그로 순서를 바꿀 수 있습니다.</p>
-              </div>
+              <h3>통계 아이템</h3>
+              <button id="add-stat-item" type="button">통계 추가</button>
             </div>
-            <div class="managed-list" id="home-section-order-list"></div>
-            <div class="form-grid">
-              <label class="field" for="home-latest-count">
-                <span>최신 영상 개수</span>
-                <input id="home-latest-count" type="number" min="1" max="12" step="1">
-              </label>
-              <label class="field" for="home-category-count">
-                <span>카테고리별 표시 개수</span>
-                <input id="home-category-count" type="number" min="1" max="12" step="1">
-              </label>
-            </div>
+            <div class="managed-list" id="stats-item-list"></div>
           </section>
         </section>
 
@@ -1063,60 +1134,6 @@
           <div class="video-grid" id="works-video-list"></div>
         </section>
 
-        <section class="tab-panel" id="panel-stats-process" data-panel="stats-process">
-          <div class="panel-head">
-            <div>
-              <h2>통계 / 프로세스</h2>
-              <p>숫자형 통계와 가격 섹션 하단 프로세스 단계를 설정합니다.</p>
-            </div>
-          </div>
-
-          <section class="editor-card detail-section">
-            <h3>섹션 표시</h3>
-            <div class="toggle-grid">
-              <label class="toggle-field" for="stats-enabled">
-                <input id="stats-enabled" type="checkbox">
-                <span>통계 섹션 표시</span>
-              </label>
-              <label class="toggle-field" for="pricing-process-enabled">
-                <input id="pricing-process-enabled" type="checkbox">
-                <span>진행 프로세스 표시</span>
-              </label>
-            </div>
-          </section>
-
-          <section class="editor-card detail-section">
-            <div class="section-row-head">
-              <h3>통계 아이템</h3>
-              <button id="add-stat-item" type="button">통계 추가</button>
-            </div>
-            <div class="managed-list" id="stats-item-list"></div>
-          </section>
-
-          <section class="editor-card detail-section">
-            <h3>프로세스 설정</h3>
-            <div class="form-grid">
-              <label class="field" for="pricing-process-style">
-                <span>프로세스 디자인 형식</span>
-                <select id="pricing-process-style">
-                  <option value="cards">cards</option>
-                  <option value="minimal">minimal</option>
-                  <option value="editorial">editorial</option>
-                </select>
-                <span class="field-note">기본값은 `cards`이며, 현재 JSON에 값이 없어도 자동 적용됩니다.</span>
-              </label>
-              <label class="field span-2" for="pricing-process-title"><span>제목</span><input id="pricing-process-title" type="text"></label>
-            </div>
-          </section>
-
-          <section class="editor-card detail-section">
-            <div class="section-row-head">
-              <h3>프로세스 단계</h3>
-              <button id="add-process-step" type="button">단계 추가</button>
-            </div>
-            <div class="managed-list" id="process-step-list"></div>
-          </section>
-        </section>
 
         <section class="tab-panel" id="panel-pricing" data-panel="pricing">
           <div class="panel-head">
@@ -1127,11 +1144,15 @@
           </div>
 
           <section class="editor-card detail-section">
-            <h3>커스텀 작업 블록 표시</h3>
+            <h3>가격 탭 표시 옵션</h3>
             <div class="toggle-grid">
               <label class="toggle-field" for="pricing-custom-works-enabled">
                 <input id="pricing-custom-works-enabled" type="checkbox">
                 <span>커스텀 작업 블록 표시</span>
+              </label>
+              <label class="toggle-field" for="pricing-process-enabled">
+                <input id="pricing-process-enabled" type="checkbox">
+                <span>진행 프로세스 표시</span>
               </label>
             </div>
           </section>
@@ -1173,7 +1194,32 @@
             </div>
             <div class="managed-list" id="custom-work-list"></div>
           </section>
+
+          <section class="editor-card detail-section">
+            <h3>프로세스 설정</h3>
+            <div class="form-grid">
+              <label class="field" for="pricing-process-style">
+                <span>프로세스 디자인 형식</span>
+                <select id="pricing-process-style">
+                  <option value="cards">cards</option>
+                  <option value="minimal">minimal</option>
+                  <option value="editorial">editorial</option>
+                </select>
+                <span class="field-note">기본값은 cards이며, 현재 JSON에 값이 없어도 자동 적용됩니다.</span>
+              </label>
+              <label class="field span-2" for="pricing-process-title"><span>제목</span><input id="pricing-process-title" type="text"></label>
+            </div>
+          </section>
+
+          <section class="editor-card detail-section">
+            <div class="section-row-head">
+              <h3>프로세스 단계</h3>
+              <button id="add-process-step" type="button">단계 추가</button>
+            </div>
+            <div class="managed-list" id="process-step-list"></div>
+          </section>
         </section>
+
 
         <section class="tab-panel" id="panel-contact-footer" data-panel="contact-footer">
           <div class="panel-head">
@@ -1278,6 +1324,7 @@
           </section>
         </section>
 
+
         <section class="tab-panel" id="panel-json" data-panel="json">
           <div class="panel-head">
             <div>
@@ -1289,80 +1336,11 @@
           <textarea id="json-output" class="json-output" spellcheck="false" aria-label="완성된 JSON"></textarea>
         </section>
 
-        <section class="tab-panel" id="panel-embed-card" data-panel="embed-card">
-          <div class="panel-head">
-            <div>
-              <h2>임베드카드 수정</h2>
-              <p><code>index.html</code>의 <code>OG START</code>부터 <code>OG END</code>까지의 HTML 코드만 읽고 수정합니다.</p>
-            </div>
-            <button class="primary-action" id="reload-embed-html" type="button">초기 HTML 다시 불러오기</button>
-          </div>
-
-          <section class="editor-card detail-section guide-card">
-            <h3>임베드 카드 설정 방법</h3>
-            <ol class="guide-steps">
-              <li><strong>HTML 코드 복사</strong>를 눌러 <code>OG START/END</code> 블록 전체를 복사하고 GitHub의 <code>index.html</code> 편집 화면을 엽니다.</li>
-              <li>파일 상단에서 <code>&lt;!-- OG START --&gt;</code>부터 <code>&lt;!-- OG END --&gt;</code>까지 기존 코드를 지웁니다.</li>
-              <li>복사한 코드를 같은 위치에 붙여넣고 저장합니다.</li>
-              <li>이미지를 바꿨다면 <code>이미지 수정</code> 페이지에서 만든 <code>social-preview.png</code>를 <code>assets/</code>에 업로드하세요.</li>
-              <li>Discord 등은 캐시가 남을 수 있으니 테스트할 때 URL 뒤에 <code>?v=2</code>를 붙여 확인하세요.</li>
-            </ol>
-          </section>
-
-          <section class="editor-card detail-section" data-no-detail-toggle="true">
-            <h3>카드 미리보기</h3>
-            <p class="field-note" id="embed-card-status">index.html의 임베드 카드 코드를 불러오는 중입니다...</p>
-            <article class="embed-card-preview" aria-label="임베드 카드 미리보기">
-              <div class="embed-preview-image-wrap">
-                <img id="embed-preview-image" alt="" hidden>
-                <div id="embed-preview-image-empty" class="embed-preview-placeholder">이미지 URL을 입력하면 이곳에 표시됩니다.</div>
-              </div>
-              <div class="embed-preview-body">
-                <div id="embed-preview-domain" class="embed-preview-domain">example.com</div>
-                <h3 id="embed-preview-title">카드 제목</h3>
-                <p id="embed-preview-description">카드 설명이 이곳에 표시됩니다.</p>
-              </div>
-            </article>
-          </section>
-
-          <section class="editor-card detail-section">
-            <div class="section-row-head">
-              <h3>메타데이터 수정</h3>
-              <button class="danger-action" id="toggle-embed-image-meta" type="button">이미지 제거</button>
-            </div>
-            <div class="form-grid">
-              <label class="field" for="embed-meta-title"><span>카드 제목</span><input id="embed-meta-title" type="text" placeholder="영상 포트폴리오 템플릿"></label>
-              <label class="field" for="embed-meta-url"><span>페이지 URL</span><input id="embed-meta-url" type="text" placeholder="현재 사이트 주소 기준으로 자동 생성됩니다."></label>
-              <label class="field span-2" for="embed-meta-description">
-                <span>카드 설명</span>
-                <textarea id="embed-meta-description" rows="3" placeholder="영상 편집자와 크리에이터를 위한 정적 포트폴리오 템플릿입니다. site.json만 수정해 브랜드, 작업물, 가격, 문의 정보를 구성할 수 있습니다."></textarea>
-                <span class="field-note">띄어쓰기와 줄바꿈은 어드민 코드/미리보기에서 보존됩니다. 다만 Discord, Notion 같은 외부 플랫폼은 자체 규칙으로 줄바꿈을 무시할 수 있습니다.</span>
-              </label>
-              <label class="field span-2" for="embed-meta-image" id="embed-meta-image-field"><span>대표 이미지 URL</span><input id="embed-meta-image" type="text" placeholder="현재 사이트 주소 기준으로 assets/social-preview.png가 자동 생성됩니다."></label>
-              <label class="field span-2" for="embed-meta-image-alt" id="embed-meta-image-alt-field"><span>이미지 대체 문구</span><input id="embed-meta-image-alt" type="text" placeholder="영상 포트폴리오 템플릿 공유 이미지"></label>
-            </div>
-            <p class="field-note" id="embed-image-meta-note"></p>
-          </section>
-
-          <section class="editor-card detail-section">
-            <div class="section-row-head">
-              <h3>코드 복사하기</h3>
-              <div class="url-actions">
-                <button class="primary-action" id="copy-embed-html" type="button">HTML 코드 복사</button>
-              </div>
-            </div>
-            <label class="field" for="embed-html-output">
-              <span>index.html에 붙여넣을 OG 코드</span>
-              <textarea id="embed-html-output" class="embed-code-output" rows="14" spellcheck="false"></textarea>
-            </label>
-            <p class="field-note">위 코드 전체를 복사해서 <code>index.html</code> 상단의 기존 <code>OG START</code>부터 <code>OG END</code>까지의 범위와 교체하세요.</p>
-          </section>
-        </section>
 
         <section class="tab-panel" id="panel-embed-image" data-panel="embed-image">
           <div class="panel-head">
             <div>
-              <h2>이미지 수정</h2>
+              <h2>대표 이미지</h2>
               <p>대표 이미지, 채널 배너, 프로필 이미지를 원하는 출력 프리셋으로 자르고 정해진 파일명으로 다운로드합니다.</p>
             </div>
           </div>
@@ -1376,7 +1354,7 @@
               <li>출력 프리셋에서 <strong>채널 배너 2560×1440</strong> 또는 <strong>프로필 이미지 800×800</strong>을 선택하면 같은 업로드 이미지에서 다른 범위를 잡을 수 있습니다.</li>
               <li><strong>PNG 다운로드</strong>를 누르면 선택 프리셋에 따라 <code>social-preview.png</code>, <code>banner.png</code>, <code>avatar.png</code> 파일로 저장됩니다.</li>
               <li><strong>assets 업로드 페이지 열기</strong>를 눌러 GitHub 레포의 <code>assets/</code> 폴더에 업로드합니다.</li>
-              <li>업로드 후 <code>임베드카드 수정</code> 페이지에서 대표 이미지 URL을 현재 배포 주소의 <code>assets/social-preview.png</code> 절대 URL로 설정합니다.</li>
+              <li>업로드 후 <code>카드 / HTML</code> 페이지에서 대표 이미지 URL을 현재 배포 주소의 <code>assets/social-preview.png</code> 절대 URL로 설정합니다.</li>
             </ol>
           </section>
 
@@ -1454,6 +1432,142 @@
             </div>
           </section>
         </section>
+
+        <section class="tab-panel" id="panel-embed-upload" data-panel="embed-upload">
+          <div class="panel-head">
+            <div>
+              <h2>assets 업로드</h2>
+              <p>다운로드한 대표 이미지를 GitHub 저장소의 assets 폴더에 업로드합니다.</p>
+            </div>
+            <button class="primary-action" id="embed-open-assets-upload" type="button">assets 업로드 페이지 열기</button>
+          </div>
+
+          <section class="editor-card detail-section guide-card">
+            <h3>업로드 체크</h3>
+            <ol class="guide-steps">
+              <li>대표 이미지 탭에서 PNG를 다운로드합니다.</li>
+              <li>GitHub 저장소의 assets 폴더에 social-preview.png 파일명으로 업로드합니다.</li>
+              <li>배너와 프로필 이미지는 banner.png, avatar.png 파일명으로 업로드합니다.</li>
+            </ol>
+            <div class="toggle-grid">
+              <label class="toggle-field" for="embed-upload-done">
+                <input id="embed-upload-done" type="checkbox">
+                <span>assets 업로드 완료</span>
+              </label>
+            </div>
+            <p class="field-note" id="embed-upload-state">아직 업로드 완료로 표시되지 않았습니다.</p>
+          </section>
+        </section>
+
+        <section class="tab-panel" id="panel-embed-card" data-panel="embed-card">
+          <div class="panel-head">
+            <div>
+              <h2>카드 / HTML</h2>
+              <p><code>index.html</code>의 <code>OG START</code>부터 <code>OG END</code>까지의 HTML 코드만 읽고 수정합니다.</p>
+            </div>
+            <button class="primary-action" id="reload-embed-html" type="button">초기 HTML 다시 불러오기</button>
+          </div>
+
+          <section class="editor-card detail-section guide-card">
+            <h3>임베드 카드 설정 방법</h3>
+            <ol class="guide-steps">
+              <li><strong>HTML 코드 복사</strong>를 눌러 <code>OG START/END</code> 블록 전체를 복사하고 GitHub의 <code>index.html</code> 편집 화면을 엽니다.</li>
+              <li>파일 상단에서 <code>&lt;!-- OG START --&gt;</code>부터 <code>&lt;!-- OG END --&gt;</code>까지 기존 코드를 지웁니다.</li>
+              <li>복사한 코드를 같은 위치에 붙여넣고 저장합니다.</li>
+              <li>이미지를 바꿨다면 <code>대표 이미지</code> 탭에서 만든 <code>social-preview.png</code>를 <code>assets/</code>에 업로드하세요.</li>
+              <li>Discord 등은 캐시가 남을 수 있으니 테스트할 때 URL 뒤에 <code>?v=2</code>를 붙여 확인하세요.</li>
+            </ol>
+          </section>
+
+          <section class="editor-card detail-section" data-no-detail-toggle="true">
+            <h3>카드 미리보기</h3>
+            <p class="field-note" id="embed-card-status">index.html의 임베드 카드 코드를 불러오는 중입니다...</p>
+            <article class="embed-card-preview" aria-label="임베드 카드 미리보기">
+              <div class="embed-preview-image-wrap">
+                <img id="embed-preview-image" alt="" hidden>
+                <div id="embed-preview-image-empty" class="embed-preview-placeholder">이미지 URL을 입력하면 이곳에 표시됩니다.</div>
+              </div>
+              <div class="embed-preview-body">
+                <div id="embed-preview-domain" class="embed-preview-domain">example.com</div>
+                <h3 id="embed-preview-title">카드 제목</h3>
+                <p id="embed-preview-description">카드 설명이 이곳에 표시됩니다.</p>
+              </div>
+            </article>
+          </section>
+
+          <section class="editor-card detail-section">
+            <div class="section-row-head">
+              <h3>메타데이터 수정</h3>
+              <button class="danger-action" id="toggle-embed-image-meta" type="button">이미지 제거</button>
+            </div>
+            <div class="form-grid">
+              <label class="field" for="embed-meta-title"><span>카드 제목</span><input id="embed-meta-title" type="text" placeholder="영상 포트폴리오 템플릿"></label>
+              <label class="field" for="embed-meta-url"><span>페이지 URL</span><input id="embed-meta-url" type="text" placeholder="현재 사이트 주소 기준으로 자동 생성됩니다."></label>
+              <label class="field span-2" for="embed-meta-description">
+                <span>카드 설명</span>
+                <textarea id="embed-meta-description" rows="3" placeholder="영상 편집자와 크리에이터를 위한 정적 포트폴리오 템플릿입니다. site.json만 수정해 브랜드, 작업물, 가격, 문의 정보를 구성할 수 있습니다."></textarea>
+                <span class="field-note">띄어쓰기와 줄바꿈은 어드민 코드/미리보기에서 보존됩니다. 다만 Discord, Notion 같은 외부 플랫폼은 자체 규칙으로 줄바꿈을 무시할 수 있습니다.</span>
+              </label>
+              <label class="field span-2" for="embed-meta-image" id="embed-meta-image-field"><span>대표 이미지 URL</span><input id="embed-meta-image" type="text" placeholder="현재 사이트 주소 기준으로 assets/social-preview.png가 자동 생성됩니다."></label>
+              <label class="field span-2" for="embed-meta-image-alt" id="embed-meta-image-alt-field"><span>이미지 대체 문구</span><input id="embed-meta-image-alt" type="text" placeholder="영상 포트폴리오 템플릿 공유 이미지"></label>
+            </div>
+            <p class="field-note" id="embed-image-meta-note"></p>
+          </section>
+
+          <section class="editor-card detail-section">
+            <div class="section-row-head">
+              <h3>코드 복사하기</h3>
+              <div class="url-actions">
+                <button class="primary-action" id="copy-embed-html" type="button">HTML 코드 복사</button>
+              </div>
+            </div>
+            <label class="field" for="embed-html-output">
+              <span>index.html에 붙여넣을 OG 코드</span>
+              <textarea id="embed-html-output" class="embed-code-output" rows="14" spellcheck="false"></textarea>
+            </label>
+            <p class="field-note">위 코드 전체를 복사해서 <code>index.html</code> 상단의 기존 <code>OG START</code>부터 <code>OG END</code>까지의 범위와 교체하세요.</p>
+          </section>
+        </section>
+
+
+        <section class="tab-panel" id="panel-embed-index" data-panel="embed-index">
+          <div class="panel-head">
+            <div>
+              <h2>index.html 적용</h2>
+              <p>복사한 OG HTML 코드를 GitHub의 index.html에 적용합니다.</p>
+            </div>
+            <button class="primary-action" id="embed-open-index-editor" type="button">GitHub index.html 편집 열기</button>
+          </div>
+
+          <section class="editor-card detail-section guide-card">
+            <h3>적용 체크</h3>
+            <ol class="guide-steps">
+              <li>HTML 코드 복사를 눌러 OG START/END 블록 전체를 복사합니다.</li>
+              <li>GitHub에서 index.html 편집 화면을 열고 기존 OG 블록을 교체합니다.</li>
+              <li>저장 후 Discord 등에서 공유 미리보기를 다시 확인합니다.</li>
+            </ol>
+            <div class="toggle-grid">
+              <label class="toggle-field" for="embed-index-done">
+                <input id="embed-index-done" type="checkbox">
+                <span>index.html 적용 완료</span>
+              </label>
+            </div>
+            <p class="field-note" id="embed-index-state">아직 index.html 수정 완료로 표시되지 않았습니다.</p>
+          </section>
+
+          <section class="editor-card detail-section">
+            <div class="section-row-head">
+              <h3>적용할 HTML 코드</h3>
+              <div class="url-actions">
+                <button class="primary-action" id="embed-copy-html-index" type="button">HTML 코드 복사</button>
+              </div>
+            </div>
+            <label class="field" for="embed-index-code-preview">
+              <span>index.html에 붙여넣을 OG 코드</span>
+              <textarea id="embed-index-code-preview" class="embed-code-output" rows="14" spellcheck="false"></textarea>
+            </label>
+          </section>
+        </section>
       </main>
     </div>
 
@@ -1471,6 +1585,6 @@
     </section>
   </div>
 
-  <script src="admin.js?v=20260426-6"></script>
+  <script src="admin.js?v=20260428-3"></script>
 </body>
 </html>

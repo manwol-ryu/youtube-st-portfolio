@@ -1,6 +1,6 @@
 {
   "site": {
-    "githubRepo": "manwol-ryu/youtube-st-portfolio",
+    "githubRepo": "",
     "brand": {
       "name": "Manwol",
       "displayName": "만월",
@@ -31,7 +31,7 @@
         }
       ],
       "ctaLabel": "문의하기",
-      "ctaHref": "https://manwol-ryu.github.io/youtube-st-portfolio/index.html#contact"
+      "ctaHref": ""
     },
     "footer": {
       "enabled": true,
@@ -56,15 +56,14 @@
           "url": "https://github.com/manwol-ryu/youtube-st-portfolio"
         }
       ]
-    }
+    },
+    "url": "https://manwol-ryu.github.io/youtube-st-portfolio/"
   },
   "hero": {
     "eyebrow": "KIM KKOMEONG FAN CHANNEL",
     "title": "김꼬멍 키리누키 채널 영상",
     "titleAccent": "키리누키",
     "description": "talk 테마 핫클립 쇼츠영상입니다.",
-    "statusLabel": "편집의뢰",
-    "statusText": "가능",
     "actions": [
       {
         "label": "최신 영상 보기",
@@ -130,7 +129,7 @@
     }
   },
   "projects": {
-    "enabled": false,
+    "enabled": true,
     "sectionEyebrow": "YouTube Channel",
     "sectionTitle": "꼬질꼬질한 캔따개 채널",
     "sectionMeta": "@kojjilmung · 김꼬멍 팬 채널",
@@ -175,7 +174,7 @@
     ]
   },
   "stats": {
-    "enabled": true,
+    "enabled": false,
     "items": [
       {
         "value": "310명",
@@ -193,11 +192,12 @@
   },
   "home": {
     "featuredVideoId": "",
+    "featuredDescription": "talk 테마 핫클립 쇼츠영상입니다.",
     "sectionOrder": [
       "featured",
+      "infoPanels",
       "latestVideos",
       "projects",
-      "infoPanels",
       "categoryVideos",
       "stats"
     ],
