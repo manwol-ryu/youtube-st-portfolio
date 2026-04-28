@@ -9,6 +9,9 @@
 .env.*
 *.local
 
+# Personal Pages data; keep main forkable with data/example.site.json only
+data/site.json
+
 # Dependency/build caches, if added later
 node_modules/
 dist/
@@ -22,3 +25,4 @@ assets/favicon-source.png
 
 # Local validation/audit scripts and generated reports
 scripts/
+.claude/

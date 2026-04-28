@@ -5,16 +5,18 @@ const indexHtmlPath = "../index.html";
 const fallbackGitHubBranch = "main";
 const detailSectionStateStorageKey = "portfolio-template-admin-detail-sections-v1";
 const editorCardStateStorageKey = "portfolio-template-admin-editor-cards-v1";
-const embedCardTabs = new Set(["embed-card", "embed-image"]);
+const embedCardTabs = new Set(["embed-image", "embed-upload", "embed-card", "embed-index"]);
 const socialPreviewPresets = Object.freeze([
-  { id: "og-191", label: "OG 권장 1.91:1 · 1200×630", width: 1200, height: 630 },
-  { id: "twitter-2-1", label: "Twitter/X 2:1 · 1200×600", width: 1200, height: 600 },
-  { id: "wide-16-9", label: "16:9 · 1200×675", width: 1200, height: 675 },
-  { id: "landscape-3-2", label: "3:2 · 1200×800", width: 1200, height: 800 },
-  { id: "classic-4-3", label: "4:3 · 1200×900", width: 1200, height: 900 },
-  { id: "square-1-1", label: "1:1 · 1200×1200", width: 1200, height: 1200 },
-  { id: "portrait-4-5", label: "4:5 · 1080×1350", width: 1080, height: 1350 },
-  { id: "story-9-16", label: "9:16 · 1080×1920", width: 1080, height: 1920 },
+  { id: "og-191", label: "OG 권장 1.91:1 · 1200×630", width: 1200, height: 630, fileName: "social-preview.png" },
+  { id: "twitter-2-1", label: "Twitter/X 2:1 · 1200×600", width: 1200, height: 600, fileName: "social-preview.png" },
+  { id: "wide-16-9", label: "16:9 · 1200×675", width: 1200, height: 675, fileName: "social-preview.png" },
+  { id: "landscape-3-2", label: "3:2 · 1200×800", width: 1200, height: 800, fileName: "social-preview.png" },
+  { id: "classic-4-3", label: "4:3 · 1200×900", width: 1200, height: 900, fileName: "social-preview.png" },
+  { id: "square-1-1", label: "1:1 · 1200×1200", width: 1200, height: 1200, fileName: "social-preview.png" },
+  { id: "portrait-4-5", label: "4:5 · 1080×1350", width: 1080, height: 1350, fileName: "social-preview.png" },
+  { id: "story-9-16", label: "9:16 · 1080×1920", width: 1080, height: 1920, fileName: "social-preview.png" },
+  { id: "channel-banner", label: "채널 배너 16:9 · 2560×1440", width: 2560, height: 1440, fileName: "banner.png" },
+  { id: "channel-profile", label: "프로필 이미지 1:1 · 800×800", width: 800, height: 800, fileName: "avatar.png" },
 ]);
 const defaultSocialPreviewPresetId = socialPreviewPresets[0].id;
 const previewFontFamilyStyle = "font-family:'Epilogue', 'Segoe UI', 'Malgun Gothic', '맑은 고딕', Arial, sans-serif;";
@@ -25,8 +27,11 @@ const publicPagePreviewTargets = new Set([
   "channel-images",
   "home",
   "hero",
+  "hero-editor",
   "hero-panels",
   "projects",
+  "project-cards",
+  "project-youtube-card",
   "works",
   "stats-process",
   "process",
@@ -65,6 +70,12 @@ const previewTargets = {
     pathText: "index.html#home",
     openHref: "../index.html#home",
   },
+  "hero-editor": {
+    title: "히어로 / 대표 영상 미리보기",
+    description: "히어로 제목 강조와 홈 대표 영상 카드가 함께 어떻게 보이는지 확인합니다.",
+    pathText: "index.html#home / hero + featured",
+    openHref: "../index.html#home",
+  },
   "hero-panels": {
     title: "경력사항 / 툴 / BGM ",
     description: "경력사항 / 사용 가능한 툴 / BGM 카드 구성을 바로 확인합니다.",
@@ -72,9 +83,21 @@ const previewTargets = {
     openHref: "../index.html#home",
   },
   projects: {
-    title: "프로젝트 고급 설정 미리보기",
-    description: "기존 프로젝트 섹션과 유튜브 채널 카드 설정을 고급 영역에서 확인합니다.",
+    title: "프로젝트 / 유튜브 카드 미리보기",
+    description: "프로젝트 카드 섹션과 유튜브 채널 카드가 홈 탭에서 어떻게 보이는지 확인합니다.",
     pathText: "index.html#projects",
+    openHref: "../index.html#projects",
+  },
+  "project-cards": {
+    title: "프로젝트 카드 미리보기",
+    description: "프로젝트 카드 탭에서 수정할 수 있는 섹션 헤더와 프로젝트 카드만 확인합니다.",
+    pathText: "index.html#projects / project cards",
+    openHref: "../index.html#projects",
+  },
+  "project-youtube-card": {
+    title: "유튜브 카드 미리보기",
+    description: "유튜브 카드 탭에서 수정할 수 있는 채널 카드만 확인합니다.",
+    pathText: "index.html#projects / youtube card",
     openHref: "../index.html#projects",
   },
   works: {
@@ -127,15 +150,13 @@ const DEFAULT_EMBED_META = {
 
 const DEFAULT_DATA = {
   site: {
-    title: "영상 포트폴리오 템플릿",
-    description: "영상 편집자와 크리에이터를 위한 정적 포트폴리오 템플릿입니다. site.json만 수정해 브랜드, 작업물, 가격, 문의 정보를 구성할 수 있습니다.",
     githubRepo: "",
+    url: "",
     brand: {
-      prefix: "studio",
       name: "your-name",
       displayName: "",
-      avatarUrl: "assets/프로필이미지.png",
-      bannerImageUrl: "assets/배너이미지.png",
+      avatarUrl: "assets/avatar.png",
+      bannerImageUrl: "assets/banner.png",
     },
     profile: {
       discordId: "",
@@ -176,8 +197,6 @@ const DEFAULT_DATA = {
     title: "브랜드에 맞는\n영상 포트폴리오를 시작하세요.",
     titleAccent: "영상 포트폴리오",
     description: "JSON 데이터만 교체하면 소개 문구, 작업물, 가격, 문의 섹션을 프로젝트에 맞게 빠르게 구성할 수 있습니다.",
-    statusLabel: "",
-    statusText: "",
     actions: [
       {
         label: "가격 보기",
@@ -210,7 +229,7 @@ const DEFAULT_DATA = {
     },
   },
   projects: {
-    enabled: false,
+    enabled: true,
     sectionEyebrow: "",
     sectionTitle: "",
     sectionMeta: "",
@@ -231,6 +250,8 @@ const DEFAULT_DATA = {
     items: [],
   },
   home: {
+    featuredVideoId: "",
+    featuredDescription: "홈 탭 상단 대표 영상에 표시할 소개 문구를 입력하세요.",
     sectionOrder: ["featured", "infoPanels", "latestVideos", "categoryVideos", "projects", "stats"],
     sectionVisibility: {
       featured: true,
@@ -368,6 +389,7 @@ const state = {
   cropInteractionStartX: 0,
   cropInteractionStartY: 0,
   cropInteractionStartSelection: null,
+  cropInteractionCanvasId: "",
   socialPreviewPresetId: defaultSocialPreviewPresetId,
 };
 
@@ -418,9 +440,7 @@ function sortNavLinksByPresetOrder(links) {
 }
 
 const DIRECT_BINDINGS = {
-  "site-title": ["site", "title"],
-  "site-description": ["site", "description"],
-  "brand-prefix": ["site", "brand", "prefix"],
+  "site-url": ["site", "url"],
   "brand-name": ["site", "brand", "name"],
   "brand-display-name": ["site", "brand", "displayName"],
   "brand-avatar-url": ["site", "brand", "avatarUrl"],
@@ -433,8 +453,8 @@ const DIRECT_BINDINGS = {
   "hero-title": ["hero", "title"],
   "hero-title-accent": ["hero", "titleAccent"],
   "hero-description": ["hero", "description"],
-  "hero-status-label": ["hero", "statusLabel"],
-  "hero-status-text": ["hero", "statusText"],
+  "home-featured-video-id": ["home", "featuredVideoId"],
+  "home-feature-description": ["home", "featuredDescription"],
   "hero-career-title": ["hero", "infoPanels", "career", "title"],
   "hero-tools-title": ["hero", "infoPanels", "tools", "title"],
   "hero-bgm-title": ["hero", "infoPanels", "bgm", "title"],
@@ -449,6 +469,8 @@ const DIRECT_BINDINGS = {
   "projects-youtube-channel-subscriber": ["projects", "youtubeChannel", "subscriberText"],
   "projects-youtube-channel-videos": ["projects", "youtubeChannel", "videoCountText"],
   "projects-youtube-channel-description": ["projects", "youtubeChannel", "description"],
+  "works-title": ["works", "sectionTitle"],
+  "works-description": ["works", "sectionDescription"],
   "pricing-eyebrow": ["pricing", "sectionEyebrow"],
   "pricing-title": ["pricing", "title"],
   "pricing-description": ["pricing", "description"],
@@ -469,7 +491,6 @@ const DIRECT_BINDINGS = {
 const CHECKBOX_BINDINGS = {
   "projects-enabled": ["projects", "enabled"],
   "projects-youtube-channel-enabled": ["projects", "youtubeChannel", "enabled"],
-  "works-enabled": ["works", "enabled"],
   "stats-enabled": ["stats", "enabled"],
   "pricing-process-enabled": ["pricing", "processEnabled"],
   "pricing-custom-works-enabled": ["pricing", "customWorksEnabled"],
@@ -483,7 +504,7 @@ const QUICKSTART_STEPS = Object.freeze([
   {
     id: "site",
     title: "사이트 정보",
-    description: "사이트 제목, GitHub Repo, English Name, 채널 표시 이름, Discord ID, 이메일, 상단 버튼을 먼저 정리합니다.",
+    description: "사이트 URL, 채널 표시 이름, 연락 정보와 대표 문구를 먼저 정리합니다.",
     preview: "brand",
   },
   {
@@ -494,9 +515,9 @@ const QUICKSTART_STEPS = Object.freeze([
   },
   {
     id: "hero",
-    title: "히어로 기본 정보",
-    description: "첫 화면의 제목, 설명, 상태 문구를 확인합니다.",
-    preview: "hero",
+    title: "03 대표 영상",
+    description: "홈 상단 대표 영상과 영상 카드 설명을 선택합니다.",
+    preview: "home",
   },
   {
     id: "panels",
@@ -506,7 +527,7 @@ const QUICKSTART_STEPS = Object.freeze([
   },
   {
     id: "process",
-    title: "프로세스",
+    title: "통계/프로세스",
     description: "진행 프로세스 표시 여부와 단계 목록을 확인합니다.",
     preview: "process",
   },
@@ -561,22 +582,18 @@ const QUICKSTART_STEPS = Object.freeze([
 ]);
 
 const QUICKSTART_DIRECT_BINDINGS = {
-  "quickstart-site-title": ["site", "title"],
-  "quickstart-site-description": ["site", "description"],
-  "quickstart-site-github-repo": ["site", "githubRepo"],
+  "quickstart-site-url": ["site", "url"],
   "quickstart-brand-name": ["site", "brand", "name"],
   "quickstart-brand-display-name": ["site", "brand", "displayName"],
   "quickstart-channel-avatar-url": ["site", "brand", "avatarUrl"],
   "quickstart-channel-banner-url": ["site", "brand", "bannerImageUrl"],
   "quickstart-profile-discord": ["site", "profile", "discordId"],
   "quickstart-profile-email": ["site", "profile", "email"],
-  "quickstart-nav-cta-label": ["site", "nav", "ctaLabel"],
-  "quickstart-nav-cta-href": ["site", "nav", "ctaHref"],
+  "quickstart-featured-video-id": ["home", "featuredVideoId"],
+  "quickstart-home-feature-description": ["home", "featuredDescription"],
   "quickstart-hero-title": ["hero", "title"],
   "quickstart-hero-title-accent": ["hero", "titleAccent"],
   "quickstart-hero-description": ["hero", "description"],
-  "quickstart-hero-status-label": ["hero", "statusLabel"],
-  "quickstart-hero-status-text": ["hero", "statusText"],
   "quickstart-hero-career-title": ["hero", "infoPanels", "career", "title"],
   "quickstart-hero-tools-title": ["hero", "infoPanels", "tools", "title"],
   "quickstart-hero-bgm-title": ["hero", "infoPanels", "bgm", "title"],
@@ -774,6 +791,12 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function withoutKeys(value, keys) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const blocked = new Set(keys);
+  return Object.fromEntries(Object.entries(value).filter(([key]) => !blocked.has(key)));
+}
+
 function loadStoredState(storageKey) {
   try {
     const raw = window.localStorage.getItem(storageKey);
@@ -822,6 +845,31 @@ function normalizeAccentKeywords(value) {
     });
 }
 
+function getAccentMatchEnd(raw, startIndex, marker) {
+  let rawIndex = startIndex;
+  let markerIndex = 0;
+  const source = String(raw || "");
+  const target = String(marker || "");
+
+  while (rawIndex < source.length && markerIndex < target.length) {
+    const rawChar = source[rawIndex];
+    const markerChar = target[markerIndex];
+
+    if (/\s/.test(markerChar)) {
+      if (!/\s/.test(rawChar)) return -1;
+      while (markerIndex < target.length && /\s/.test(target[markerIndex])) markerIndex += 1;
+      while (rawIndex < source.length && /\s/.test(source[rawIndex])) rawIndex += 1;
+      continue;
+    }
+
+    if (rawChar !== markerChar) return -1;
+    rawIndex += 1;
+    markerIndex += 1;
+  }
+
+  return markerIndex === target.length ? rawIndex : -1;
+}
+
 function normalizeGitHubRepo(value) {
   let repo = String(value || "").trim();
   if (!repo) return "";
@@ -868,6 +916,25 @@ function resolveGitHubRepoFromPagesLocation(locationRef = window.location) {
   return `${owner}/${repoName}`;
 }
 
+function getGitHubRepoFromSiteUrl(siteUrl = state.data?.site?.url, locationRef = window.location) {
+  const value = String(siteUrl || "").trim();
+  if (!value) return "";
+
+  try {
+    const baseHref = locationRef?.href || window.location.href;
+    const url = new URL(value, baseHref);
+    const hostname = String(url.hostname || "").toLowerCase();
+
+    if (hostname === "github.com" || hostname === "www.github.com") {
+      return normalizeGitHubRepo(url.pathname);
+    }
+
+    return resolveGitHubRepoFromPagesLocation(url) || normalizeGitHubRepo(value);
+  } catch (error) {
+    return normalizeGitHubRepo(value);
+  }
+}
+
 function buildGitHubRepoApiUrl(repo) {
   const normalizedRepo = normalizeGitHubRepo(repo);
   return normalizedRepo ? `https://api.github.com/repos/${normalizedRepo}` : "";
@@ -906,7 +973,7 @@ function buildGitHubRepoUrl(repo) {
 }
 
 function getEffectiveGitHubRepo(repoValue = state.data?.site?.githubRepo, locationRef = window.location) {
-  return normalizeGitHubRepo(repoValue) || resolveGitHubRepoFromPagesLocation(locationRef);
+  return getGitHubRepoFromSiteUrl(state.data?.site?.url, locationRef) || normalizeGitHubRepo(repoValue) || resolveGitHubRepoFromPagesLocation(locationRef);
 }
 
 function buildGitHubPagesBaseUrl(repo) {
@@ -974,8 +1041,9 @@ function resolvePreviewAwareHref(href) {
 function getDefaultEmbedMeta(locationRef = window.location, repoValue = state.data?.site?.githubRepo) {
   const baseUrl = resolveGitHubPagesBaseUrl(locationRef, repoValue) || resolveCurrentSiteBaseUrl(locationRef);
   const site = state?.data?.site || DEFAULT_DATA.site;
-  const title = compactText(site.title) || DEFAULT_EMBED_META.title;
-  const description = compactText(site.description) || DEFAULT_EMBED_META.description;
+  const brand = site.brand || {};
+  const title = compactText(brand.displayName) || compactText(brand.name) || DEFAULT_EMBED_META.title;
+  const description = compactText(state?.data?.hero?.description) || DEFAULT_EMBED_META.description;
   return {
     ...DEFAULT_EMBED_META,
     title,
@@ -1437,11 +1505,20 @@ function normalizeHomeSectionVisibility(sourceHome) {
   const visibility = sourceHome?.sectionVisibility || {};
   return HOME_SECTION_KEYS.reduce((result, sectionKey) => {
     let fallback = true;
+    if (sectionKey === "projects") fallback = normalizeEnabled(sourceHome?.projects?.enabled, true);
     if (sectionKey === "latestVideos") fallback = normalizeEnabled(sourceHome?.latestVideos?.enabled, true);
     if (sectionKey === "categoryVideos") fallback = normalizeEnabled(sourceHome?.categoryVideos?.enabled, true);
     result[sectionKey] = normalizeEnabled(visibility?.[sectionKey], fallback);
     return result;
   }, {});
+}
+
+function getExplicitHomeSectionVisibility(sourceHome, sectionKey, fallback) {
+  const visibility = sourceHome?.sectionVisibility;
+  if (visibility && Object.prototype.hasOwnProperty.call(visibility, sectionKey)) {
+    return normalizeEnabled(visibility[sectionKey], fallback);
+  }
+  return fallback;
 }
 
 function isHomeSectionVisible(homeSettings, sectionKey) {
@@ -1455,9 +1532,14 @@ function setHomeSectionVisibility(sectionKey, isVisible) {
   if (!state.data.home.sectionVisibility || typeof state.data.home.sectionVisibility !== "object") {
     state.data.home.sectionVisibility = normalizeHomeSectionVisibility(state.data.home);
   }
-  state.data.home.sectionVisibility[sectionKey] = Boolean(isVisible);
-  if (sectionKey === "latestVideos") state.data.home.latestVideos.enabled = Boolean(isVisible);
-  if (sectionKey === "categoryVideos") state.data.home.categoryVideos.enabled = Boolean(isVisible);
+  const nextVisible = Boolean(isVisible);
+  state.data.home.sectionVisibility[sectionKey] = nextVisible;
+  if (sectionKey === "latestVideos") state.data.home.latestVideos.enabled = nextVisible;
+  if (sectionKey === "categoryVideos") state.data.home.categoryVideos.enabled = nextVisible;
+  if (sectionKey === "projects") {
+    state.data.projects.enabled = nextVisible;
+  }
+  if (sectionKey === "stats") state.data.stats.enabled = nextVisible;
 }
 
 function normalizeHomeSettings(sourceHome) {
@@ -1471,6 +1553,8 @@ function normalizeHomeSettings(sourceHome) {
     ...(sourceHome || {}),
     sectionOrder: normalizeHomeSectionOrder(sourceHome?.sectionOrder),
     sectionVisibility,
+    featuredVideoId: String(sourceHome?.featuredVideoId || "").trim(),
+    featuredDescription: String(sourceHome?.featuredDescription ?? base.featuredDescription).trim() || base.featuredDescription,
     playAllButtonEnabled: normalizeEnabled(sourceHome?.playAllButtonEnabled, base.playAllButtonEnabled),
     latestVideos: {
       ...base.latestVideos,
@@ -1622,6 +1706,12 @@ function getSortedWorksVideos(videos = state.data.works?.videos) {
   return (Array.isArray(videos) ? videos : [])
     .filter((video) => video.id)
     .slice();
+}
+
+function getHomeFeaturedVideo(home = state.data.home, works = state.data.works) {
+  const videos = getSortedWorksVideos(works?.videos);
+  const featuredVideoId = String(home?.featuredVideoId || "").trim();
+  return videos.find((video) => video.id === featuredVideoId) || videos[0] || null;
 }
 
 function watchUrlFromVideoId(videoId) {
@@ -2123,16 +2213,23 @@ function resetWorksVideoForm() {
 function normalizeData(input) {
   const source = input && typeof input === "object" && !Array.isArray(input) ? input : {};
   const base = clone(DEFAULT_DATA);
+  const normalizedHome = normalizeHomeSettings(source.home);
+  const projectsEnabled = getExplicitHomeSectionVisibility(source.home, "projects", normalizeEnabled(source.projects?.enabled, base.projects.enabled));
+  const worksEnabled = true;
+  const statsEnabled = getExplicitHomeSectionVisibility(source.home, "stats", normalizeEnabled(source.stats?.enabled, base.stats.enabled));
+  normalizedHome.sectionVisibility.projects = projectsEnabled;
+  normalizedHome.sectionVisibility.stats = statsEnabled;
 
   return {
     ...base,
     ...source,
     site: {
       ...base.site,
-      ...(source.site || {}),
+      ...withoutKeys(source.site, ["title", "description"]),
+      url: String(source.site?.url || base.site.url || "").trim(),
       brand: {
         ...base.site.brand,
-        ...(source.site?.brand || {}),
+        ...withoutKeys(source.site?.brand, ["prefix"]),
       },
       profile: {
         ...base.site.profile,
@@ -2155,7 +2252,7 @@ function normalizeData(input) {
     },
     hero: {
       ...base.hero,
-      ...(source.hero || {}),
+      ...withoutKeys(source.hero, ["statusLabel", "statusText"]),
       actions: Array.isArray(source.hero?.actions)
         ? source.hero.actions.map((action) => ({
             label: String(action?.label || "").trim(),
@@ -2168,7 +2265,7 @@ function normalizeData(input) {
     projects: {
       ...base.projects,
       ...(source.projects || {}),
-      enabled: normalizeEnabled(source.projects?.enabled, base.projects.enabled),
+      enabled: projectsEnabled,
       youtubeChannel: normalizeProjectYouTubeChannel(source.projects?.youtubeChannel),
       cards: Array.isArray(source.projects?.cards)
         ? source.projects.cards.map((card) => ({
@@ -2183,7 +2280,7 @@ function normalizeData(input) {
         : [],
     },
     stats: {
-      enabled: normalizeEnabled(source.stats?.enabled, base.stats.enabled),
+      enabled: statsEnabled,
       items: Array.isArray(source.stats?.items)
         ? source.stats.items.map((item) => ({
             value: String(item?.value || "").trim(),
@@ -2191,11 +2288,18 @@ function normalizeData(input) {
           })).filter((item) => item.value || item.label)
         : [],
     },
-    home: normalizeHomeSettings(source.home),
+    home: {
+      ...normalizedHome,
+      sectionVisibility: {
+        ...normalizedHome.sectionVisibility,
+        projects: projectsEnabled,
+        stats: statsEnabled,
+      },
+    },
     works: {
       ...base.works,
       ...(source.works || {}),
-      enabled: normalizeEnabled(source.works?.enabled, base.works.enabled),
+      enabled: worksEnabled,
       visualPreset: normalizeWorksVisualPreset(source.works?.visualPreset),
       displayMode: normalizeWorksDisplayMode(source.works?.displayMode),
       gridColumns: normalizeWorksColumnCount(source.works?.gridColumns, base.works.gridColumns),
@@ -2292,8 +2396,8 @@ function setYouTubeChannelFeedback(message, type = "") {
 
 function serializeData() {
   const data = clone(state.data);
-  const effectiveRepo = getEffectiveGitHubRepo(data.site?.githubRepo);
-  data.site.githubRepo = effectiveRepo || normalizeGitHubRepo(data.site?.githubRepo) || "";
+  data.site.url = String(data.site?.url || "").trim();
+  data.site.githubRepo = getGitHubRepoFromSiteUrl(data.site?.url) || getEffectiveGitHubRepo(data.site?.githubRepo) || normalizeGitHubRepo(data.site?.githubRepo) || "";
   data.site.footer.links = getEffectiveFooterLinks(data.site?.footer?.links, data.site.githubRepo);
   return data;
 }
@@ -2308,39 +2412,35 @@ function refreshJsonOutput() {
 }
 
 function renderGitHubRepoField({ preserveInputValue = false, sourceId = "" } = {}) {
-  const inputs = ["site-github-repo", "quickstart-site-github-repo"]
+  const inputs = ["site-url", "quickstart-site-url"]
     .map((id) => document.getElementById(id))
     .filter(Boolean);
-  if (!inputs.length) return;
-
-  const rawRepo = String(state.data.site?.githubRepo || "").trim();
-  const normalizedRepo = normalizeGitHubRepo(rawRepo);
-  const inferredRepo = resolveGitHubRepoFromPagesLocation();
-  const effectiveRepo = normalizedRepo || inferredRepo;
-  const displayValue = rawRepo || effectiveRepo || "";
-  const placeholder = effectiveRepo || "owner/repo";
+  const rawUrl = String(state.data.site?.url || "").trim();
+  const inferredFromUrl = getGitHubRepoFromSiteUrl(rawUrl);
+  const inferredFromLocation = resolveGitHubRepoFromPagesLocation();
+  const effectiveRepo = inferredFromUrl || inferredFromLocation || normalizeGitHubRepo(state.data.site?.githubRepo);
 
   inputs.forEach((input) => {
     if (!(preserveInputValue && input.id === sourceId)) {
-      input.value = displayValue;
+      input.value = rawUrl;
     }
-    input.placeholder = placeholder;
+    input.placeholder = rawUrl || resolveGitHubPagesBaseUrl(window.location, effectiveRepo) || "https://owner.github.io/repo/";
   });
 
-  const notes = ["site-github-repo-note", "quickstart-site-github-repo-note"]
+  const notes = ["site-url-note", "quickstart-site-url-note"]
     .map((id) => document.getElementById(id))
     .filter(Boolean);
   if (!notes.length) return;
 
-  let noteText = "GitHub Pages에서 열면 현재 repo를 자동으로 감지하고 기본 브랜치도 함께 확인합니다.";
-  if (rawRepo && normalizedRepo) {
-    noteText = `직접 입력한 GitHub Repo를 사용합니다.${getGitHubDefaultBranchNote(effectiveRepo)}`;
-  } else if (rawRepo && !normalizedRepo) {
-    noteText = inferredRepo
-      ? `owner/repo 형식이 아니어서 현재 GitHub Pages 주소의 ${inferredRepo}를 대신 사용합니다.${getGitHubDefaultBranchNote(inferredRepo)}`
-      : "owner/repo 형식으로 입력해주세요.";
-  } else if (inferredRepo) {
-    noteText = `현재 GitHub Pages 주소에서 ${inferredRepo}를 자동으로 감지해 사용합니다.${getGitHubDefaultBranchNote(inferredRepo)}`;
+  let noteText = "GitHub Pages 또는 GitHub 저장소 URL을 입력하면 owner/repo를 자동으로 저장합니다.";
+  if (rawUrl && inferredFromUrl) {
+    noteText = `사이트 URL에서 ${inferredFromUrl}를 자동 추출합니다.${getGitHubDefaultBranchNote(inferredFromUrl)}`;
+  } else if (rawUrl && !inferredFromUrl) {
+    noteText = inferredFromLocation
+      ? `사이트 URL에서 repo를 찾지 못해 현재 GitHub Pages 주소의 ${inferredFromLocation}를 사용합니다.${getGitHubDefaultBranchNote(inferredFromLocation)}`
+      : "GitHub Pages URL 또는 https://github.com/owner/repo 형식의 주소를 입력해주세요.";
+  } else if (inferredFromLocation) {
+    noteText = `현재 GitHub Pages 주소에서 ${inferredFromLocation}를 자동 감지합니다.${getGitHubDefaultBranchNote(inferredFromLocation)}`;
   }
 
   notes.forEach((note) => {
@@ -2775,6 +2875,7 @@ function syncEmbedEditorFromHTML(html, { updateTextarea = false } = {}) {
     const output = $("#embed-html-output");
     if (output) output.value = source;
   }
+  renderEmbedStandaloneTabs();
 }
 
 function getEmbedMetaFromFieldPrefix(prefix) {
@@ -2965,27 +3066,112 @@ function getSocialPreviewSizeText(preset = getSocialPreviewPreset()) {
   return `${preset.width}×${preset.height}`;
 }
 
+function getSocialPreviewFileName(preset = getSocialPreviewPreset()) {
+  return preset?.fileName || "social-preview.png";
+}
+
+function getChannelImagePreset(fallbackId = "channel-banner") {
+  return socialPreviewPresets.find((preset) => preset.id === fallbackId && preset.id.startsWith("channel-"))
+    || socialPreviewPresets.find((preset) => preset.id === "channel-banner")
+    || getSocialPreviewPreset();
+}
+
+function getCropSelectionElementForCanvas(canvas = $("#embed-crop-canvas")) {
+  if (canvas?.id === "quickstart-channel-crop-canvas") return $("#quickstart-channel-crop-selection");
+  return $("#embed-crop-selection");
+}
+
+function getCropCanvasForSelectionElement(selectionElement) {
+  if (selectionElement?.id === "quickstart-channel-crop-selection") return $("#quickstart-channel-crop-canvas");
+  return $("#embed-crop-canvas") || $("#quickstart-channel-crop-canvas");
+}
+
+function getActiveCropEditorCanvas(fallbackCanvas = null) {
+  if (fallbackCanvas) return fallbackCanvas;
+  if (state.cropInteractionCanvasId) {
+    const interactionCanvas = document.getElementById(state.cropInteractionCanvasId);
+    if (interactionCanvas) return interactionCanvas;
+  }
+  return $("#embed-crop-canvas") || $("#quickstart-channel-crop-canvas");
+}
+
+function getCropEditorCanvases() {
+  return ["#embed-crop-canvas", "#quickstart-channel-crop-canvas"]
+    .map((selector) => $(selector))
+    .filter(Boolean);
+}
+
+function getCropPlaceholderForCanvas(canvas) {
+  if (canvas?.id === "quickstart-channel-crop-canvas") return $("#quickstart-channel-crop-placeholder");
+  return $("#embed-crop-placeholder");
+}
+
+function getCropSourceCanvasForPreview(previewCanvas) {
+  if (previewCanvas?.id === "quickstart-channel-crop-preview") {
+    return $("#quickstart-channel-crop-canvas") || $("#embed-crop-canvas");
+  }
+  return $("#embed-crop-canvas") || $("#quickstart-channel-crop-canvas");
+}
+
+function selectHasOption(select, value) {
+  return Boolean(select && Array.from(select.options || []).some((option) => option.value === value));
+}
+
+function getQuickstartChannelPresetFromSelect() {
+  const select = $("#quickstart-channel-image-ratio");
+  return getChannelImagePreset(select?.value || "channel-banner");
+}
+
+function applyQuickstartChannelPresetFromSelect() {
+  const preset = getQuickstartChannelPresetFromSelect();
+  changeSocialPreviewPreset(preset.id);
+  return preset;
+}
+
 function syncSocialPreviewPresetUI() {
   const preset = getSocialPreviewPreset();
+  const fileName = getSocialPreviewFileName(preset);
   const select = $("#embed-image-ratio");
-  if (select && select.value !== preset.id) select.value = preset.id;
+  if (select && selectHasOption(select, preset.id) && select.value !== preset.id) select.value = preset.id;
 
   const note = $("#embed-image-ratio-note");
   if (note) {
-    note.textContent = `현재 출력 크기: ${getSocialPreviewSizeText(preset)} PNG`;
+    note.textContent = `현재 출력: ${getSocialPreviewSizeText(preset)} PNG · ${fileName}`;
   }
 
   const outputNote = $("#embed-image-output-note");
   if (outputNote) {
-    outputNote.textContent = `선택 박스 안의 영역만 ${getSocialPreviewSizeText(preset)} PNG로 저장됩니다.`;
+    outputNote.textContent = `선택 박스 안의 영역만 ${getSocialPreviewSizeText(preset)} PNG로 잘라 ${fileName} 파일로 저장됩니다.`;
+  }
+
+  const channelSelect = $("#quickstart-channel-image-ratio");
+  if (channelSelect) {
+    if (preset.id.startsWith("channel-") && selectHasOption(channelSelect, preset.id)) {
+      channelSelect.value = preset.id;
+    } else if (!channelSelect.value) {
+      channelSelect.value = "channel-banner";
+    }
+  }
+  const channelPreset = getQuickstartChannelPresetFromSelect();
+  const channelFileName = getSocialPreviewFileName(channelPreset);
+  const channelNote = $("#quickstart-channel-image-ratio-note");
+  if (channelNote) {
+    channelNote.textContent = `현재 출력: ${getSocialPreviewSizeText(channelPreset)} PNG · ${channelFileName}`;
+  }
+  const channelOutputNote = $("#quickstart-channel-image-output-note");
+  if (channelOutputNote) {
+    channelOutputNote.textContent = `선택 박스 안의 영역만 ${getSocialPreviewSizeText(channelPreset)} PNG로 잘라 ${channelFileName} 파일로 저장됩니다.`;
   }
 }
 
 function updateCropPreviewCanvasSize() {
   const preset = getSocialPreviewPreset();
   $$(".crop-preview-canvas").forEach((previewCanvas) => {
-    if (previewCanvas.width !== preset.width) previewCanvas.width = preset.width;
-    if (previewCanvas.height !== preset.height) previewCanvas.height = preset.height;
+    const canvasPreset = previewCanvas.id === "quickstart-channel-crop-preview"
+      ? getQuickstartChannelPresetFromSelect()
+      : preset;
+    if (previewCanvas.width !== canvasPreset.width) previewCanvas.width = canvasPreset.width;
+    if (previewCanvas.height !== canvasPreset.height) previewCanvas.height = canvasPreset.height;
   });
 }
 
@@ -3001,7 +3187,7 @@ function changeSocialPreviewPreset(presetId) {
 }
 
 function setEmbedImageStatus(message, type = "info") {
-  ["#embed-image-status", "#quickstart-embed-image-status"].forEach((selector) => {
+  ["#embed-image-status", "#quickstart-embed-image-status", "#quickstart-channel-image-status"].forEach((selector) => {
     const status = $(selector);
     if (!status) return;
     status.textContent = message;
@@ -3075,7 +3261,7 @@ function createInitialCropSelection(bounds) {
 }
 
 function updateCropSelectionOverlay(canvas = $("#embed-crop-canvas")) {
-  const selectionElement = $("#embed-crop-selection");
+  const selectionElement = getCropSelectionElementForCanvas(canvas);
   if (!selectionElement || !canvas || !state.cropImage || !state.cropSelection) {
     if (selectionElement) selectionElement.hidden = true;
     return;
@@ -3115,8 +3301,9 @@ function drawCropEditorCanvas(canvas) {
 
 function getCropSourceRect(canvas = $("#embed-crop-canvas")) {
   if (!canvas || !state.cropImage || !state.cropSelection) return null;
-  const imageRect = state.cropImageRect || getCropImageRect(canvas);
+  const imageRect = getCropImageRect(canvas) || state.cropImageRect;
   if (!imageRect) return null;
+  state.cropImageRect = imageRect;
   const selection = fitCropSelectionToBounds(state.cropSelection, imageRect);
   state.cropSelection = selection;
   return {
@@ -3134,7 +3321,8 @@ function drawCropPreviewCanvas(canvas) {
   context.fillStyle = "#10131a";
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  const sourceRect = getCropSourceRect();
+  const sourceCanvas = getCropSourceCanvasForPreview(canvas);
+  const sourceRect = getCropSourceRect(sourceCanvas);
   if (!sourceRect) return;
   context.drawImage(
     state.cropImage,
@@ -3150,24 +3338,26 @@ function drawCropPreviewCanvas(canvas) {
 }
 
 function renderCropCanvases() {
-  const editorCanvas = $("#embed-crop-canvas");
+  const editorCanvases = getCropEditorCanvases();
   updateCropPreviewCanvasSize();
   syncSocialPreviewPresetUI();
-  drawCropEditorCanvas(editorCanvas);
+  editorCanvases.forEach((editorCanvas) => drawCropEditorCanvas(editorCanvas));
   $$(".crop-preview-canvas").forEach((previewCanvas) => drawCropPreviewCanvas(previewCanvas));
 
-  const placeholder = $("#embed-crop-placeholder");
-  if (placeholder) placeholder.hidden = Boolean(state.cropImage);
+  editorCanvases.forEach((editorCanvas) => {
+    const placeholder = getCropPlaceholderForCanvas(editorCanvas);
+    if (placeholder) placeholder.hidden = Boolean(state.cropImage);
+  });
 }
 
-function resetCropSelection() {
-  state.cropImageRect = getCropImageRect();
+function resetCropSelection(canvas = getActiveCropEditorCanvas()) {
+  state.cropImageRect = getCropImageRect(canvas);
   state.cropSelection = createInitialCropSelection(state.cropImageRect);
   renderCropCanvases();
 }
 
-function centerCropSelection() {
-  const bounds = state.cropImageRect || getCropImageRect();
+function centerCropSelection(canvas = getActiveCropEditorCanvas()) {
+  const bounds = state.cropImageRect || getCropImageRect(canvas);
   if (!bounds || !state.cropSelection) return;
   state.cropSelection = fitCropSelectionToBounds({
     ...state.cropSelection,
@@ -3229,7 +3419,9 @@ function resizeCropSelectionFromHandle(handle, point) {
 function updateCropSelectionFromPointer(event) {
   if (!state.cropInteraction || !state.cropImage || !state.cropInteractionStartSelection) return;
 
-  const point = getCropCanvasPoint(event);
+  const canvas = getActiveCropEditorCanvas();
+  state.cropImageRect = getCropImageRect(canvas);
+  const point = getCropCanvasPoint(event, canvas);
   if (state.cropInteraction === "move") {
     const start = state.cropInteractionStartSelection;
     const dx = point.x - state.cropInteractionStartX;
@@ -3248,14 +3440,19 @@ function updateCropSelectionFromPointer(event) {
 
 function startCropSelectionInteraction(event) {
   if (!state.cropImage || !state.cropSelection) return;
-  const selectionElement = $("#embed-crop-selection");
-  if (!selectionElement) return;
+  const selectionElement = event.currentTarget?.classList?.contains("crop-selection-box")
+    ? event.currentTarget
+    : $("#embed-crop-selection");
+  const canvas = getCropCanvasForSelectionElement(selectionElement);
+  if (!selectionElement || !canvas) return;
 
   event.preventDefault();
   const handle = event.target?.dataset?.handle || "move";
-  const point = getCropCanvasPoint(event);
+  const point = getCropCanvasPoint(event, canvas);
   state.cropInteraction = handle;
   state.cropInteractionPointerId = event.pointerId;
+  state.cropInteractionCanvasId = canvas.id;
+  state.cropImageRect = getCropImageRect(canvas);
   state.cropInteractionStartX = point.x;
   state.cropInteractionStartY = point.y;
   state.cropInteractionStartSelection = { ...state.cropSelection };
@@ -3264,7 +3461,9 @@ function startCropSelectionInteraction(event) {
 }
 
 function finishCropSelectionInteraction(event) {
-  const selectionElement = $("#embed-crop-selection");
+  const selectionElement = event?.currentTarget?.classList?.contains("crop-selection-box")
+    ? event.currentTarget
+    : getCropSelectionElementForCanvas(getActiveCropEditorCanvas());
   if (!state.cropInteraction) return;
   if (
     event?.pointerId != null &&
@@ -3276,6 +3475,7 @@ function finishCropSelectionInteraction(event) {
   state.cropInteraction = null;
   state.cropInteractionPointerId = null;
   state.cropInteractionStartSelection = null;
+  state.cropInteractionCanvasId = "";
 }
 
 function loadCropImage(src, { revokePrevious = false } = {}) {
@@ -3287,6 +3487,7 @@ function loadCropImage(src, { revokePrevious = false } = {}) {
     state.cropImageRect = null;
     state.cropSelection = null;
     state.cropInteraction = null;
+    state.cropInteractionCanvasId = "";
     renderCropCanvases();
     setEmbedImageStatus("이미지를 불러왔습니다. 선택 박스를 움직이거나 크기를 조절해 구도를 맞춰주세요.", "success");
   };
@@ -3309,14 +3510,17 @@ function loadCropImageFromUrlInput(inputId) {
     setEmbedImageStatus("이미지 URL을 입력해주세요.", "error");
     return;
   }
-  const peerInputId = inputId === "#quickstart-embed-image-url" ? "#embed-image-url" : "#quickstart-embed-image-url";
-  const peerInput = $(peerInputId);
-  if (peerInput && peerInput.value !== url) peerInput.value = url;
+  ["#embed-image-url", "#quickstart-embed-image-url", "#quickstart-channel-image-url"].forEach((peerInputId) => {
+    if (peerInputId === inputId) return;
+    const peerInput = $(peerInputId);
+    if (peerInput && peerInput.value !== url) peerInput.value = url;
+  });
   loadCropImage(url);
 }
 
 function downloadSocialPreviewPNG() {
-  const canvas = $("#embed-crop-canvas");
+  let canvas = arguments[0];
+  if (canvas?.target || !canvas) canvas = $("#embed-crop-canvas");
   if (!canvas || !state.cropImage) {
     setEmbedImageStatus("먼저 이미지를 불러와주세요.", "error");
     return;
@@ -3353,13 +3557,14 @@ function downloadSocialPreviewPNG() {
       }
       const downloadUrl = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
+      const fileName = getSocialPreviewFileName(preset);
       anchor.href = downloadUrl;
-      anchor.download = "social-preview.png";
+      anchor.download = fileName;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
-      setEmbedImageStatus(`${getSocialPreviewSizeText(preset)} social-preview.png 파일을 다운로드했습니다.`, "success");
+      setEmbedImageStatus(`${getSocialPreviewSizeText(preset)} ${fileName} 파일을 다운로드했습니다.`, "success");
     }, "image/png");
   } catch (error) {
     setEmbedImageStatus("브라우저 보안 정책 때문에 PNG 다운로드가 막혔습니다. 파일 업로드로 다시 시도하세요.", "error");
@@ -3384,7 +3589,17 @@ function mountLivePreview() {
 }
 
 function getEffectivePreviewTab(tab = state.activeTab) {
-  return tab;
+  const homePreviewMap = {
+    "home-layout": "home",
+    "home-content": "hero",
+    "home-advanced": "hero-panels",
+    "home-hero": "hero-editor",
+    "home-info-panels": "hero-panels",
+    "home-project-cards": "project-cards",
+    "home-youtube-card": "project-youtube-card",
+    "home-stats": "stats-process",
+  };
+  return homePreviewMap[tab] || tab;
 }
 
 function previewConfigForTab(tab = state.activeTab) {
@@ -3401,13 +3616,13 @@ function previewConfigForTab(tab = state.activeTab) {
 
   const effectiveTab = getEffectivePreviewTab(tab);
   const config = previewTargets[effectiveTab] || previewTargets.brand;
-  if (effectiveTab !== "projects") return config;
+  if (!["projects", "project-cards", "project-youtube-card"].includes(effectiveTab)) return config;
 
   if (state.data.projects.enabled === false) {
     return {
       ...config,
-      pathText: "index.html#works",
-      openHref: "../index.html#works",
+      pathText: effectiveTab === "projects" ? "index.html#works" : "index.html#projects",
+      openHref: effectiveTab === "projects" ? "../index.html#works" : "../index.html#projects",
     };
   }
 
@@ -3426,10 +3641,13 @@ function renderPreviewAccentText(text, accent, accentClass) {
   let index = 0;
 
   while (index < raw.length) {
-    const match = markers.find((marker) => raw.startsWith(marker, index));
-    if (match) {
-      output += `<span class="${accentClass}">${escapeHTML(match)}</span>`;
-      index += match.length;
+    const matchEnd = markers.reduce((bestEnd, marker) => {
+      const end = getAccentMatchEnd(raw, index, marker);
+      return end > bestEnd ? end : bestEnd;
+    }, -1);
+    if (matchEnd > index) {
+      output += `<span class="${accentClass}">${escapeWithBreaks(raw.slice(index, matchEnd))}</span>`;
+      index = matchEnd;
       continue;
     }
 
@@ -3439,6 +3657,42 @@ function renderPreviewAccentText(text, accent, accentClass) {
   }
 
   return output;
+}
+
+function hasAccentMatch(text, accent) {
+  const raw = String(text || "");
+  const markers = normalizeAccentKeywords(accent);
+  if (!raw || !markers.length) return false;
+
+  for (let index = 0; index < raw.length; index += 1) {
+    if (markers.some((marker) => getAccentMatchEnd(raw, index, marker) > index)) return true;
+  }
+  return false;
+}
+
+function renderHeroAccentPreviews() {
+  const previewIds = ["hero-title-accent-preview", "quickstart-hero-title-accent-preview"];
+  const title = textOrFallback(state.data.hero?.title, DEFAULT_DATA.hero.title);
+  const accent = state.data.hero?.titleAccent || "";
+  const markers = normalizeAccentKeywords(accent);
+  const matched = hasAccentMatch(title, accent);
+  const titleMarkup = renderPreviewAccentText(title, accent, "accent-preview-mark");
+
+  previewIds.forEach((id) => {
+    const container = document.getElementById(id);
+    if (!container) return;
+    container.innerHTML = `
+      <span class="accent-preview-label">강조 미리보기</span>
+      <div class="accent-preview-title">${titleMarkup || "대표 문구 제목을 입력하세요."}</div>
+      <p class="accent-preview-note ${markers.length && !matched ? "is-warning" : ""}">
+        ${markers.length
+          ? matched
+            ? "분홍색으로 표시된 부분이 공개 페이지 제목에서 강조됩니다."
+            : "현재 대표 문구 제목에 포함된 단어가 없어 강조되지 않습니다."
+          : "강조할 단어를 입력하면 이곳에서 바로 확인할 수 있습니다."}
+      </p>
+    `;
+  });
 }
 
 function renderPreviewNavLinks() {
@@ -3571,8 +3825,7 @@ function renderPreviewChannelHero(activeTab = "home") {
       <div class="overflow-hidden rounded-xl border border-[#e5e5e5] bg-[#111]">
         <div class="flex aspect-[6/1] min-h-[118px] items-center justify-between gap-6 bg-[linear-gradient(110deg,#171717,#30240f_48%,#0f0f0f)] px-7 text-white">
           <div>
-            <div class="text-xs font-black uppercase tracking-[0.34em] text-[#facc15]">${escapeHTML(textOrFallback(hero.eyebrow, DEFAULT_DATA.hero.eyebrow))}</div>
-            <div class="mt-3 text-3xl font-black leading-none md:text-5xl">${renderPreviewAccentText(textOrFallback(hero.title, DEFAULT_DATA.hero.title), hero.titleAccent, "text-[#facc15]")}</div>
+            <div class="text-3xl font-black leading-none md:text-5xl">${renderPreviewAccentText(textOrFallback(hero.title, DEFAULT_DATA.hero.title), hero.titleAccent, "text-[#facc15]")}</div>
           </div>
           <span class="hidden h-20 w-28 items-center justify-center rounded-2xl border border-white/15 bg-[#facc15] text-[#111] md:flex">
             <span class="material-symbols-outlined text-5xl">play_arrow</span>
@@ -3589,7 +3842,6 @@ function renderPreviewChannelHero(activeTab = "home") {
             ${renderPreviewChannelMetaParts().map((part) => `<span>${escapeHTML(part)}</span>`).join("")}
           </div>
           <p class="mt-4 max-w-4xl text-base font-semibold leading-relaxed text-[#3f3f3f]">${escapeWithBreaks(description)}</p>
-          ${renderPreviewHeroStatus(hero)}
           <div class="mt-5 flex flex-wrap gap-3">
             ${renderPreviewHeroActions(hero.actions, "light")}
           </div>
@@ -3711,27 +3963,6 @@ function renderPreviewLightPlanCards() {
           </article>
         `;
       }).join("")}
-    </div>
-  `;
-}
-
-function renderPreviewHeroStatus(hero = state.data.hero, tone = "light") {
-  const statusLabel = String(hero?.statusLabel || "").trim();
-  const statusText = String(hero?.statusText || "").trim();
-  if (!statusLabel && !statusText) {
-    return "";
-  }
-
-  const isDark = tone === "dark";
-  const wrapperClass = isDark
-    ? "mt-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-white/80"
-    : "mt-5 inline-flex items-center gap-2 rounded-full border border-[#e5e5e5] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#606060]";
-  const labelClass = isDark ? "text-[#facc15]" : "text-[#ff0033]";
-
-  return `
-    <div class="${wrapperClass}">
-      ${statusLabel ? `<span class="${labelClass}">${escapeHTML(statusLabel)}</span>` : ""}
-      ${statusText ? `<span>${escapeHTML(statusText)}</span>` : ""}
     </div>
   `;
 }
@@ -4274,10 +4505,10 @@ function renderPreviewProjectYouTubeChannelCard(options = {}) {
       <div class="project-youtube-avatar">
         ${avatarMarkup}
       </div>
-      <div class="project-youtube-copy bg-white text-[#606060]">
-        <span class="project-youtube-label text-[#606060]">YouTube Channel</span>
+      <div class="project-youtube-copy">
+        <span class="project-youtube-label">YouTube Channel</span>
         <div class="project-youtube-title-row">
-          <strong class="project-youtube-name text-[#0f0f0f]">${escapeHTML(channel.name || channel.handle)}</strong>
+          <strong class="project-youtube-name">${escapeHTML(channel.name || channel.handle)}</strong>
           ${channel.handle ? `<span class="project-youtube-handle">${escapeHTML(channel.handle)}</span>` : ""}
         </div>
         ${stats.length ? `<div class="project-youtube-stats">${stats.map((item) => `<span class="project-youtube-stat">${escapeHTML(item)}</span>`).join("")}</div>` : ""}
@@ -4302,10 +4533,28 @@ function renderInlinePreviewShell(title, content, emptyText) {
   `;
 }
 
+function renderInlineProjectPreviewShell(title, content, emptyText) {
+  return `
+    <div class="inline-preview-label">${escapeHTML(title)}</div>
+    <div class="inline-preview-surface is-project-preview">
+      ${content || `<div class="inline-preview-empty">${escapeHTML(emptyText)}</div>`}
+    </div>
+  `;
+}
+
+function renderInlineYouTubePreviewShell(title, content, emptyText) {
+  return `
+    <div class="inline-preview-label">${escapeHTML(title)}</div>
+    <div class="inline-preview-surface is-youtube-preview">
+      ${content || `<div class="inline-preview-empty">${escapeHTML(emptyText)}</div>`}
+    </div>
+  `;
+}
+
 function renderProjectInlinePreviews() {
   const channelPreview = $("#projects-youtube-channel-preview");
   if (channelPreview) {
-    channelPreview.innerHTML = renderInlinePreviewShell(
+    channelPreview.innerHTML = renderInlineYouTubePreviewShell(
       "유튜브 채널 카드 미리보기",
       renderPreviewProjectYouTubeChannelCard({ ignoreEnabled: true }),
       "채널 URL과 채널명을 입력하면 이곳에 카드가 표시됩니다.",
@@ -4314,9 +4563,12 @@ function renderProjectInlinePreviews() {
 
   const cardsPreview = $("#projects-card-only-preview");
   if (cardsPreview) {
-    cardsPreview.innerHTML = renderInlinePreviewShell(
+    const cardPreviewContent = state.data.projects.enabled === false
+      ? previewHiddenBlock("프로젝트 카드 섹션이 꺼져 있습니다.")
+      : `<div class="preview-project-card-grid grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-12">${renderPreviewProjectCards()}</div>`;
+    cardsPreview.innerHTML = renderInlineProjectPreviewShell(
       "프로젝트 카드 미리보기",
-      `<div class="preview-project-card-grid grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-12">${renderPreviewProjectCards()}</div>`,
+      cardPreviewContent,
       "프로젝트 카드를 추가하면 이곳에 표시됩니다.",
     );
   }
@@ -4380,11 +4632,6 @@ function buildBrandPreview() {
           </div>
         `).join("")}
       </div>
-      <div class="rounded-xl border border-[#e5e5e5] bg-white p-5">
-        <div class="mb-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#606060]">site copy</div>
-        <div class="text-2xl font-black text-[#0f0f0f]">${escapeHTML(textOrFallback(state.data.site.title, "영상 포트폴리오 템플릿"))}</div>
-        <p class="mt-2 text-sm font-semibold leading-relaxed text-[#606060]">${escapeHTML(textOrFallback(state.data.site.description, "영상 편집자와 크리에이터를 위한 정적 포트폴리오 템플릿입니다."))}</p>
-      </div>
     </section>
   `;
   return renderPreviewLightShell("home", content);
@@ -4395,14 +4642,13 @@ function buildHeroPreview() {
   const content = `
     <section class="mt-8 grid gap-5 border-t border-[#e5e5e5] pt-6">
       <div class="rounded-xl border border-[#e5e5e5] bg-[#fafafa] p-5">
-        <div class="mb-3 text-[11px] font-black uppercase tracking-[0.18em] text-[#ff0033]">${escapeHTML(textOrFallback(hero.eyebrow, DEFAULT_DATA.hero.eyebrow))}</div>
         <div class="text-3xl font-black leading-tight text-[#0f0f0f] md:text-4xl">${renderPreviewAccentText(textOrFallback(hero.title, DEFAULT_DATA.hero.title), hero.titleAccent, "text-[#ff0033]")}</div>
         <p class="mt-4 max-w-3xl text-sm font-semibold leading-relaxed text-[#606060]">${escapeWithBreaks(textOrFallback(hero.description, DEFAULT_DATA.hero.description))}</p>
-        ${renderPreviewHeroStatus(hero)}
         <div class="mt-5 flex flex-wrap gap-3">
           ${renderPreviewHeroActions(hero.actions, "light")}
         </div>
       </div>
+      ${renderHomeFeaturedPreviewSection()}
       <div class="rounded-xl border border-[#e5e5e5] bg-white p-5">
         <div class="mb-4 text-lg font-black text-[#0f0f0f]">홈 하단 고급 패널</div>
         ${renderPreviewHeroInfoPanels() || '<div class="rounded-xl border border-dashed border-[#d9d9d9] bg-[#fafafa] px-6 py-8 text-center text-sm font-bold text-[#606060]">경력, 툴, BGM 항목을 추가하면 이곳에 표시됩니다.</div>'}
@@ -4428,7 +4674,7 @@ function renderHomePreviewCard(sectionKey, title, description, body) {
 }
 
 function renderHomeFeaturedPreviewSection() {
-  const featuredVideo = getSortedWorksVideos(state.data.works.videos)[0];
+  const featuredVideo = getHomeFeaturedVideo(state.data.home, state.data.works);
   const videoTitle = featuredVideo?.title || "대표 영상";
   const videoMeta = [featuredVideo?.category, featuredVideo?.date ? formatDisplayDate(featuredVideo.date) : ""].filter(Boolean).join(" · ");
   return renderHomePreviewCard(
@@ -4444,9 +4690,8 @@ function renderHomeFeaturedPreviewSection() {
           <span class="absolute bottom-3 left-3 rounded-full bg-[#0f0f0f] px-3 py-1 text-xs font-black text-white">대표 영상</span>
         </div>
         <div>
-          <div class="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#ff0033]">${escapeHTML(textOrFallback(state.data.hero.eyebrow, "VIDEO PORTFOLIO"))}</div>
           <div class="text-3xl font-black leading-tight text-[#0f0f0f]">${renderPreviewAccentText(textOrFallback(state.data.hero.title, videoTitle), state.data.hero.titleAccent, "text-[#ff0033]")}</div>
-          <p class="mt-3 text-sm font-semibold leading-relaxed text-[#606060]">${escapeWithBreaks(textOrFallback(state.data.hero.description, videoMeta || "홈 탭 대표 영상 설명"))}</p>
+          <p class="mt-3 text-sm font-semibold leading-relaxed text-[#606060]">${escapeWithBreaks(textOrFallback(state.data.home.featuredDescription, videoMeta || DEFAULT_DATA.home.featuredDescription))}</p>
         </div>
       </div>
     `,
@@ -4841,7 +5086,7 @@ function buildQuickstartEmbedUploadPreview() {
     <div class="quickstart-preview-card">
       <span class="preview-kicker">GITHUB ASSETS</span>
       <h3>assets 폴더 업로드</h3>
-      <p><strong>${escapeHTML(repo)}</strong> 레포의 <code>assets/</code> 폴더에 <code>social-preview.png</code>, <code>프로필이미지.png</code>, <code>배너이미지.png</code> 파일을 업로드할 수 있습니다.</p>
+      <p><strong>${escapeHTML(repo)}</strong> 레포의 <code>assets/</code> 폴더에 <code>social-preview.png</code>, <code>avatar.png</code>, <code>banner.png</code> 파일을 업로드할 수 있습니다.</p>
       <div class="quickstart-preview-state ${state.quickstartEmbedUploadDone ? "is-done" : ""}">
         ${state.quickstartEmbedUploadDone ? "업로드 완료로 표시됨" : "업로드 완료 체크 전"}
       </div>
@@ -4904,11 +5149,15 @@ function getPublicPreviewHash(target = getCurrentLivePreviewTarget()) {
     case "brand":
     case "home":
     case "hero":
+    case "hero-editor":
     case "hero-panels":
     case "json":
       return "#home";
     case "projects":
       return state.data.projects?.enabled === false ? "#works" : "#projects";
+    case "project-cards":
+    case "project-youtube-card":
+      return "#projects";
     case "works":
       return "#works";
     case "stats-process":
@@ -4958,12 +5207,58 @@ function syncPublicPreviewFrames(surface = $("#live-preview-surface")) {
   });
 }
 
+function getPublicPreviewFrameHeightBounds(target = "") {
+  if (target === "hero-editor") return { min: 420, max: 660 };
+  if (target === "hero-panels") return { min: 260, max: 460 };
+  if (target === "projects") return { min: 320, max: 600 };
+  if (target === "project-cards") return { min: 320, max: 560 };
+  if (target === "project-youtube-card") return { min: 280, max: 420 };
+  return { min: 320, max: 620 };
+}
+
+function resizePublicPreviewFrame(frame) {
+  if (!frame) return;
+  try {
+    const doc = frame.contentDocument;
+    if (!doc) return;
+    const target = frame.closest(".public-preview-frame-shell")?.dataset.previewTarget || "";
+    const focusElements = Array.from(doc.querySelectorAll(".is-admin-preview-focus"))
+      .filter((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      });
+    const bounds = getPublicPreviewFrameHeightBounds(target);
+    const measuredBottom = focusElements.reduce((bottom, element) => {
+      const rect = element.getBoundingClientRect();
+      return Math.max(bottom, rect.bottom);
+    }, 0);
+    const fallbackHeight = Math.max(
+      doc.body?.scrollHeight || 0,
+      doc.documentElement?.scrollHeight || 0,
+      bounds.min,
+    );
+    const nextHeight = Math.ceil((measuredBottom || fallbackHeight) + 32);
+    frame.style.height = `${Math.min(Math.max(nextHeight, bounds.min), bounds.max)}px`;
+  } catch (error) {
+    // Cross-origin protection should not trigger for local previews, but keep the preview usable if it does.
+  }
+}
+
+function resizePublicPreviewFrames(surface = $("#live-preview-surface")) {
+  if (!surface) return;
+  surface.querySelectorAll(".public-preview-frame").forEach((frame) => resizePublicPreviewFrame(frame));
+}
+
 function bindPublicPreviewFrames(surface = $("#live-preview-surface")) {
   if (!surface) return;
   surface.querySelectorAll(".public-preview-frame").forEach((frame) => {
     if (frame.dataset.previewBound === "true") return;
     frame.dataset.previewBound = "true";
-    frame.addEventListener("load", () => syncPublicPreviewFrames(surface));
+    frame.addEventListener("load", () => {
+      syncPublicPreviewFrames(surface);
+      window.setTimeout(() => resizePublicPreviewFrame(frame), 80);
+      window.setTimeout(() => resizePublicPreviewFrame(frame), 240);
+    });
   });
 }
 
@@ -5025,6 +5320,7 @@ function buildLivePreviewMarkup() {
       return buildHomePreview();
     case "hero":
     case "hero-panels":
+    case "hero-editor":
       return buildHeroPreview();
     case "projects":
       return buildProjectsPreview();
@@ -5070,9 +5366,11 @@ function renderLivePreview() {
       surface.dataset.previewMode = "public-page";
       surface.dataset.previewTarget = target;
       surface.dataset.previewHref = href;
-      bindPublicPreviewFrames(surface);
+    bindPublicPreviewFrames(surface);
     }
     syncPublicPreviewFrames(surface);
+    window.setTimeout(() => resizePublicPreviewFrames(surface), 80);
+    window.setTimeout(() => resizePublicPreviewFrames(surface), 240);
     return;
   }
 
@@ -6418,6 +6716,32 @@ function renderQuickstartStepDots() {
   `).join("");
 }
 
+function getFeaturedVideoOptionLabel(video, index) {
+  const type = video.type === "short" ? "쇼츠" : "동영상";
+  const meta = [type, video.category, formatDisplayDate(video.date)].filter(Boolean).join(" · ");
+  return `${index + 1}. ${video.title || video.id}${meta ? ` (${meta})` : ""}`;
+}
+
+function renderQuickstartFeaturedVideoSelect() {
+  const selects = ["quickstart-featured-video-id", "home-featured-video-id"]
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+  if (!selects.length) return;
+  const videos = getSortedWorksVideos(state.data.works?.videos);
+  const selectedId = String(state.data.home?.featuredVideoId || "").trim();
+  const hasSelectedVideo = videos.some((video) => video.id === selectedId);
+  const options = [
+    '<option value="">자동 선택 · 첫 번째 등록 영상</option>',
+    ...videos.map((video, index) => `
+      <option value="${escapeHTML(video.id)}">${escapeHTML(getFeaturedVideoOptionLabel(video, index))}</option>
+    `),
+  ].join("");
+  selects.forEach((select) => {
+    select.innerHTML = options;
+    select.value = hasSelectedVideo ? selectedId : "";
+  });
+}
+
 function renderQuickstartWizard() {
   const step = getQuickstartStep();
   $$("[data-quickstart-step]").forEach((panel) => {
@@ -6445,6 +6769,33 @@ function renderQuickstartWizard() {
   renderQuickstartStepDots();
 }
 
+function renderEmbedStandaloneTabs() {
+  const uploadDone = $("#embed-upload-done");
+  const uploadState = $("#embed-upload-state");
+  const indexDone = $("#embed-index-done");
+  const indexState = $("#embed-index-state");
+  const codePreview = $("#embed-index-code-preview");
+  const code = $("#embed-html-output")?.value || state.embedHtml || buildEmbedHTML(state.embedMeta || getDefaultEmbedMeta());
+
+  if (uploadDone) uploadDone.checked = Boolean(state.quickstartEmbedUploadDone);
+  if (uploadState) {
+    uploadState.textContent = state.quickstartEmbedUploadDone
+      ? "assets 업로드 완료로 표시되었습니다."
+      : "아직 업로드 완료로 표시되지 않았습니다.";
+  }
+
+  if (indexDone) indexDone.checked = Boolean(state.quickstartEmbedIndexDone);
+  if (indexState) {
+    indexState.textContent = state.quickstartEmbedIndexDone
+      ? "index.html 수정 완료로 표시되었습니다."
+      : "아직 index.html 수정 완료로 표시되지 않았습니다.";
+  }
+
+  if (codePreview && codePreview !== document.activeElement) {
+    codePreview.value = code;
+  }
+}
+
 function renderQuickstartFinishSummary() {
   const container = $("#quickstart-finish-summary");
   if (!container) return;
@@ -6461,7 +6812,8 @@ async function openQuickstartGitHubIndexEditor() {
 }
 
 function getTabLabel(tab = state.activeTab) {
-  const button = document.querySelector(`.tab-button[data-tab="${tab}"]`);
+  const buttons = Array.from(document.querySelectorAll(`.tab-button[data-tab="${tab}"]`));
+  const button = buttons.find((candidate) => candidate.classList.contains("sub-tab")) || buttons[0];
   return String(button?.textContent || "편집 메뉴").trim();
 }
 
@@ -6721,8 +7073,12 @@ function renderQuickstartPricingPlanList() {
 function jumpToAdminSection(button) {
   const tab = String(button?.dataset?.jumpTab || "").trim();
   const targetId = String(button?.dataset?.jumpTarget || "").trim();
+  const cropPresetId = String(button?.dataset?.cropPreset || "").trim();
   if (!tab) return;
   switchTab(tab);
+  if (tab === "embed-image" && cropPresetId) {
+    changeSocialPreviewPreset(cropPresetId);
+  }
   window.requestAnimationFrame(() => {
     const target = targetId ? document.getElementById(targetId) : null;
     const fallback = document.querySelector(`.tab-panel[data-panel="${tab}"]`);
@@ -6747,6 +7103,7 @@ function renderAll() {
   renderHeroActionList();
   renderHeroInfoEditors();
   renderQuickstartHeroContentEditors();
+  renderHeroAccentPreviews();
   renderProjectCardList();
   renderProjectInlinePreviews();
   renderHomeSettings();
@@ -6754,6 +7111,7 @@ function renderAll() {
   renderWorksCategoryOrderList();
   renderWorksVideoForm();
   renderWorksVideoList();
+  renderQuickstartFeaturedVideoSelect();
   renderStatsItemList();
   renderProcessStepList();
   renderPricingPlanList();
@@ -6762,6 +7120,7 @@ function renderAll() {
   renderQuickstartPricingPlanList();
   renderQuickstartFinishSummary();
   renderQuickstartWizard();
+  renderEmbedStandaloneTabs();
   renderCustomWorkList();
   renderContactDetailList();
   renderFooterLinkList();
@@ -6769,7 +7128,7 @@ function renderAll() {
   syncQuickstartMobileMenu();
   refreshJsonOutput();
   renderLivePreview();
-  if (state.activeTab === "embed-card") {
+  if (["embed-card", "embed-index"].includes(state.activeTab)) {
     void loadEmbedHTMLFromIndex();
   }
 }
@@ -6790,8 +7149,9 @@ function switchTab(tab) {
   renderLivePreview();
   setMobileTabMenuOpen(false);
   if (tab === "json") refreshJsonOutput();
-  if (tab === "embed-card") void loadEmbedHTMLFromIndex();
+  if (["embed-card", "embed-index"].includes(tab)) void loadEmbedHTMLFromIndex();
   if (tab === "embed-image") renderCropCanvases();
+  if (embedCardTabs.has(tab)) renderEmbedStandaloneTabs();
   updateDetailSectionBulkToggle($(`.tab-panel[data-panel="${tab}"]`));
 }
 
@@ -6813,10 +7173,13 @@ function setFloatingActionsOpen(isOpen) {
 function applyMinorChange(message = "변경 사항이 반영되었습니다.") {
   syncWorksCategoryOrderState();
   renderSummary();
+  renderCheckboxInputs();
   renderHomeSettings();
   renderWorksDisplaySettings();
   renderWorksCategoryOrderList();
+  renderQuickstartFeaturedVideoSelect();
   renderProjectInlinePreviews();
+  renderHeroAccentPreviews();
   renderQuickstartResourceSummary();
   renderQuickstartFinishSummary();
   renderQuickstartWizard();
@@ -7150,15 +7513,17 @@ function validateJson() {
   }
 }
 
-function handleGitHubRepoInput(event) {
-  state.data.site.githubRepo = event.target.value;
+function handleSiteUrlInput(event) {
+  state.data.site.url = event.target.value;
+  syncDirectInputPeers(event.target.id, ["site", "url"]);
   renderGitHubRepoField({ preserveInputValue: true, sourceId: event.target.id });
-  scheduleGitHubDefaultBranchLookup(event.target.value, window.location);
+  const effectiveRepo = getEffectiveGitHubRepo(state.data.site.githubRepo, window.location);
+  scheduleGitHubDefaultBranchLookup(effectiveRepo, window.location);
   renderSummary();
   renderFooterLinkList();
   refreshJsonOutput();
   renderLivePreview();
-  setStatus("GitHub Repo 설정이 반영되었습니다.", "success");
+  setStatus("사이트 URL과 GitHub Repo 자동 설정이 반영되었습니다.", "success");
 }
 
 function bindDirectInputs() {
@@ -7166,8 +7531,8 @@ function bindDirectInputs() {
     const input = document.getElementById(id);
     if (!input) return;
     const handleInput = (event) => {
-      if (id === "quickstart-site-github-repo") {
-        handleGitHubRepoInput(event);
+      if (pathsEqual(path, ["site", "url"])) {
+        handleSiteUrlInput(event);
         return;
       }
 
@@ -7182,12 +7547,22 @@ function bindDirectInputs() {
   });
 }
 
+function syncSectionEnabledCheckboxToHomeVisibility(path, isVisible) {
+  if (pathsEqual(path, ["projects", "enabled"])) {
+    setHomeSectionVisibility("projects", isVisible);
+  }
+  if (pathsEqual(path, ["stats", "enabled"])) {
+    setHomeSectionVisibility("stats", isVisible);
+  }
+}
+
 function bindCheckboxInputs() {
   checkboxBindingEntries().forEach(([id, path]) => {
     const input = document.getElementById(id);
     if (!input) return;
     input.addEventListener("change", (event) => {
       setByPath(path, event.target.checked);
+      syncSectionEnabledCheckboxToHomeVisibility(path, event.target.checked);
       syncCheckboxInputPeers(id, path);
       applyMinorChange("섹션 표시 설정이 반영되었습니다.");
     });
@@ -7218,20 +7593,43 @@ function bindEvents() {
   });
 
   $("#quickstart-download-social-preview")?.addEventListener("click", downloadSocialPreviewPNG);
+  $("#quickstart-download-channel-image")?.addEventListener("click", () => {
+    applyQuickstartChannelPresetFromSelect();
+    downloadSocialPreviewPNG($("#quickstart-channel-crop-canvas"));
+  });
   $("#quickstart-open-assets-upload")?.addEventListener("click", openAssetsUploadPage);
   $("#quickstart-open-channel-assets-upload")?.addEventListener("click", openAssetsUploadPage);
   $("#quickstart-open-embed-card")?.addEventListener("click", () => switchTab("embed-card"));
   $("#quickstart-copy-embed-html")?.addEventListener("click", copyEmbedHTML);
   $("#quickstart-copy-embed-html-index")?.addEventListener("click", copyEmbedHTML);
   $("#quickstart-open-index-editor")?.addEventListener("click", openQuickstartGitHubIndexEditor);
+  $("#embed-open-assets-upload")?.addEventListener("click", openAssetsUploadPage);
+  $("#embed-copy-html-index")?.addEventListener("click", copyEmbedHTML);
+  $("#embed-open-index-editor")?.addEventListener("click", openQuickstartGitHubIndexEditor);
   $("#quickstart-embed-upload-done")?.addEventListener("change", (event) => {
     state.quickstartEmbedUploadDone = event.target.checked;
     renderQuickstartFinishSummary();
+    renderEmbedStandaloneTabs();
     renderLivePreview();
   });
   $("#quickstart-embed-index-done")?.addEventListener("change", (event) => {
     state.quickstartEmbedIndexDone = event.target.checked;
     renderQuickstartFinishSummary();
+    renderEmbedStandaloneTabs();
+    renderLivePreview();
+  });
+  $("#embed-upload-done")?.addEventListener("change", (event) => {
+    state.quickstartEmbedUploadDone = event.target.checked;
+    renderQuickstartFinishSummary();
+    renderQuickstartWizard();
+    renderEmbedStandaloneTabs();
+    renderLivePreview();
+  });
+  $("#embed-index-done")?.addEventListener("change", (event) => {
+    state.quickstartEmbedIndexDone = event.target.checked;
+    renderQuickstartFinishSummary();
+    renderQuickstartWizard();
+    renderEmbedStandaloneTabs();
     renderLivePreview();
   });
 
@@ -7383,36 +7781,46 @@ function bindEvents() {
     }
   });
 
-  ["embed-image-file", "quickstart-embed-image-file"].forEach((id) => {
+  ["embed-image-file", "quickstart-embed-image-file", "quickstart-channel-image-file"].forEach((id) => {
     document.getElementById(id)?.addEventListener("change", (event) => {
+      if (id === "quickstart-channel-image-file") applyQuickstartChannelPresetFromSelect();
       loadCropImageFile(event.target.files?.[0]);
     });
   });
 
   $("#load-embed-image-url")?.addEventListener("click", () => loadCropImageFromUrlInput("#embed-image-url"));
   $("#quickstart-load-embed-image-url")?.addEventListener("click", () => loadCropImageFromUrlInput("#quickstart-embed-image-url"));
+  $("#quickstart-load-channel-image-url")?.addEventListener("click", () => {
+    applyQuickstartChannelPresetFromSelect();
+    loadCropImageFromUrlInput("#quickstart-channel-image-url");
+  });
 
-  $("#center-embed-crop")?.addEventListener("click", centerCropSelection);
-  $("#reset-embed-crop")?.addEventListener("click", resetCropSelection);
+  $("#center-embed-crop")?.addEventListener("click", () => centerCropSelection($("#embed-crop-canvas")));
+  $("#reset-embed-crop")?.addEventListener("click", () => resetCropSelection($("#embed-crop-canvas")));
+  $("#quickstart-center-channel-crop")?.addEventListener("click", () => centerCropSelection($("#quickstart-channel-crop-canvas")));
+  $("#quickstart-reset-channel-crop")?.addEventListener("click", () => resetCropSelection($("#quickstart-channel-crop-canvas")));
   $("#embed-image-ratio")?.addEventListener("change", (event) => {
+    changeSocialPreviewPreset(event.target.value);
+  });
+  $("#quickstart-channel-image-ratio")?.addEventListener("change", (event) => {
     changeSocialPreviewPreset(event.target.value);
   });
   syncSocialPreviewPresetUI();
   updateCropPreviewCanvasSize();
 
-  const cropSelection = $("#embed-crop-selection");
-  cropSelection?.addEventListener("pointerdown", startCropSelectionInteraction);
-  cropSelection?.addEventListener("pointermove", updateCropSelectionFromPointer);
-  cropSelection?.addEventListener("pointerup", finishCropSelectionInteraction);
-  cropSelection?.addEventListener("pointercancel", finishCropSelectionInteraction);
-  cropSelection?.addEventListener("lostpointercapture", finishCropSelectionInteraction);
+  ["#embed-crop-selection", "#quickstart-channel-crop-selection"].forEach((selector) => {
+    const cropSelection = $(selector);
+    cropSelection?.addEventListener("pointerdown", startCropSelectionInteraction);
+    cropSelection?.addEventListener("pointermove", updateCropSelectionFromPointer);
+    cropSelection?.addEventListener("pointerup", finishCropSelectionInteraction);
+    cropSelection?.addEventListener("pointercancel", finishCropSelectionInteraction);
+    cropSelection?.addEventListener("lostpointercapture", finishCropSelectionInteraction);
+  });
 
   $("#floating-actions-toggle")?.addEventListener("click", () => {
     setFloatingActionsOpen(!$(".floating-actions")?.classList.contains("is-open"));
   });
   setFloatingActionsOpen(false);
-
-  $("#site-github-repo")?.addEventListener("input", handleGitHubRepoInput);
 
   $("#pricing-grid-columns")?.addEventListener("change", (event) => {
     state.data.pricing.gridColumns = normalizePricingGridColumns(event.target.value, DEFAULT_DATA.pricing.gridColumns);

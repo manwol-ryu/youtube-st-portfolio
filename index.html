@@ -1,10 +1,47 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+
+
+
+
+
+
+
+
+
+<!-- OG START -->
+<title>영상 포트폴리오 템플릿</title>
+<meta property="og:title" content="영상 포트폴리오 템플릿">
+<meta property="og:description" content="영상 편집자와 크리에이터를 위한 정적 포트폴리오 템플릿입니다.">
+<meta property="og:image" content="https://manwol-ryu.github.io/youtube-st-portfolio/assets/social-preview.png">
+<meta property="og:url" content="https://manwol-ryu.github.io/youtube-st-portfolio/">
+<meta property="og:image:alt" content="만월 공유 이미지">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="영상 포트폴리오 템플릿">
+<meta name="twitter:description" content="영상 편집자와 크리에이터를 위한 정적 포트폴리오 템플릿입니다.">
+<meta name="twitter:image" content="https://manwol-ryu.github.io/youtube-st-portfolio/assets/social-preview.png">
+<!-- OG END -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>영상 포트폴리오 템플릿</title>
-  <meta id="site-desc" name="description" content="영상 편집자와 크리에이터를 위한 정적 포트폴리오 템플릿입니다.">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon.png">
@@ -188,12 +225,6 @@
       min-width: 0;
     }
 
-    .brand-prefix {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
 
     .brand-name {
       overflow: hidden;
@@ -527,25 +558,6 @@
       font-size: 14px;
       font-weight: 500;
       line-height: 1.7;
-    }
-
-    .hero-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 18px;
-      border: 1px solid #e3e5e8;
-      border-radius: 999px;
-      background: #f7f8fa;
-      padding: 8px 12px;
-      color: #2a2a2a;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .hero-status-label {
-      color: var(--yt-red);
-      text-transform: uppercase;
     }
 
     .hero-actions {
@@ -1942,9 +1954,6 @@
         min-width: 0;
       }
 
-      .brand-prefix {
-        display: none;
-      }
 
       .brand-name {
         max-width: 160px;
@@ -2138,7 +2147,6 @@
       <span class="yt-logo-mark" aria-hidden="true">
         <span class="material-symbols-outlined">play_arrow</span>
       </span>
-      <span id="brand-prefix" class="brand-prefix sr-only">studio</span>
       <span id="brand-name" class="brand-name">your-name</span>
     </a>
     <nav id="nav-links" class="desktop-nav" aria-label="주요 메뉴">
@@ -2188,7 +2196,7 @@
   <main class="yt-main">
     <section id="home" aria-label="채널 홈">
       <div class="channel-banner">
-        <img class="channel-banner-image" src="assets/배너이미지.png" alt="" aria-hidden="true">
+        <img class="channel-banner-image" src="assets/banner.png" alt="" aria-hidden="true">
         <div class="channel-banner-inner">
           <div>
             <p id="hero-eyebrow" class="hero-eyebrow">VIDEO PORTFOLIO TEMPLATE</p>
@@ -2224,12 +2232,6 @@
             </span>
           </p>
           <p id="hero-description" class="hero-description">site.json을 불러오는 중입니다.</p>
-          <div class="channel-actions-row">
-            <div id="hero-status" class="hero-status">
-              <span id="hero-status-label" class="hero-status-label">Status</span>
-              <span id="hero-status-text">READY</span>
-            </div>
-          </div>
           <div id="hero-actions" class="hero-actions"></div>
         </div>
       </div>
@@ -2353,7 +2355,7 @@
     </div>
   </footer>
 
-  <script src="script.js?v=20260426-2" defer></script>
+  <script src="script.js?v=20260427-3" defer></script>
   <script>
     window.addEventListener("DOMContentLoaded", () => {
       const tabAliases = new Map([
@@ -2482,14 +2484,9 @@
 
       const syncHomeFeature = () => {
         const heroTitle = document.getElementById("hero-title");
-        const heroDescription = document.getElementById("hero-description");
         const featureTitle = document.getElementById("home-feature-title");
-        const featureDescription = document.getElementById("home-feature-description");
-        if (heroTitle && featureTitle) {
+        if (heroTitle && featureTitle && !featureTitle.textContent.trim()) {
           featureTitle.textContent = heroTitle.textContent.replace(/\s+/g, " ").trim() || "영상 포트폴리오";
-        }
-        if (heroDescription && featureDescription) {
-          featureDescription.textContent = heroDescription.textContent.trim() || "포트폴리오 채널의 대표 소개 콘텐츠입니다.";
         }
       };
 
@@ -2501,9 +2498,7 @@
       if (contactPrimaryCard) contactMetaObserver.observe(contactPrimaryCard, { childList: true, characterData: true, subtree: true });
       const featureObserver = new MutationObserver(syncHomeFeature);
       const heroTitle = document.getElementById("hero-title");
-      const heroDescription = document.getElementById("hero-description");
       if (heroTitle) featureObserver.observe(heroTitle, { childList: true, characterData: true, subtree: true });
-      if (heroDescription) featureObserver.observe(heroDescription, { childList: true, characterData: true, subtree: true });
       syncTabHrefs();
       syncBrandEcho();
       syncChannelMeta();

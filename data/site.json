@@ -34,7 +34,7 @@
         }
       ],
       "ctaLabel": "문의하기",
-      "ctaHref": "index.html#contact"
+      "ctaHref": ""
     },
     "footer": {
       "enabled": true,
@@ -55,7 +55,8 @@
           "href": "index.html#contact"
         }
       ]
-    }
+    },
+    "url": ""
   },
   "hero": {
     "eyebrow": "VIDEO PORTFOLIO TEMPLATE",
@@ -212,7 +213,7 @@
     ]
   },
   "stats": {
-    "enabled": true,
+    "enabled": false,
     "items": [
       {
         "value": "61+",
@@ -354,27 +355,32 @@
     "processSteps": [
       {
         "number": "01",
-        "title": "자료 확인",
-        "description": "원본, 레퍼런스, 원하는 톤과 납기 일정을 확인합니다."
+        "title": "상담 및 결제",
+        "description": "프로젝트의 성격과 마감 기한을 확인한 뒤 결제를 진행합니다."
       },
       {
         "number": "02",
-        "title": "편집 진행",
-        "description": "컷 편집, 자막, 그래픽, 사운드 정리를 순서대로 진행합니다."
+        "title": "초안 전달",
+        "description": "작업 착수 후 평균 3-5일 이내에 1차 가편집본을 전달합니다."
       },
       {
         "number": "03",
-        "title": "피드백 반영",
-        "description": "수정 의견을 반영하고 플랫폼 업로드에 맞는 형식으로 납품합니다."
+        "title": "피드백 수렴",
+        "description": "기본 2회의 무상 수정을 통해 디테일을 정리합니다."
+      },
+      {
+        "number": "4",
+        "title": "최종 납품",
+        "description": "최종 승인된 영상은 원본 화질로 렌더링하여 전달하며 마무리됩니다."
       }
     ]
   },
   "contact": {
-    "eyebrow": "CONTACT",
-    "title": "프로젝트 문의는\n이메일로 남겨주세요.",
-    "titleAccent": "이메일",
-    "description": "메일 주소와 응답 정책을 템플릿으로 남겨두었습니다. 실제 운영 정보로 교체해서 사용하세요.",
-    "detailsEnabled": true,
+    "eyebrow": "CHANNEL",
+    "title": "디스코드에 친구추가하여\n문의를 해보세요.",
+    "titleAccent": "YouTube 채널",
+    "description": "문의는 디스코드에서 부탁드립니다.",
+    "detailsEnabled": false,
     "primaryCard": {
       "label": "Email",
       "value": "your@email.com",

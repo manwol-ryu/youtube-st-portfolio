@@ -1,14 +1,11 @@
 {
   "site": {
-    "title": "영상 포트폴리오 템플릿",
-    "description": "영상 편집자와 크리에이터를 위한 정적 포트폴리오 템플릿입니다. site.json만 수정해 브랜드, 작업물, 가격, 문의 정보를 구성할 수 있습니다.",
     "githubRepo": "",
     "brand": {
-      "prefix": "studio",
       "name": "your-name",
       "displayName": "",
-      "avatarUrl": "assets/프로필이미지.png",
-      "bannerImageUrl": "assets/배너이미지.png"
+      "avatarUrl": "assets/avatar.png",
+      "bannerImageUrl": "assets/banner.png"
     },
     "profile": {
       "discordId": "",
@@ -55,15 +52,14 @@
           "href": "index.html#contact"
         }
       ]
-    }
+    },
+    "url": ""
   },
   "hero": {
     "eyebrow": "VIDEO PORTFOLIO TEMPLATE",
     "title": "브랜드에 맞는\n영상 포트폴리오를 시작하세요.",
     "titleAccent": "영상 포트폴리오",
     "description": "JSON 데이터만 교체하면 소개 문구, 작업물, 가격, 문의 섹션을 프로젝트에 맞게 빠르게 구성할 수 있습니다.",
-    "statusLabel": "Status",
-    "statusText": "READY FOR CUSTOMIZATION",
     "actions": [
       {
         "label": "가격 보기",
@@ -164,7 +160,9 @@
       "categoryVideos": true,
       "projects": true,
       "stats": true
-    }
+    },
+    "featuredVideoId": "dQw4w9WgXcQ",
+    "featuredDescription": "JSON 데이터만 교체하면 소개 문구, 작업물, 가격, 문의 섹션을 프로젝트에 맞게 빠르게 구성할 수 있습니다."
   },
   "projects": {
     "enabled": true,
