@@ -30,6 +30,8 @@ const publicPagePreviewTargets = new Set([
   "hero-editor",
   "hero-panels",
   "projects",
+  "project-cards",
+  "project-youtube-card",
   "works",
   "stats-process",
   "process",
@@ -84,6 +86,18 @@ const previewTargets = {
     title: "프로젝트 / 유튜브 카드 미리보기",
     description: "프로젝트 카드 섹션과 유튜브 채널 카드가 홈 탭에서 어떻게 보이는지 확인합니다.",
     pathText: "index.html#projects",
+    openHref: "../index.html#projects",
+  },
+  "project-cards": {
+    title: "프로젝트 카드 미리보기",
+    description: "프로젝트 카드 탭에서 수정할 수 있는 섹션 헤더와 프로젝트 카드만 확인합니다.",
+    pathText: "index.html#projects / project cards",
+    openHref: "../index.html#projects",
+  },
+  "project-youtube-card": {
+    title: "유튜브 카드 미리보기",
+    description: "유튜브 카드 탭에서 수정할 수 있는 채널 카드만 확인합니다.",
+    pathText: "index.html#projects / youtube card",
     openHref: "../index.html#projects",
   },
   works: {
@@ -490,7 +504,7 @@ const QUICKSTART_STEPS = Object.freeze([
   {
     id: "site",
     title: "사이트 정보",
-    description: "채널 표시 이름, English Name, Discord ID, 이메일을 정리합니다.",
+    description: "사이트 URL, 채널 표시 이름, 연락 정보와 대표 문구를 먼저 정리합니다.",
     preview: "brand",
   },
   {
@@ -501,8 +515,8 @@ const QUICKSTART_STEPS = Object.freeze([
   },
   {
     id: "hero",
-    title: "03 동영상/미리보기",
-    description: "홈 상단 대표 영상과 영상 포트폴리오 미리보기 문구를 확인합니다.",
+    title: "03 대표 영상",
+    description: "홈 상단 대표 영상과 영상 카드 설명을 선택합니다.",
     preview: "home",
   },
   {
@@ -3581,8 +3595,8 @@ function getEffectivePreviewTab(tab = state.activeTab) {
     "home-advanced": "hero-panels",
     "home-hero": "hero-editor",
     "home-info-panels": "hero-panels",
-    "home-project-cards": "projects",
-    "home-youtube-card": "projects",
+    "home-project-cards": "project-cards",
+    "home-youtube-card": "project-youtube-card",
     "home-stats": "stats-process",
   };
   return homePreviewMap[tab] || tab;
@@ -3602,13 +3616,13 @@ function previewConfigForTab(tab = state.activeTab) {
 
   const effectiveTab = getEffectivePreviewTab(tab);
   const config = previewTargets[effectiveTab] || previewTargets.brand;
-  if (effectiveTab !== "projects") return config;
+  if (!["projects", "project-cards", "project-youtube-card"].includes(effectiveTab)) return config;
 
   if (state.data.projects.enabled === false) {
     return {
       ...config,
-      pathText: "index.html#works",
-      openHref: "../index.html#works",
+      pathText: effectiveTab === "projects" ? "index.html#works" : "index.html#projects",
+      openHref: effectiveTab === "projects" ? "../index.html#works" : "../index.html#projects",
     };
   }
 
@@ -3643,6 +3657,42 @@ function renderPreviewAccentText(text, accent, accentClass) {
   }
 
   return output;
+}
+
+function hasAccentMatch(text, accent) {
+  const raw = String(text || "");
+  const markers = normalizeAccentKeywords(accent);
+  if (!raw || !markers.length) return false;
+
+  for (let index = 0; index < raw.length; index += 1) {
+    if (markers.some((marker) => getAccentMatchEnd(raw, index, marker) > index)) return true;
+  }
+  return false;
+}
+
+function renderHeroAccentPreviews() {
+  const previewIds = ["hero-title-accent-preview", "quickstart-hero-title-accent-preview"];
+  const title = textOrFallback(state.data.hero?.title, DEFAULT_DATA.hero.title);
+  const accent = state.data.hero?.titleAccent || "";
+  const markers = normalizeAccentKeywords(accent);
+  const matched = hasAccentMatch(title, accent);
+  const titleMarkup = renderPreviewAccentText(title, accent, "accent-preview-mark");
+
+  previewIds.forEach((id) => {
+    const container = document.getElementById(id);
+    if (!container) return;
+    container.innerHTML = `
+      <span class="accent-preview-label">강조 미리보기</span>
+      <div class="accent-preview-title">${titleMarkup || "대표 문구 제목을 입력하세요."}</div>
+      <p class="accent-preview-note ${markers.length && !matched ? "is-warning" : ""}">
+        ${markers.length
+          ? matched
+            ? "분홍색으로 표시된 부분이 공개 페이지 제목에서 강조됩니다."
+            : "현재 대표 문구 제목에 포함된 단어가 없어 강조되지 않습니다."
+          : "강조할 단어를 입력하면 이곳에서 바로 확인할 수 있습니다."}
+      </p>
+    `;
+  });
 }
 
 function renderPreviewNavLinks() {
@@ -4455,10 +4505,10 @@ function renderPreviewProjectYouTubeChannelCard(options = {}) {
       <div class="project-youtube-avatar">
         ${avatarMarkup}
       </div>
-      <div class="project-youtube-copy bg-white text-[#606060]">
-        <span class="project-youtube-label text-[#606060]">YouTube Channel</span>
+      <div class="project-youtube-copy">
+        <span class="project-youtube-label">YouTube Channel</span>
         <div class="project-youtube-title-row">
-          <strong class="project-youtube-name text-[#0f0f0f]">${escapeHTML(channel.name || channel.handle)}</strong>
+          <strong class="project-youtube-name">${escapeHTML(channel.name || channel.handle)}</strong>
           ${channel.handle ? `<span class="project-youtube-handle">${escapeHTML(channel.handle)}</span>` : ""}
         </div>
         ${stats.length ? `<div class="project-youtube-stats">${stats.map((item) => `<span class="project-youtube-stat">${escapeHTML(item)}</span>`).join("")}</div>` : ""}
@@ -4492,10 +4542,19 @@ function renderInlineProjectPreviewShell(title, content, emptyText) {
   `;
 }
 
+function renderInlineYouTubePreviewShell(title, content, emptyText) {
+  return `
+    <div class="inline-preview-label">${escapeHTML(title)}</div>
+    <div class="inline-preview-surface is-youtube-preview">
+      ${content || `<div class="inline-preview-empty">${escapeHTML(emptyText)}</div>`}
+    </div>
+  `;
+}
+
 function renderProjectInlinePreviews() {
   const channelPreview = $("#projects-youtube-channel-preview");
   if (channelPreview) {
-    channelPreview.innerHTML = renderInlinePreviewShell(
+    channelPreview.innerHTML = renderInlineYouTubePreviewShell(
       "유튜브 채널 카드 미리보기",
       renderPreviewProjectYouTubeChannelCard({ ignoreEnabled: true }),
       "채널 URL과 채널명을 입력하면 이곳에 카드가 표시됩니다.",
@@ -5096,6 +5155,9 @@ function getPublicPreviewHash(target = getCurrentLivePreviewTarget()) {
       return "#home";
     case "projects":
       return state.data.projects?.enabled === false ? "#works" : "#projects";
+    case "project-cards":
+    case "project-youtube-card":
+      return "#projects";
     case "works":
       return "#works";
     case "stats-process":
@@ -5149,6 +5211,8 @@ function getPublicPreviewFrameHeightBounds(target = "") {
   if (target === "hero-editor") return { min: 420, max: 660 };
   if (target === "hero-panels") return { min: 260, max: 460 };
   if (target === "projects") return { min: 320, max: 600 };
+  if (target === "project-cards") return { min: 320, max: 560 };
+  if (target === "project-youtube-card") return { min: 280, max: 420 };
   return { min: 320, max: 620 };
 }
 
@@ -7039,6 +7103,7 @@ function renderAll() {
   renderHeroActionList();
   renderHeroInfoEditors();
   renderQuickstartHeroContentEditors();
+  renderHeroAccentPreviews();
   renderProjectCardList();
   renderProjectInlinePreviews();
   renderHomeSettings();
@@ -7114,6 +7179,7 @@ function applyMinorChange(message = "변경 사항이 반영되었습니다.") {
   renderWorksCategoryOrderList();
   renderQuickstartFeaturedVideoSelect();
   renderProjectInlinePreviews();
+  renderHeroAccentPreviews();
   renderQuickstartResourceSummary();
   renderQuickstartFinishSummary();
   renderQuickstartWizard();

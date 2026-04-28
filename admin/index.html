@@ -50,7 +50,7 @@
     };
   </script>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link rel="stylesheet" href="admin.css?v=20260428-3">
+  <link rel="stylesheet" href="admin.css?v=20260428-4">
 </head>
 <body>
   <div class="admin-layout">
@@ -170,7 +170,7 @@
               <div class="quickstart-stepper-copy">
                 <span class="quickstart-step-counter" id="quickstart-current-step">01 / 13</span>
                 <strong id="quickstart-current-title">사이트 정보</strong>
-                <p id="quickstart-current-description">GitHub Repo, English Name, 채널 표시 이름, Discord ID, 이메일, 상단 버튼을 먼저 정리합니다.</p>
+                <p id="quickstart-current-description">사이트 URL, 채널 표시 이름, 연락 정보와 대표 문구를 먼저 정리합니다.</p>
               </div>
               <div class="quickstart-step-dots" id="quickstart-step-dots" aria-label="단계 바로가기"></div>
             </header>
@@ -181,19 +181,23 @@
                   <span class="quickstart-step">01</span>
                   <div>
                     <h3>사이트 정보</h3>
-                    <p class="field-note">GitHub Repo, English Name, 채널 표시 이름, Discord ID, 이메일, 상단 버튼을 먼저 정리합니다.</p>
+                    <p class="field-note">사이트 URL, 채널 표시 이름, 연락 정보와 대표 문구를 먼저 정리합니다.</p>
                   </div>
                 </div>
                 <div class="form-grid">
                   <label class="field span-2" for="quickstart-site-url"><span>사이트 URL</span><input id="quickstart-site-url" type="url" placeholder="https://owner.github.io/repo/"></label>
                   <p class="field-note span-2" id="quickstart-site-url-note">GitHub Pages 또는 GitHub 저장소 URL을 입력하면 owner/repo를 자동으로 저장합니다.</p>
-                  <label class="field" for="quickstart-brand-name"><span>English Name</span><input id="quickstart-brand-name" type="text" placeholder="your-name"></label>
-                  <label class="field" for="quickstart-brand-display-name"><span>채널 표시 이름</span><input id="quickstart-brand-display-name" type="text" placeholder="공개 페이지에 크게 보일 이름"></label>
-                  <p class="field-note span-2">채널 표시 이름은 공개 페이지 채널 헤더의 <code>brand-name-display</code> 위치에 표시됩니다. English Name은 상단 로고와 채널 메타 이름용으로 분리됩니다.</p>
-                  <label class="field" for="quickstart-profile-discord"><span>Discord ID</span><input id="quickstart-profile-discord" type="text" placeholder="비워두면 표시하지 않음"></label>
-                  <label class="field" for="quickstart-profile-email"><span>Email</span><input id="quickstart-profile-email" type="email" placeholder="비워두면 표시하지 않음"></label>
-                  <label class="field" for="quickstart-nav-cta-label"><span>상단 버튼 문구</span><input id="quickstart-nav-cta-label" type="text"></label>
-                  <label class="field span-2" for="quickstart-nav-cta-href"><span>상단 버튼 링크</span><input id="quickstart-nav-cta-href" type="text" placeholder="index.html#contact"></label>
+                  <label class="field span-2" for="quickstart-brand-display-name"><span>채널 표시 이름</span><input id="quickstart-brand-display-name" type="text" placeholder="공개 페이지에 크게 보일 이름"></label>
+                  <div class="quickstart-three-grid span-2">
+                    <label class="field" for="quickstart-brand-name"><span>English Name</span><input id="quickstart-brand-name" type="text" placeholder="your-name"></label>
+                    <label class="field" for="quickstart-profile-discord"><span>Discord ID</span><input id="quickstart-profile-discord" type="text" placeholder="비워두면 표시하지 않음"></label>
+                    <label class="field" for="quickstart-profile-email"><span>Email</span><input id="quickstart-profile-email" type="email" placeholder="비워두면 표시하지 않음"></label>
+                  </div>
+                  <p class="field-note span-2">채널 표시 이름은 공개 페이지 채널 헤더의 <code>brand-name-display</code> 위치에 표시됩니다. English Name, Discord ID, Email은 채널 메타 정보로 분리됩니다.</p>
+                  <label class="field span-2" for="quickstart-hero-title"><span>대표 문구 제목</span><textarea id="quickstart-hero-title" rows="3" placeholder="줄바꿈이 필요한 경우 Enter로 나눠 입력하세요."></textarea></label>
+                  <label class="field" for="quickstart-hero-title-accent"><span>강조 단어</span><input id="quickstart-hero-title-accent" type="text" placeholder="#영상, 포트폴리오"><span class="field-note">대표 문구 제목에 포함된 단어만 강조됩니다.</span></label>
+                  <div class="accent-preview span-2" id="quickstart-hero-title-accent-preview"></div>
+                  <label class="field span-2" for="quickstart-hero-description"><span>대표 설명</span><textarea id="quickstart-hero-description" rows="4"></textarea></label>
                 </div>
               </section>
 
@@ -269,15 +273,12 @@
                 <div class="quickstart-card-head">
                   <span class="quickstart-step">03</span>
                   <div>
-                    <h3>대표 설정</h3>
-                    <p class="field-note">홈 상단 대표 영역의 대표 영상과 표시 문구를 바로 수정합니다.</p>
+                    <h3>대표 영상</h3>
+                    <p class="field-note">홈 탭 상단에 크게 보여줄 대표 영상과 영상 카드 설명을 선택합니다.</p>
                   </div>
                 </div>
                 <div class="form-grid">
                   <label class="field span-2" for="quickstart-featured-video-id"><span>대표 영상</span><select id="quickstart-featured-video-id"></select><span class="field-note">동영상/카테고리에 등록된 영상 중 홈 상단에 크게 보여줄 영상을 선택합니다.</span></label>
-                  <label class="field span-2" for="quickstart-hero-title"><span>대표 문구 제목</span><textarea id="quickstart-hero-title" rows="3" placeholder="줄바꿈이 필요한 경우 Enter로 나눠 입력하세요."></textarea></label>
-                  <label class="field" for="quickstart-hero-title-accent"><span>강조 단어</span><input id="quickstart-hero-title-accent" type="text" placeholder="#영상, 포트폴리오"></label>
-                  <label class="field span-2" for="quickstart-hero-description"><span>대표 설명</span><textarea id="quickstart-hero-description" rows="4"></textarea></label>
                   <label class="field span-2" for="quickstart-home-feature-description"><span>대표 영상 설명</span><textarea id="quickstart-home-feature-description" rows="3"></textarea></label>
                 </div>
               </section>
@@ -690,8 +691,9 @@
               <label class="field" for="hero-title-accent">
                 <span>강조 단어</span>
                 <input id="hero-title-accent" type="text" placeholder="#영상, 포트폴리오">
-                <span class="field-note"># 또는 ,로 여러 단어를 나눠 입력할 수 있습니다. 줄바꿈이 있어도 같은 단어로 인식합니다.</span>
+                <span class="field-note">대표 문구 제목에 포함된 단어만 강조됩니다. # 또는 ,로 여러 단어를 나눌 수 있습니다.</span>
               </label>
+              <div class="accent-preview span-2" id="hero-title-accent-preview"></div>
               <label class="field span-2" for="hero-description">
                 <span>설명</span>
                 <textarea id="hero-description" rows="4"></textarea>
@@ -1585,6 +1587,6 @@
     </section>
   </div>
 
-  <script src="admin.js?v=20260428-3"></script>
+  <script src="admin.js?v=20260428-4"></script>
 </body>
 </html>
