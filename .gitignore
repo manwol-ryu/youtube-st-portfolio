@@ -25,3 +25,4 @@ assets/favicon-source.png
 
 # Local validation/audit scripts and generated reports
 scripts/
+.claude/
